@@ -266,6 +266,7 @@ function setupBroadcast(){
       ctx.fillText(text,bx*w+padding,by*h+13);
       loadStamps();
     })
+    .on('broadcast',{event:'reload'},()=>{loadCanvas();loadStamps();})
     .subscribe();
 }
 
@@ -495,10 +496,12 @@ function togglePlay(){
 }
 
 async function confirmClear(){
-  if(!confirm('캔버스를 초기화할까요? 모두에게 적용돼요!'))return;
-  await sb.from('shared_canvas').delete().neq('id',0);
-  await sb.from('canvas_stamps').delete().neq('id',0);
+  if(!confirm('내 그림을 지울까요?'))return;
+  await sb.from('shared_canvas').delete().eq('nickname',myNickname);
+  await sb.from('canvas_stamps').delete().eq('nickname',myNickname);
   loadCanvas();loadStamps();
+  // 다른 사람들도 캔버스 다시 그리도록 broadcast
+  if(broadcastChannel)broadcastChannel.send({type:'broadcast',event:'reload',payload:{}});
 }
 
 /* ── 온라인 참여자 ── */
