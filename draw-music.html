@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>그림으로 만드는 노래</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden}
+:root{--cream:#FFF8F0;--peach:#FFE4CC;--pink:#C97B7B;--pink-light:#E8A89A;--pink-pale:#FFD6E8;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh}
+.header{background:linear-gradient(135deg,#FFE4CC 0%,#FFD6E8 100%);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.65);border:1px solid rgba(200,160,140,.3);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
+.header-sub{font-size:11px;color:var(--text-light)}
+.wrap{padding:1rem;max-width:480px;margin:0 auto}
+
+/* 닉네임 */
+#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
+.nick-card{background:#fff;border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(200,160,140,.15);text-align:center}
+.nick-emoji{font-size:44px;margin-bottom:.8rem}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.3rem}
+.nick-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.8}
+.nick-field{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--text-dark);background:var(--cream);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-field:focus{border-color:rgba(201,123,123,.5)}
+.nick-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+
+/* 메인 */
+#screen-main{display:none;padding:1rem;max-width:480px;margin:0 auto;padding-bottom:120px}
+
+/* 악기 범례 */
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;background:#fff;border-radius:14px;padding:.8rem;border:1.5px solid rgba(200,160,140,.15)}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-mid)}
+.legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.legend-hint{font-size:10px;color:var(--text-light);width:100%;margin-top:4px}
+
+/* 캔버스 */
+.canvas-wrap{border-radius:18px;overflow:hidden;border:2px solid rgba(200,160,140,.2);margin-bottom:.8rem;position:relative}
+.canvas-tools{display:flex;gap:6px;padding:8px 10px;background:linear-gradient(135deg,#FFF5F0,#FFF8FC);border-bottom:1px solid rgba(200,160,140,.15);flex-wrap:wrap;align-items:center}
+.color-btn{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0;transition:transform .15s;position:relative}
+.color-btn.active{border-color:var(--text-dark);transform:scale(1.2)}
+.tool-btn{padding:4px 10px;border-radius:8px;border:1.5px solid rgba(200,160,140,.2);background:#fff;font-size:11px;font-weight:500;cursor:pointer;color:var(--pink);font-family:'Noto Sans KR',sans-serif}
+.tool-btn.active{background:#FFF0E8;border-color:var(--pink)}
+canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8}
+
+/* 음계 가이드 */
+.note-guide{position:absolute;right:0;top:0;bottom:0;width:32px;background:linear-gradient(to bottom,rgba(255,255,255,.9),rgba(255,255,255,.0));display:flex;flex-direction:column;justify-content:space-between;padding:4px 2px;pointer-events:none}
+.note-label{font-size:8px;color:var(--text-light);text-align:center;font-weight:500}
+
+/* 컨트롤 */
+.controls{display:flex;gap:8px;margin-bottom:1rem}
+.ctrl-btn{flex:1;border:none;border-radius:12px;padding:12px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:44px}
+.ctrl-btn:active{transform:scale(.97)}
+.play-btn{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff}
+.play-btn.playing{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse 1s infinite}
+.save-btn{background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff}
+.clear-btn{background:#fff;border:1.5px solid rgba(200,160,140,.3)!important;color:var(--text-mid)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
+
+/* 릴레이 목록 */
+.relay-box{background:#fff;border-radius:18px;padding:1rem;border:1.5px solid rgba(200,160,140,.15)}
+.relay-label{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.8rem;text-transform:uppercase}
+.relay-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--cream);margin-bottom:6px;cursor:pointer;transition:all .2s}
+.relay-item:active{transform:scale(.98)}
+.relay-item.playing-item{background:linear-gradient(135deg,#F0FFF0,#F0F8FF);border:1px solid rgba(107,203,119,.3)}
+.relay-thumb{width:48px;height:48px;border-radius:10px;flex-shrink:0;overflow:hidden}
+.relay-thumb img{width:100%;height:100%;object-fit:cover}
+.relay-info{flex:1;min-width:0}
+.relay-name{font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:2px}
+.relay-meta{font-size:11px;color:var(--text-light)}
+.relay-play{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--pink-light));display:flex;align-items:center;justify-content:center;flex-shrink:0;border:none;cursor:pointer}
+.relay-play svg{width:10px;height:10px;fill:#fff;margin-left:2px}
+.empty-relay{font-size:13px;color:var(--text-light);text-align:center;padding:1.5rem 0}
+
+/* 재생 시각화 */
+.viz-bar{position:absolute;bottom:0;width:3px;background:rgba(255,200,100,.7);border-radius:2px;transition:height .1s;pointer-events:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">🎨 그림으로 만드는 노래</div>
+  <div class="header-sub">그림을 그리면 음악이 돼요!</div>
+</div>
+
+<!-- 닉네임 -->
+<div id="screen-nick">
+  <div style="height:.5rem"></div>
+  <div class="nick-card">
+    <div class="nick-emoji">🎨</div>
+    <div class="nick-title">그림으로 만드는 노래</div>
+    <div class="nick-sub">색깔이 악기가 되고<br>높이가 음이 돼요!<br>릴레이로 함께 만들어요 🎵</div>
+    <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterMain()">
+    <button class="nick-btn" onclick="enterMain()">🎨 시작하기</button>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div id="screen-main">
+  <!-- 악기 범례 -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#E05555"></div>피아노</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4D96FF"></div>실로폰</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6BCB77"></div>기타</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#C77DFF"></div>플루트</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#FFD93D"></div>트럼펫</div>
+    <div class="legend-hint">↑ 위로 그릴수록 높은 음 · 아래로 그릴수록 낮은 음</div>
+  </div>
+
+  <!-- 캔버스 -->
+  <div class="canvas-wrap" id="canvas-wrap">
+    <div class="canvas-tools">
+      <div class="color-btn active" style="background:#E05555" onclick="setColor('#E05555',this)" title="피아노"></div>
+      <div class="color-btn" style="background:#4D96FF" onclick="setColor('#4D96FF',this)" title="실로폰"></div>
+      <div class="color-btn" style="background:#6BCB77" onclick="setColor('#6BCB77',this)" title="기타"></div>
+      <div class="color-btn" style="background:#C77DFF" onclick="setColor('#C77DFF',this)" title="플루트"></div>
+      <div class="color-btn" style="background:#FFD93D" onclick="setColor('#FFD93D',this)" title="트럼펫"></div>
+      <button class="tool-btn active" id="pen-btn" onclick="setTool('pen')">펜</button>
+      <button class="tool-btn" id="eraser-btn" onclick="setTool('eraser')">지우개</button>
+      <input type="range" min="3" max="18" value="6" id="brush-range" oninput="brushSize=+this.value" style="flex:1;min-width:40px;max-width:70px">
+      <button class="tool-btn" onclick="clearCanvas()">지우기</button>
+    </div>
+    <canvas id="draw-canvas"></canvas>
+    <!-- 음계 가이드 -->
+    <div class="note-guide">
+      <div class="note-label">시</div>
+      <div class="note-label">라</div>
+      <div class="note-label">솔</div>
+      <div class="note-label">파</div>
+      <div class="note-label">미</div>
+      <div class="note-label">레</div>
+      <div class="note-label">도</div>
+    </div>
+  </div>
+
+  <!-- 컨트롤 -->
+  <div class="controls">
+    <button class="ctrl-btn play-btn" id="play-btn" onclick="togglePlay()">▶ 내 그림 재생</button>
+    <button class="ctrl-btn save-btn" onclick="saveRelay()">🎵 릴레이에 추가</button>
+    <button class="ctrl-btn clear-btn" onclick="clearCanvas()">🗑</button>
+  </div>
+
+  <!-- 릴레이 목록 -->
+  <div class="relay-box">
+    <div class="relay-label">🎵 우리가 함께 만든 음악</div>
+    <div id="relay-list"><div class="empty-relay">아직 아무도 그림을 추가하지 않았어요<br>첫 번째 그림을 추가해줘요! 🌸</div></div>
+    <button id="play-all-btn" onclick="playAll()" style="display:none;width:100%;margin-top:.8rem;background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:12px;padding:12px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:44px">🎵 전체 재생</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+// 음계 주파수 (도~시 7음)
+const NOTES=[261.63,293.66,329.63,349.23,392.00,440.00,493.88]; // 도레미파솔라시
+// 색깔 → 악기 타입
+const COLOR_MAP={
+  '#E05555':'piano',
+  '#4D96FF':'xylophone',
+  '#6BCB77':'guitar',
+  '#C77DFF':'flute',
+  '#FFD93D':'trumpet',
+};
+
+let myNickname='';
+let tool='pen', color='#E05555', brushSize=6;
+let isDrawing=false;
+let audioCtx=null;
+let isPlaying=false;
+let playTimeout=null;
+let relayData=[];
+let playingRelayIdx=-1;
+
+function getAudioCtx(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function enterMain(){
+  const nick=document.getElementById('nick-input').value.trim();
+  if(!nick){alert('이름을 입력해줘요!');return;}
+  myNickname=nick;
+  document.getElementById('screen-nick').style.display='none';
+  document.getElementById('screen-main').style.display='block';
+  initCanvas();loadRelay();subscribeRelay();
+}
+
+/* ── 캔버스 ── */
+let canvasInited=false;
+function initCanvas(){
+  if(canvasInited)return;canvasInited=true;
+  const canvas=document.getElementById('draw-canvas');
+  const ctx=canvas.getContext('2d');
+  function resize(){
+    const w=canvas.parentElement.clientWidth;
+    canvas.width=w;canvas.height=Math.round(w*.6);
+    ctx.fillStyle='#FFFDF8';ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+  resize();window.addEventListener('resize',resize);
+  function pos(e){const r=canvas.getBoundingClientRect();const src=e.touches?e.touches[0]:e;return{x:(src.clientX-r.left)*(canvas.width/r.width),y:(src.clientY-r.top)*(canvas.height/r.height)};}
+  function draw(p){
+    ctx.lineTo(p.x,p.y);
+    ctx.strokeStyle=tool==='eraser'?'#FFFDF8':color;
+    ctx.lineWidth=tool==='eraser'?brushSize*3:brushSize;
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+  }
+  canvas.addEventListener('mousedown',e=>{isDrawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+  canvas.addEventListener('mousemove',e=>{if(!isDrawing)return;draw(pos(e));});
+  canvas.addEventListener('mouseup',()=>isDrawing=false);
+  canvas.addEventListener('mouseleave',()=>isDrawing=false);
+  canvas.addEventListener('touchstart',e=>{e.preventDefault();isDrawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);},{passive:false});
+  canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!isDrawing)return;draw(pos(e));},{passive:false});
+  canvas.addEventListener('touchend',()=>isDrawing=false);
+}
+
+function setColor(c,el){color=c;document.querySelectorAll('.color-btn').forEach(d=>d.classList.remove('active'));el.classList.add('active');if(tool==='eraser')setTool('pen');}
+function setTool(t){tool=t;document.getElementById('pen-btn').classList.toggle('active',t==='pen');document.getElementById('eraser-btn').classList.toggle('active',t==='eraser');}
+function clearCanvas(){const c=document.getElementById('draw-canvas');const ctx=c.getContext('2d');ctx.fillStyle='#FFFDF8';ctx.fillRect(0,0,c.width,c.height);}
+
+/* ── 그림 → 음악 변환 ── */
+function canvasToNotes(canvas){
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h=canvas.height;
+  const data=ctx.getImageData(0,0,w,h).data;
+  const COLS=32; // 32개 시간 슬롯
+  const slotW=w/COLS;
+  const notes=[];
+  for(let col=0;col<COLS;col++){
+    const x0=Math.floor(col*slotW),x1=Math.floor((col+1)*slotW);
+    // 각 슬롯에서 그려진 픽셀 찾기
+    const pixels=[];
+    for(let x=x0;x<x1;x++){
+      for(let y=0;y<h;y++){
+        const i=(y*w+x)*4;
+        const r=data[i],g=data[i+1],b=data[i+2],a=data[i+3];
+        if(a>50&&!(r>250&&g>250&&b>240)){// 배경 제외
+          pixels.push({x,y,r,g,b});
+        }
+      }
+    }
+    if(pixels.length>0){
+      // 평균 y → 음높이
+      const avgY=pixels.reduce((s,p)=>s+p.y,0)/pixels.length;
+      const noteIdx=Math.floor((1-avgY/h)*NOTES.length);
+      const freq=NOTES[Math.max(0,Math.min(NOTES.length-1,noteIdx))];
+      // 지배적 색깔 → 악기
+      const avgR=pixels.reduce((s,p)=>s+p.r,0)/pixels.length;
+      const avgG=pixels.reduce((s,p)=>s+p.g,0)/pixels.length;
+      const avgB=pixels.reduce((s,p)=>s+p.b,0)/pixels.length;
+      const instrument=getInstrument(avgR,avgG,avgB);
+      notes.push({col,freq,instrument,volume:Math.min(pixels.length/50,1)});
+    }else{
+      notes.push(null);
+    }
+  }
+  return notes;
+}
+
+function getInstrument(r,g,b){
+  // 가장 가까운 색깔 찾기
+  const colors={
+    piano:{r:224,g:85,b:85},
+    xylophone:{r:77,g:150,b:255},
+    guitar:{r:107,g:203,b:119},
+    flute:{r:199,g:125,b:255},
+    trumpet:{r:255,g:217,b:61},
+  };
+  let best='piano',bestDist=Infinity;
+  for(const[name,c]of Object.entries(colors)){
+    const d=Math.sqrt((r-c.r)**2+(g-c.g)**2+(b-c.b)**2);
+    if(d<bestDist){bestDist=d;best=name;}
+  }
+  return best;
+}
+
+function playNote(freq,instrument,vol,duration,ctx){
+  const osc=ctx.createOscillator();
+  const gain=ctx.createGain();
+  osc.connect(gain);gain.connect(ctx.destination);
+  // 악기별 파형
+  const waveforms={piano:'triangle',xylophone:'sine',guitar:'sawtooth',flute:'sine',trumpet:'square'};
+  osc.type=waveforms[instrument]||'sine';
+  osc.frequency.value=freq;
+  gain.gain.setValueAtTime(0,ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(vol*.4,ctx.currentTime+.02);
+  gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+duration*.9);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime+duration);
+}
+
+/* ── 내 그림 재생 ── */
+function togglePlay(){
+  if(isPlaying){stopPlay();return;}
+  const canvas=document.getElementById('draw-canvas');
+  const notes=canvasToNotes(canvas);
+  const hasNotes=notes.some(n=>n!==null);
+  if(!hasNotes){alert('먼저 그림을 그려줘요! 🎨');return;}
+  isPlaying=true;
+  document.getElementById('play-btn').textContent='⏹ 멈추기';
+  document.getElementById('play-btn').classList.add('playing');
+  playNotesSequence(notes,()=>{stopPlay();});
+}
+
+function stopPlay(){
+  isPlaying=false;
+  document.getElementById('play-btn').textContent='▶ 내 그림 재생';
+  document.getElementById('play-btn').classList.remove('playing');
+  if(playTimeout)clearTimeout(playTimeout);
+}
+
+function playNotesSequence(notes,onEnd){
+  const ctx=getAudioCtx();
+  const BPM=120,beatDur=60/BPM/2;
+  let i=0;
+  function step(){
+    if(i>=notes.length){if(onEnd)onEnd();return;}
+    const note=notes[i];
+    if(note)playNote(note.freq,note.instrument,note.volume,beatDur*1.2,ctx);
+    i++;
+    playTimeout=setTimeout(step,beatDur*1000);
+  }
+  step();
+}
+
+/* ── 릴레이 저장 ── */
+async function saveRelay(){
+  const canvas=document.getElementById('draw-canvas');
+  const notes=canvasToNotes(canvas);
+  const hasNotes=notes.some(n=>n!==null);
+  if(!hasNotes){alert('먼저 그림을 그려줘요! 🎨');return;}
+  const imageData=canvas.toDataURL('image/png');
+  const{error}=await sb.from('relay_songs').insert([{nickname:myNickname,image_data:imageData,notes_data:JSON.stringify(notes)}]);
+  if(error){alert('저장 실패: '+error.message);return;}
+  clearCanvas();
+  alert('추가됐어요! 🎵');
+  loadRelay();
+}
+
+/* ── 릴레이 불러오기 ── */
+async function loadRelay(){
+  const{data,error}=await sb.from('relay_songs').select('*').order('created_at',{ascending:true});
+  if(error){console.log(error);return;}
+  relayData=data||[];
+  renderRelay();
+}
+
+function renderRelay(){
+  const el=document.getElementById('relay-list');
+  const allBtn=document.getElementById('play-all-btn');
+  if(!relayData.length){
+    el.innerHTML='<div class="empty-relay">아직 아무도 그림을 추가하지 않았어요<br>첫 번째 그림을 추가해줘요! 🌸</div>';
+    allBtn.style.display='none';return;
+  }
+  allBtn.style.display='block';
+  el.innerHTML=relayData.map((r,i)=>`
+    <div class="relay-item${playingRelayIdx===i?' playing-item':''}" onclick="playRelayItem(${i})">
+      <div class="relay-thumb">
+        <img src="${r.image_data}" alt="">
+      </div>
+      <div class="relay-info">
+        <div class="relay-name">${r.nickname}의 그림 🎨</div>
+        <div class="relay-meta">${new Date(r.created_at).toLocaleDateString('ko-KR')}</div>
+      </div>
+      <button class="relay-play" onclick="playRelayItem(${i});event.stopPropagation()">
+        <svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function playRelayItem(idx){
+  playingRelayIdx=idx;renderRelay();
+  const notes=JSON.parse(relayData[idx].notes_data);
+  if(playTimeout)clearTimeout(playTimeout);
+  playNotesSequence(notes,()=>{playingRelayIdx=-1;renderRelay();});
+}
+
+let isPlayingAll=false;
+function playAll(){
+  if(!relayData.length)return;
+  if(isPlayingAll){isPlayingAll=false;playingRelayIdx=-1;renderRelay();if(playTimeout)clearTimeout(playTimeout);document.getElementById('play-all-btn').textContent='🎵 전체 재생';return;}
+  isPlayingAll=true;
+  document.getElementById('play-all-btn').textContent='⏹ 멈추기';
+  let idx=0;
+  function playNext(){
+    if(!isPlayingAll||idx>=relayData.length){isPlayingAll=false;playingRelayIdx=-1;renderRelay();document.getElementById('play-all-btn').textContent='🎵 전체 재생';return;}
+    playingRelayIdx=idx;renderRelay();
+    const notes=JSON.parse(relayData[idx].notes_data);
+    playNotesSequence(notes,()=>{idx++;setTimeout(playNext,500);});
+  }
+  playNext();
+}
+
+/* ── 실시간 구독 ── */
+function subscribeRelay(){
+  sb.channel('relay-rt')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'relay_songs'},()=>{loadRelay();})
+    .subscribe();
+}
+</script>
+</body>
+</html>
