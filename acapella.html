@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>아카펠라 쌓기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden}
+:root{--cream:#FFF8F0;--peach:#FFE4CC;--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh}
+
+.header{background:linear-gradient(135deg,#FFD6E8 0%,#D6E4FF 100%);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.65);border:1px solid rgba(200,160,140,.3);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
+.header-sub{font-size:11px;color:var(--text-light)}
+
+/* 닉네임 */
+#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
+.nick-card{background:#fff;border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(200,160,140,.15);text-align:center}
+.nick-emoji{font-size:56px;margin-bottom:.8rem;cursor:pointer;display:block;transition:transform .2s}
+.nick-emoji:active{transform:scale(.9)}
+.nick-hint{font-size:11px;color:var(--text-light);margin-bottom:.5rem}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.3rem}
+.nick-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.8}
+.nick-field{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--text-dark);background:var(--cream);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-field:focus{border-color:rgba(201,123,123,.5)}
+.start-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+.start-btn:active{transform:scale(.98)}
+
+/* 메인 */
+#screen-main{display:none;padding:1rem;max-width:480px;margin:0 auto;padding-bottom:120px}
+
+/* 악보 시각화 */
+.score-wrap{background:#fff;border-radius:18px;padding:1.2rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:1rem}
+.score-title{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.8rem;text-transform:uppercase}
+.score-tracks{display:flex;flex-direction:column;gap:8px}
+.score-track{display:flex;align-items:center;gap:10px}
+.track-avatar{font-size:24px;flex-shrink:0;width:32px;text-align:center}
+.track-bar-wrap{flex:1;height:32px;background:var(--cream);border-radius:8px;overflow:hidden;position:relative}
+.track-bar{height:100%;border-radius:8px;display:flex;align-items:center;padding:0 10px;font-size:10px;font-weight:600;color:#fff;transition:width .3s ease}
+.track-bar.playing{animation:trackPulse .5s ease infinite alternate}
+@keyframes trackPulse{from{filter:brightness(1)}to{filter:brightness(1.3)}}
+.track-harmony{font-size:10px;color:var(--text-light);flex-shrink:0;width:36px;text-align:right}
+.score-empty{font-size:12px;color:var(--text-light);text-align:center;padding:1rem}
+
+/* 재생 컨트롤 */
+.play-card{background:linear-gradient(135deg,#F0FFF0,#F0F8FF);border-radius:18px;padding:1.2rem;border:1.5px solid rgba(107,203,119,.3);margin-bottom:1rem;text-align:center}
+.play-status{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--text-dark);margin-bottom:.8rem;min-height:26px}
+.play-progress{height:6px;background:rgba(107,203,119,.2);border-radius:3px;overflow:hidden;margin-bottom:.8rem}
+.play-progress-fill{height:100%;background:linear-gradient(90deg,#6BCB77,#4D96FF);border-radius:3px;width:0%;transition:width .2s}
+.play-btn{width:100%;background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:600;cursor:pointer;min-height:48px}
+.play-btn:active{transform:scale(.98)}
+.play-btn.playing{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
+
+/* 녹음 */
+.rec-card{background:#fff;border-radius:18px;padding:1.2rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:1rem}
+.rec-card-title{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.6rem;text-transform:uppercase}
+.harmony-preview{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--cream);border-radius:10px;margin-bottom:.8rem}
+.harmony-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.harmony-name{font-size:12px;font-weight:500;color:var(--text-dark)}
+.harmony-desc{font-size:11px;color:var(--text-light);margin-left:auto}
+.big-rec-btn{width:100%;padding:18px;border-radius:18px;border:2px dashed rgba(200,160,140,.3);background:var(--cream);cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:600;color:var(--pink);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;min-height:60px}
+.big-rec-btn.recording{background:linear-gradient(135deg,#FFE0E8,#FFD6E8);border-color:var(--pink);animation:pulse 1s infinite}
+.big-rec-btn:active{transform:scale(.98)}
+.rec-hint{font-size:11px;color:var(--text-light);text-align:center;margin-top:.5rem;line-height:1.6}
+
+/* 초기화 */
+.clear-btn{width:100%;background:#fff;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:11px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-light);cursor:pointer}
+.clear-btn:active{transform:scale(.98)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">🎼 아카펠라 쌓기</div>
+  <div class="header-sub">목소리를 쌓아 화음을 만들어요!</div>
+</div>
+
+<!-- 닉네임 -->
+<div id="screen-nick">
+  <div style="height:.5rem"></div>
+  <div class="nick-card">
+    <span class="nick-emoji" id="nick-avatar" onclick="rerollAvatar()">🐶</span>
+    <div class="nick-hint">탭하면 바뀌어요!</div>
+    <div class="nick-title">아카펠라 쌓기</div>
+    <div class="nick-sub">목소리를 녹음하면<br>자동으로 화음에 맞게 쌓여요 🎵<br>다같이 목소리를 모아봐요!</div>
+    <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterMain()">
+    <button class="start-btn" onclick="enterMain()">🎼 입장하기</button>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div id="screen-main">
+  <!-- 악보 -->
+  <div class="score-wrap">
+    <div class="score-title">🎵 쌓인 목소리들</div>
+    <div class="score-tracks" id="score-tracks">
+      <div class="score-empty">아직 목소리가 없어요<br>첫 번째로 녹음해봐요! 🎙️</div>
+    </div>
+  </div>
+
+  <!-- 재생 -->
+  <div class="play-card">
+    <div class="play-status" id="play-status">모두 함께 재생해요 🎼</div>
+    <div class="play-progress"><div class="play-progress-fill" id="play-progress-fill"></div></div>
+    <button class="play-btn" id="play-btn" onclick="togglePlay()">▶ 아카펠라 재생</button>
+  </div>
+
+  <!-- 녹음 -->
+  <div class="rec-card">
+    <div class="rec-card-title">🎙️ 내 목소리 추가하기</div>
+    <div class="harmony-preview" id="harmony-preview">
+      <div class="harmony-dot" id="harmony-dot" style="background:#E05555"></div>
+      <div class="harmony-name" id="harmony-name">기준음</div>
+      <div class="harmony-desc" id="harmony-desc">첫 번째 목소리예요</div>
+    </div>
+    <button class="big-rec-btn" id="rec-btn"
+      ontouchstart="startRec();event.preventDefault()"
+      ontouchend="stopRec();event.preventDefault()"
+      onmousedown="startRec()" onmouseup="stopRec()">
+      <span id="rec-icon">🎙️</span>
+      <span id="rec-text">누르고 있으면 녹음돼요</span>
+    </button>
+    <div class="rec-hint" id="rec-hint">말하거나 노래해도 좋아요 🎵<br>자동으로 화음에 맞게 조정돼요</div>
+  </div>
+
+  <button class="clear-btn" onclick="confirmClear()">🗑 처음부터 다시 시작하기</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const AVATARS=['🐶','🐱','🐼','🐰','🐸','🐧','🦊','🐻','🐨','🐯','🦁','🐮','🐷','🐙','🦋','🐢','🦄','🐳','🦖','🐝'];
+
+// 화음: 유니즌, 장3도, 완전5도, 옥타브, 단3도, 장6도
+const HARMONY=[
+  {ratio:1.0,     name:'기준음',   desc:'첫 번째 목소리예요',  color:'#E05555'},
+  {ratio:1.2599,  name:'장3도↑',   desc:'기준음보다 높아요',   color:'#4D96FF'},
+  {ratio:1.4983,  name:'완전5도↑', desc:'풍성한 화음이에요',   color:'#6BCB77'},
+  {ratio:2.0,     name:'옥타브↑',  desc:'한 옥타브 높아요',    color:'#C77DFF'},
+  {ratio:0.7937,  name:'장3도↓',   desc:'기준음보다 낮아요',   color:'#FFD93D'},
+  {ratio:0.6674,  name:'완전5도↓', desc:'깊은 베이스예요',     color:'#FF8C69'},
+];
+
+let myNickname='';
+let myAvatar='🐶';
+let audioCtx=null;
+let mediaRec=null,recChunks=[],isRec=false;
+let currentStream=null;
+let layers=[];
+let isPlaying=false;
+let playTimeout=null;
+let channel=null;
+
+function getAudioCtx(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function rerollAvatar(){
+  myAvatar=AVATARS[Math.floor(Math.random()*AVATARS.length)];
+  document.getElementById('nick-avatar').textContent=myAvatar;
+}
+rerollAvatar();
+
+function enterMain(){
+  const nick=document.getElementById('nick-input').value.trim();
+  if(!nick){alert('이름을 입력해줘요!');return;}
+  myNickname=nick;
+  document.getElementById('screen-nick').style.display='none';
+  document.getElementById('screen-main').style.display='block';
+  loadLayers();
+  setupChannel();
+  setInterval(loadLayers,10000);
+}
+
+/* ── 레이어 불러오기 ── */
+async function loadLayers(){
+  const{data}=await sb.from('acapella_layers').select('*').order('created_at',{ascending:true}).limit(6);
+  if(!data)return;
+  layers=data;
+  renderScore();
+  updateHarmonyPreview();
+}
+
+function renderScore(){
+  const el=document.getElementById('score-tracks');
+  if(!layers.length){
+    el.innerHTML='<div class="score-empty">아직 목소리가 없어요<br>첫 번째로 녹음해봐요! 🎙️</div>';
+    return;
+  }
+  el.innerHTML=layers.map((l,i)=>{
+    const h=HARMONY[l.harmony_idx]||HARMONY[0];
+    const w=Math.max(30,Math.min(100,40+i*10));
+    return `<div class="score-track">
+      <div class="track-avatar">${l.avatar}</div>
+      <div class="track-bar-wrap">
+        <div class="track-bar" style="background:linear-gradient(135deg,${h.color},${h.color}bb);width:${w}%">
+          ${l.nickname}
+        </div>
+      </div>
+      <div class="track-harmony">${h.name}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateHarmonyPreview(){
+  const idx=layers.length%HARMONY.length;
+  const h=HARMONY[idx];
+  document.getElementById('harmony-dot').style.background=h.color;
+  document.getElementById('harmony-name').textContent=h.name;
+  document.getElementById('harmony-desc').textContent=h.desc;
+  document.getElementById('harmony-preview').style.borderLeft=`4px solid ${h.color}`;
+}
+
+/* ── 녹음 ── */
+function startRec(){
+  if(isRec)return;
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    currentStream=stream;
+    mediaRec=new MediaRecorder(stream);recChunks=[];
+    mediaRec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};
+    mediaRec.onstop=()=>{
+      if(currentStream){currentStream.getTracks().forEach(t=>t.stop());currentStream=null;}
+      if(!recChunks.length)return;
+      const blob=new Blob(recChunks,{type:'audio/webm'});
+      recChunks=[];
+      processAndSave(blob);
+    };
+    mediaRec.start();isRec=true;
+    document.getElementById('rec-btn').classList.add('recording');
+    document.getElementById('rec-icon').textContent='⏹';
+    document.getElementById('rec-text').textContent='녹음 중... 손 떼면 완료!';
+    document.getElementById('rec-hint').textContent='지금 말하거나 노래해요 🎵';
+  }).catch(()=>{alert('마이크 권한이 필요해요!');resetRecBtn();});
+}
+
+function stopRec(){
+  if(!isRec)return;
+  isRec=false;
+  if(mediaRec&&mediaRec.state==='recording'){try{mediaRec.stop();}catch(e){}}
+  resetRecBtn();
+}
+
+function resetRecBtn(){
+  isRec=false;
+  document.getElementById('rec-btn').classList.remove('recording');
+  document.getElementById('rec-icon').textContent='🎙️';
+  document.getElementById('rec-text').textContent='누르고 있으면 녹음돼요';
+  document.getElementById('rec-hint').textContent='말하거나 노래해도 좋아요 🎵
+자동으로 화음에 맞게 조정돼요';
+}
+
+async function processAndSave(blob){
+  document.getElementById('play-status').textContent='처리 중... ✨';
+  const actx=getAudioCtx();
+  const arrayBuf=await blob.arrayBuffer();
+  let audioBuf;
+  try{audioBuf=await actx.decodeAudioData(arrayBuf);}catch(e){alert('녹음 처리 실패');return;}
+
+  const harmonyIdx=layers.length%HARMONY.length;
+  const ratio=HARMONY[harmonyIdx].ratio;
+
+  // 피치 시프트
+  const shiftedBuf=pitchShift(audioBuf,ratio,actx);
+
+  // 미리 재생
+  playBuffer(shiftedBuf,actx);
+
+  // WAV 변환 후 저장
+  const wavBlob=bufferToWav(shiftedBuf);
+  const b64=await blobToB64(wavBlob);
+
+  const{error}=await sb.from('acapella_layers').insert([{
+    nickname:myNickname,avatar:myAvatar,harmony_idx:harmonyIdx,audio_b64:b64
+  }]);
+  if(error){alert('저장 실패: '+error.message);return;}
+
+  document.getElementById('play-status').textContent='추가됐어요! 🎉';
+  setTimeout(()=>document.getElementById('play-status').textContent='모두 함께 재생해요 🎼',2000);
+
+  // 다른 사람에게 알림
+  if(channel)channel.send({type:'broadcast',event:'new_layer',payload:{nickname:myNickname,avatar:myAvatar,harmony_idx:harmonyIdx}});
+
+  loadLayers();
+}
+
+/* ── 피치 시프트 ── */
+function pitchShift(buf,ratio,actx){
+  const sr=buf.sampleRate,ch=buf.numberOfChannels,len=buf.length;
+  const newLen=Math.floor(len/ratio);
+  const out=actx.createBuffer(ch,newLen,sr);
+  for(let c=0;c<ch;c++){
+    const inp=buf.getChannelData(c);
+    const outp=out.getChannelData(c);
+    for(let i=0;i<newLen;i++){
+      const srcIdx=i*ratio;
+      const lo=Math.floor(srcIdx);const hi=Math.min(lo+1,len-1);
+      const frac=srcIdx-lo;
+      outp[i]=(inp[lo]||0)*(1-frac)+(inp[hi]||0)*frac;
+    }
+  }
+  return out;
+}
+
+/* ── 재생 ── */
+function playBuffer(buf,actx){
+  const src=actx.createBufferSource();
+  const gain=actx.createGain();gain.gain.value=0.75;
+  src.buffer=buf;src.connect(gain);gain.connect(actx.destination);
+  src.start();
+}
+
+async function togglePlay(){
+  if(isPlaying){
+    isPlaying=false;if(playTimeout)clearTimeout(playTimeout);
+    document.getElementById('play-btn').textContent='▶ 아카펠라 재생';
+    document.getElementById('play-btn').classList.remove('playing');
+    document.getElementById('play-status').textContent='모두 함께 재생해요 🎼';
+    document.getElementById('play-progress-fill').style.width='0%';
+    // 트랙 바 애니메이션 제거
+    document.querySelectorAll('.track-bar').forEach(b=>b.classList.remove('playing'));
+    return;
+  }
+  if(!layers.length){alert('아직 목소리가 없어요! 먼저 녹음해봐요 🎙️');return;}
+  isPlaying=true;
+  document.getElementById('play-btn').textContent='⏹ 멈추기';
+  document.getElementById('play-btn').classList.add('playing');
+
+  const actx=getAudioCtx();
+  const maxDur=3; // 진행 바용 예상 시간
+  let startTime=Date.now();
+
+  // 모든 트랙 동시 재생
+  let longestDur=0;
+  for(let i=0;i<layers.length;i++){
+    const l=layers[i];
+    if(!l.audio_b64)continue;
+    try{
+      const binary=atob(l.audio_b64);
+      const ab=new ArrayBuffer(binary.length);
+      const view=new Uint8Array(ab);
+      for(let j=0;j<binary.length;j++)view[j]=binary.charCodeAt(j);
+      const buf=await actx.decodeAudioData(ab);
+      if(buf.duration>longestDur)longestDur=buf.duration;
+      playBuffer(buf,actx);
+      // 트랙 바 애니메이션
+      const trackBar=document.querySelector(`#score-tracks .score-track:nth-child(${i+1}) .track-bar`);
+      if(trackBar)trackBar.classList.add('playing');
+    }catch(e){console.log(e);}
+  }
+
+  document.getElementById('play-status').textContent='🎵 재생 중...';
+
+  // 프로그레스 바
+  const dur=longestDur||5;
+  const tick=()=>{
+    if(!isPlaying)return;
+    const elapsed=(Date.now()-startTime)/1000;
+    const pct=Math.min(elapsed/dur*100,100);
+    document.getElementById('play-progress-fill').style.width=pct+'%';
+    if(pct<100)playTimeout=setTimeout(tick,100);
+    else{
+      isPlaying=false;
+      document.getElementById('play-btn').textContent='▶ 아카펠라 재생';
+      document.getElementById('play-btn').classList.remove('playing');
+      document.getElementById('play-status').textContent='🎉 재생 완료!';
+      document.getElementById('play-progress-fill').style.width='0%';
+      document.querySelectorAll('.track-bar').forEach(b=>b.classList.remove('playing'));
+      setTimeout(()=>document.getElementById('play-status').textContent='모두 함께 재생해요 🎼',2000);
+    }
+  };
+  tick();
+}
+
+/* ── 초기화 ── */
+async function confirmClear(){
+  if(!confirm('모든 목소리를 지울까요?'))return;
+  await sb.from('acapella_layers').delete().neq('id',0);
+  layers=[];renderScore();updateHarmonyPreview();
+  document.getElementById('play-status').textContent='모두 함께 재생해요 🎼';
+  if(channel)channel.send({type:'broadcast',event:'cleared',payload:{}});
+}
+
+/* ── 실시간 ── */
+function setupChannel(){
+  channel=sb.channel('acapella-rt',{config:{broadcast:{self:false}}});
+  channel
+    .on('broadcast',{event:'new_layer'},(payload)=>{
+      const{nickname,harmony_idx}=payload.payload;
+      const h=HARMONY[harmony_idx]||HARMONY[0];
+      document.getElementById('play-status').textContent=`${nickname}이 ${h.name} 추가! 🎵`;
+      setTimeout(loadLayers,500);
+    })
+    .on('broadcast',{event:'cleared'},()=>{
+      layers=[];renderScore();updateHarmonyPreview();
+    })
+    .subscribe();
+}
+
+/* ── 유틸 ── */
+function bufferToWav(buf){
+  const sr=buf.sampleRate,len=buf.length,ch=buf.numberOfChannels;
+  const wavLen=44+len*ch*2;const ab=new ArrayBuffer(wavLen);const view=new DataView(ab);
+  function ws(o,s){for(let i=0;i<s.length;i++)view.setUint8(o+i,s.charCodeAt(i));}
+  ws(0,'RIFF');view.setUint32(4,wavLen-8,true);ws(8,'WAVE');
+  ws(12,'fmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);
+  view.setUint16(22,ch,true);view.setUint32(24,sr,true);
+  view.setUint32(28,sr*ch*2,true);view.setUint16(32,ch*2,true);
+  view.setUint16(34,16,true);ws(36,'data');view.setUint32(40,len*ch*2,true);
+  let offset=44;
+  for(let i=0;i<len;i++){for(let c=0;c<ch;c++){
+    const s=Math.max(-1,Math.min(1,buf.getChannelData(c)[i]));
+    view.setInt16(offset,s<0?s*0x8000:s*0x7FFF,true);offset+=2;
+  }}
+  return new Blob([ab],{type:'audio/wav'});
+}
+
+function blobToB64(blob){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(',')[1]);
+    r.readAsDataURL(blob);
+  });
+}
+</script>
+</body>
+</html>
