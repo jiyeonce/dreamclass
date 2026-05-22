@@ -141,10 +141,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
       <button class="effect-btn" onclick="selectEffect('echo',this)">🌊 에코</button>
       <button class="effect-btn" onclick="selectEffect('deep',this)">👻 으스스</button>
       <button class="effect-btn" onclick="selectEffect('alien',this)">👽 외계인</button>
-      <button class="effect-btn" onclick="selectEffect('autotune',this)">🎵 오토튠</button>
-      <button class="effect-btn" onclick="selectEffect('harmony',this)">🎼 화음</button>
-      <button class="effect-btn" onclick="selectEffect('vibrato',this)">🎤 비브라토</button>
-      <button class="effect-btn" onclick="selectEffect('melody',this)">🎹 멜로디</button>
     </div>
   </div>
 
@@ -170,7 +166,7 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const AVATARS=['🐶','🐱','🐼','🐰','🐸','🐧','🦊','🐻','🐨','🐯','🦁','🐮','🐷','🐙','🦋','🐢','🦄','🐳','🦖','🐝'];
-const EFFECT_NAMES={normal:'그냥',squirrel:'다람쥐',robot:'로봇',echo:'에코',deep:'으스스',alien:'외계인',autotune:'오토튠',harmony:'화음',vibrato:'비브라토',melody:'멜로디'};
+const EFFECT_NAMES={normal:'그냥',squirrel:'다람쥐',robot:'로봇',echo:'에코',deep:'으스스',alien:'외계인'};
 
 let myNickname='';
 let myAvatar=AVATARS[0];
