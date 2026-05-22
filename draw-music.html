@@ -54,7 +54,19 @@ canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8
 .play-btn.playing{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse 1s infinite}
 .clear-btn{background:#fff;border:1.5px solid rgba(200,160,140,.3)!important;color:var(--text-mid);max-width:60px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
-.sticker-box{background:#fff;border-radius:16px;padding:.8rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:.8rem}
+/* 전체 삭제 동의 팝업 */
+#clear-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(20,10,5,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem}
+#clear-overlay.show{display:flex}
+.clear-box{background:#fff;border-radius:24px;padding:2rem 1.5rem;text-align:center;max-width:300px;width:100%}
+.clear-box-emoji{font-size:44px;margin-bottom:.8rem}
+.clear-box-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.4rem}
+.clear-box-sub{font-size:12px;color:var(--text-light);margin-bottom:1rem;line-height:1.7}
+.clear-votes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
+.vote-chip{background:var(--cream);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--text-mid);border:1.5px solid rgba(200,160,140,.2)}
+.vote-chip.agree{background:#D4E8D0;border-color:#6BCB77;color:#2d7a3a}
+.clear-btn-row{display:flex;gap:8px}
+.clear-agree-btn{flex:1;background:linear-gradient(135deg,#FF8080,var(--pink));color:#fff;border:none;border-radius:12px;padding:12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:44px}
+.clear-cancel-btn{flex:1;background:#fff;border:1.5px solid rgba(200,160,140,.3);border-radius:12px;padding:12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;color:var(--text-mid);cursor:pointer;min-height:44px}
 .sticker-label{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.6rem;text-transform:uppercase}
 .sticker-row{display:flex;flex-wrap:wrap;gap:6px}
 .sticker-btn{width:38px;height:38px;border-radius:10px;border:1.5px solid rgba(200,160,140,.2);background:var(--cream);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
@@ -142,6 +154,20 @@ canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8
   <div class="controls">
     <button class="ctrl-btn play-btn" id="play-btn" onclick="togglePlay()">▶ 음악으로 재생</button>
     <button class="ctrl-btn clear-btn" onclick="confirmClear()">🗑</button>
+  </div>
+</div>
+
+<!-- 전체 삭제 동의 팝업 -->
+<div id="clear-overlay">
+  <div class="clear-box">
+    <div class="clear-box-emoji">🗑️</div>
+    <div class="clear-box-title" id="clear-box-title">전체 지울까요?</div>
+    <div class="clear-box-sub" id="clear-box-sub">모든 그림이 지워져요.<br>다같이 동의하면 지워져요!</div>
+    <div class="clear-votes" id="clear-votes"></div>
+    <div class="clear-btn-row">
+      <button class="clear-agree-btn" id="clear-agree-btn" onclick="voteAgree()">✓ 동의해요</button>
+      <button class="clear-cancel-btn" onclick="voteCancel()">✕ 취소</button>
+    </div>
   </div>
 </div>
 
@@ -345,6 +371,30 @@ function setupBroadcast(){
       drawStickerOnCanvas(ctx,nx,ny,emoji,nickname,canvas.width,canvas.height);
     })
     .on('broadcast',{event:'reload'},()=>{loadCanvas();})
+    .on('broadcast',{event:'clear_request'},async(payload)=>{
+      const{requester}=payload.payload;
+      clearVotes=new Set([requester]);clearRequester=requester;
+      const since=new Date(Date.now()-30000).toISOString();
+      const{data}=await sb.from('online_users').select('nickname').gte('last_seen',since);
+      showClearOverlay(data?data.map(u=>u.nickname):[requester]);
+    })
+    .on('broadcast',{event:'clear_vote'},async(payload)=>{
+      const{nickname}=payload.payload;
+      clearVotes.add(nickname);
+      const since=new Date(Date.now()-30000).toISOString();
+      const{data}=await sb.from('online_users').select('nickname').gte('last_seen',since);
+      const users=data?data.map(u=>u.nickname):[];
+      renderClearVotes(users);
+      if(clearVotes.has(myNickname))checkAllAgreed(users);
+    })
+    .on('broadcast',{event:'clear_cancel'},()=>{
+      clearVotes=new Set();
+      document.getElementById('clear-overlay').classList.remove('show');
+    })
+    .on('broadcast',{event:'clear_execute'},async()=>{
+      document.getElementById('clear-overlay').classList.remove('show');
+      await doFullClear();
+    })
     .subscribe();
 }
 
@@ -636,13 +686,79 @@ async function togglePlay(){
   step();
 }
 
+/* ── 전체 삭제 동의 ── */
+let clearVotes=new Set();
+let clearRequester='';
+let onlineCount=1;
+
 async function confirmClear(){
-  if(!confirm('내 그림을 지울까요?'))return;
-  await sb.from('shared_canvas').delete().eq('nickname',myNickname);
-  await sb.from('canvas_stamps').delete().eq('nickname',myNickname);
-  await sb.from('canvas_stickers').delete().eq('nickname',myNickname);
+  // 현재 온라인 인원 확인
+  const since=new Date(Date.now()-30000).toISOString();
+  const{data}=await sb.from('online_users').select('nickname').gte('last_seen',since);
+  onlineCount=data?data.length:1;
+
+  if(onlineCount<=1){
+    // 혼자면 그냥 지우기
+    if(!confirm('내 그림을 지울까요?'))return;
+    await doFullClear();
+    return;
+  }
+  // 여러 명이면 동의 요청 broadcast
+  clearVotes=new Set([myNickname]);
+  clearRequester=myNickname;
+  broadcastChannel.send({type:'broadcast',event:'clear_request',payload:{requester:myNickname}});
+  showClearOverlay(data.map(u=>u.nickname));
+}
+
+function showClearOverlay(users){
+  document.getElementById('clear-box-title').textContent='전체 지울까요?';
+  document.getElementById('clear-box-sub').textContent='모든 그림이 지워져요.\n다같이 동의하면 지워져요!';
+  document.getElementById('clear-agree-btn').style.display='block';
+  renderClearVotes(users);
+  document.getElementById('clear-overlay').classList.add('show');
+}
+
+function renderClearVotes(users){
+  const el=document.getElementById('clear-votes');
+  if(!users)return;
+  el.innerHTML=users.map(u=>`
+    <div class="vote-chip${clearVotes.has(u)?' agree':''}">
+      ${clearVotes.has(u)?'✓':''} ${u}${u===myNickname?' (나)':''}
+    </div>`).join('');
+}
+
+async function voteAgree(){
+  clearVotes.add(myNickname);
+  document.getElementById('clear-agree-btn').style.display='none';
+  broadcastChannel.send({type:'broadcast',event:'clear_vote',payload:{nickname:myNickname,agree:true}});
+  // 온라인 인원 재확인
+  const since=new Date(Date.now()-30000).toISOString();
+  const{data}=await sb.from('online_users').select('nickname').gte('last_seen',since);
+  const users=data?data.map(u=>u.nickname):[];
+  renderClearVotes(users);
+  checkAllAgreed(users);
+}
+
+function voteCancel(){
+  clearVotes=new Set();
+  document.getElementById('clear-overlay').classList.remove('show');
+  broadcastChannel.send({type:'broadcast',event:'clear_cancel',payload:{nickname:myNickname}});
+}
+
+async function checkAllAgreed(users){
+  const allAgreed=users.every(u=>clearVotes.has(u));
+  if(allAgreed){
+    document.getElementById('clear-overlay').classList.remove('show');
+    await doFullClear();
+    broadcastChannel.send({type:'broadcast',event:'clear_execute',payload:{}});
+  }
+}
+
+async function doFullClear(){
+  await sb.from('shared_canvas').delete().neq('id',0);
+  await sb.from('canvas_stamps').delete().neq('id',0);
+  await sb.from('canvas_stickers').delete().neq('id',0);
   loadCanvas();
-  if(broadcastChannel)broadcastChannel.send({type:'broadcast',event:'reload',payload:{}});
 }
 
 /* ── 온라인 참여자 ── */
