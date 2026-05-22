@@ -8,14 +8,12 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;overflow-x:hidden}
-:root{--cream:#FFF8F0;--peach:#FFE4CC;--pink:#C97B7B;--pink-light:#E8A89A;--pink-pale:#FFD6E8;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
+:root{--cream:#FFF8F0;--peach:#FFE4CC;--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh}
 .header{background:linear-gradient(135deg,#FFE4CC 0%,#FFD6E8 100%);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative}
 .back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.65);border:1px solid rgba(200,160,140,.3);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
 .header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
 .header-sub{font-size:11px;color:var(--text-light)}
-
-/* 닉네임 */
 #screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
 .nick-card{background:#fff;border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(200,160,140,.15);text-align:center}
 .nick-emoji{font-size:44px;margin-bottom:.8rem}
@@ -24,17 +22,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .nick-field{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--text-dark);background:var(--cream);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
 .nick-field:focus{border-color:rgba(201,123,123,.5)}
 .nick-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
-
-/* 메인 */
 #screen-main{display:none;padding:1rem;max-width:480px;margin:0 auto;padding-bottom:120px}
-
-/* 범례 */
+.online-box{background:#fff;border-radius:14px;padding:.8rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:.8rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.online-dot{width:8px;height:8px;border-radius:50%;background:#6BCB77;flex-shrink:0;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.online-name{font-size:12px;font-weight:500;color:var(--text-dark)}
+.online-me{color:var(--teal)}
 .legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.8rem;background:#fff;border-radius:14px;padding:.8rem;border:1.5px solid rgba(200,160,140,.15)}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-mid)}
 .legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
 .legend-hint{font-size:10px;color:var(--text-light);width:100%;margin-top:4px}
-
-/* 캔버스 */
 .canvas-wrap{border-radius:18px;overflow:hidden;border:2px solid rgba(200,160,140,.2);margin-bottom:.8rem;position:relative}
 .canvas-tools{display:flex;gap:6px;padding:8px 10px;background:linear-gradient(135deg,#FFF5F0,#FFF8FC);border-bottom:1px solid rgba(200,160,140,.15);flex-wrap:wrap;align-items:center}
 .color-btn{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0;transition:transform .15s}
@@ -42,16 +39,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .tool-btn{padding:4px 10px;border-radius:8px;border:1.5px solid rgba(200,160,140,.2);background:#fff;font-size:11px;font-weight:500;cursor:pointer;color:var(--pink);font-family:'Noto Sans KR',sans-serif}
 .tool-btn.active{background:#FFF0E8;border-color:var(--pink)}
 canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8}
-
-/* 음계 가이드 */
 .note-guide{position:absolute;right:0;top:36px;bottom:0;width:28px;display:flex;flex-direction:column;justify-content:space-between;padding:4px 2px;pointer-events:none;background:rgba(255,255,255,.7)}
 .note-label{font-size:8px;color:var(--text-light);text-align:center;font-weight:500}
-
-/* 이름표 버튼 */
+/* 커서 표시 */
+.remote-cursor{position:absolute;pointer-events:none;transition:left .05s,top .05s;z-index:10}
+.remote-cursor-dot{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.remote-cursor-name{font-size:9px;font-weight:600;color:#fff;background:rgba(0,0,0,.5);border-radius:6px;padding:1px 5px;margin-top:2px;white-space:nowrap}
 .stamp-btn{width:100%;background:linear-gradient(135deg,#FFD93D,#FFA500);color:#7a4a00;border:none;border-radius:12px;padding:12px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:600;cursor:pointer;min-height:44px;margin-bottom:.6rem}
 .stamp-btn:active{transform:scale(.97)}
-
-/* 컨트롤 */
 .controls{display:flex;gap:8px;margin-bottom:1rem}
 .ctrl-btn{flex:1;border:none;border-radius:12px;padding:12px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:44px}
 .ctrl-btn:active{transform:scale(.97)}
@@ -59,28 +54,18 @@ canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8
 .play-btn.playing{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse 1s infinite}
 .clear-btn{background:#fff;border:1.5px solid rgba(200,160,140,.3)!important;color:var(--text-mid);max-width:60px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
-
-/* 이름표 목록 */
 .stamps-box{background:#fff;border-radius:18px;padding:1rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:1rem}
 .stamps-label{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.8rem;text-transform:uppercase}
 .stamp-item{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500;margin:3px;color:#fff}
-
-/* 온라인 참여자 */
-.online-box{background:#fff;border-radius:14px;padding:.8rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:.8rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.online-dot{width:8px;height:8px;border-radius:50%;background:#6BCB77;flex-shrink:0}
-.online-name{font-size:12px;font-weight:500;color:var(--text-dark)}
-.online-me{color:var(--teal)}
 </style>
 </head>
 <body>
-
 <div class="header">
   <a class="back" href="index.html">← 돌아가기</a>
   <div class="header-title">🎨 함께 그리는 노래</div>
   <div class="header-sub">다 같이 그리면 음악이 돼요!</div>
 </div>
 
-<!-- 닉네임 -->
 <div id="screen-nick">
   <div style="height:.5rem"></div>
   <div class="nick-card">
@@ -92,16 +77,12 @@ canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8
   </div>
 </div>
 
-<!-- 메인 -->
 <div id="screen-main">
-  <!-- 온라인 참여자 -->
   <div class="online-box" id="online-box">
     <div class="online-dot"></div>
     <span style="font-size:11px;color:var(--text-light)">지금 함께:</span>
     <div id="online-names"></div>
   </div>
-
-  <!-- 범례 -->
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:#E05555"></div>피아노</div>
     <div class="legend-item"><div class="legend-dot" style="background:#4D96FF"></div>실로폰</div>
@@ -110,8 +91,6 @@ canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8
     <div class="legend-item"><div class="legend-dot" style="background:#FFD93D"></div>트럼펫</div>
     <div class="legend-hint">↑ 위로 그릴수록 높은 음 · 아래로 그릴수록 낮은 음</div>
   </div>
-
-  <!-- 캔버스 -->
   <div class="canvas-wrap" id="canvas-wrap">
     <div class="canvas-tools">
       <div class="color-btn active" style="background:#E05555" onclick="setColor('#E05555',this)"></div>
@@ -134,17 +113,11 @@ canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8
       <div class="note-label">도</div>
     </div>
   </div>
-
-  <!-- 이름표 찍기 -->
   <button class="stamp-btn" onclick="stampName()">🏷️ 여기에 내 이름표 찍기</button>
-
-  <!-- 컨트롤 -->
   <div class="controls">
     <button class="ctrl-btn play-btn" id="play-btn" onclick="togglePlay()">▶ 음악으로 재생</button>
     <button class="ctrl-btn clear-btn" onclick="confirmClear()">🗑</button>
   </div>
-
-  <!-- 이름표 목록 -->
   <div class="stamps-box">
     <div class="stamps-label">🏷️ 함께 그린 친구들</div>
     <div id="stamps-list"><span style="font-size:12px;color:var(--text-light)">아직 이름표가 없어요</span></div>
@@ -163,9 +136,9 @@ const NAME_COLORS=['#E05555','#4D96FF','#6BCB77','#C77DFF','#FFD93D','#FF8C69','
 let myNickname='';
 let tool='pen',color='#E05555',brushSize=6,isDrawing=false;
 let audioCtx=null,isPlaying=false,playTimeout=null;
-let strokeBuffer=[];
-let syncInterval=null;
-let onlineUsers=new Set();
+let broadcastChannel=null;
+let remoteCursors={};
+let lastBroadcast=0;
 
 function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
 
@@ -178,39 +151,78 @@ function enterMain(){
   initCanvas();
   loadCanvas();
   loadStamps();
-  subscribeCanvas();
+  setupBroadcast();
   registerOnline();
   setInterval(registerOnline,15000);
   setInterval(loadOnline,8000);
 }
 
-/* ── 캔버스 초기화 ── */
+/* ── 캔버스 ── */
 let canvasInited=false;
 function initCanvas(){
   if(canvasInited)return;canvasInited=true;
   const canvas=document.getElementById('draw-canvas');
   const ctx=canvas.getContext('2d');
   function resize(){
-    const imgData=canvas.width>0?ctx.getImageData(0,0,canvas.width,canvas.height):null;
     const w=canvas.parentElement.clientWidth;
+    const oldW=canvas.width,oldH=canvas.height;
+    let imgData=null;
+    if(oldW>0&&oldH>0){try{imgData=ctx.getImageData(0,0,oldW,oldH);}catch(e){}}
     canvas.width=w;canvas.height=Math.round(w*.65);
     ctx.fillStyle='#FFFDF8';ctx.fillRect(0,0,canvas.width,canvas.height);
     if(imgData)ctx.putImageData(imgData,0,0);
   }
   resize();
-  function pos(e){const r=canvas.getBoundingClientRect();const src=e.touches?e.touches[0]:e;return{x:(src.clientX-r.left)*(canvas.width/r.width),y:(src.clientY-r.top)*(canvas.height/r.height)};}
+
+  function pos(e){
+    const r=canvas.getBoundingClientRect();
+    const src=e.touches?e.touches[0]:e;
+    return{
+      x:(src.clientX-r.left)*(canvas.width/r.width),
+      y:(src.clientY-r.top)*(canvas.height/r.height),
+      nx:(src.clientX-r.left)/r.width,
+      ny:(src.clientY-r.top)/r.height
+    };
+  }
+
   let strokePoints=[];
-  canvas.addEventListener('mousedown',e=>{isDrawing=true;strokePoints=[];const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);strokePoints.push(p);});
-  canvas.addEventListener('mousemove',e=>{if(!isDrawing)return;const p=pos(e);drawLine(ctx,p);strokePoints.push(p);});
-  canvas.addEventListener('mouseup',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);}});
-  canvas.addEventListener('mouseleave',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);}});
-  canvas.addEventListener('touchstart',e=>{e.preventDefault();isDrawing=true;strokePoints=[];const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);strokePoints.push(p);},{passive:false});
-  canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!isDrawing)return;const p=pos(e);drawLine(ctx,p);strokePoints.push(p);},{passive:false});
-  canvas.addEventListener('touchend',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);}});
+  let lastPoint=null;
+
+  canvas.addEventListener('mousedown',e=>{
+    isDrawing=true;strokePoints=[];
+    const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);
+    lastPoint=p;strokePoints.push({x:p.nx,y:p.ny});
+    broadcastDraw('start',p);
+  });
+  canvas.addEventListener('mousemove',e=>{
+    if(!isDrawing)return;
+    const p=pos(e);
+    drawSegment(ctx,lastPoint,p);
+    lastPoint=p;strokePoints.push({x:p.nx,y:p.ny});
+    broadcastDraw('move',p);
+  });
+  canvas.addEventListener('mouseup',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);broadcastDraw('end',null);}});
+  canvas.addEventListener('mouseleave',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);broadcastDraw('end',null);}});
+
+  canvas.addEventListener('touchstart',e=>{
+    e.preventDefault();isDrawing=true;strokePoints=[];
+    const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);
+    lastPoint=p;strokePoints.push({x:p.nx,y:p.ny});
+    broadcastDraw('start',p);
+  },{passive:false});
+  canvas.addEventListener('touchmove',e=>{
+    e.preventDefault();if(!isDrawing)return;
+    const p=pos(e);
+    drawSegment(ctx,lastPoint,p);
+    lastPoint=p;strokePoints.push({x:p.nx,y:p.ny});
+    broadcastDraw('move',p);
+  },{passive:false});
+  canvas.addEventListener('touchend',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);broadcastDraw('end',null);}});
 }
 
-function drawLine(ctx,p){
-  ctx.lineTo(p.x,p.y);
+function drawSegment(ctx,from,to){
+  if(!from||!to)return;
+  ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.lineTo(to.x,to.y);
   ctx.strokeStyle=tool==='eraser'?'#FFFDF8':color;
   ctx.lineWidth=tool==='eraser'?brushSize*3:brushSize;
   ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
@@ -219,17 +231,96 @@ function drawLine(ctx,p){
 function setColor(c,el){color=c;document.querySelectorAll('.color-btn').forEach(d=>d.classList.remove('active'));el.classList.add('active');if(tool==='eraser')setTool('pen');}
 function setTool(t){tool=t;document.getElementById('pen-btn').classList.toggle('active',t==='pen');document.getElementById('eraser-btn').classList.toggle('active',t==='eraser');}
 
-/* ── 스트로크 저장/불러오기 ── */
+/* ── Broadcast 실시간 ── */
+function setupBroadcast(){
+  broadcastChannel=sb.channel('draw-realtime',{config:{broadcast:{self:false}}});
+
+  broadcastChannel
+    .on('broadcast',{event:'draw'},(payload)=>{
+      const{nickname,action,nx,ny,color:c,brushSize:bs,tool:t}=payload.payload;
+      handleRemoteDraw(nickname,action,nx,ny,c,bs,t);
+    })
+    .on('broadcast',{event:'cursor'},(payload)=>{
+      const{nickname,nx,ny}=payload.payload;
+      updateRemoteCursor(nickname,nx,ny);
+    })
+    .subscribe();
+}
+
+// 원격 드로잉 상태
+const remoteDrawState={};
+
+function handleRemoteDraw(nickname,action,nx,ny,c,bs,t){
+  const canvas=document.getElementById('draw-canvas');
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h=canvas.height;
+  const x=nx*w,y=ny*h;
+
+  if(!remoteDrawState[nickname])remoteDrawState[nickname]={lastPoint:null};
+  const state=remoteDrawState[nickname];
+
+  if(action==='start'){
+    state.lastPoint={x,y};state.color=c;state.brushSize=bs;state.tool=t;
+  }else if(action==='move'&&state.lastPoint){
+    ctx.beginPath();ctx.moveTo(state.lastPoint.x,state.lastPoint.y);ctx.lineTo(x,y);
+    ctx.strokeStyle=t==='eraser'?'#FFFDF8':c;
+    ctx.lineWidth=t==='eraser'?bs*3:bs;
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+    state.lastPoint={x,y};
+    updateRemoteCursor(nickname,nx,ny);
+  }else if(action==='end'){
+    state.lastPoint=null;
+    hideRemoteCursor(nickname);
+  }
+}
+
+function broadcastDraw(action,p){
+  if(!broadcastChannel)return;
+  const now=Date.now();
+  if(action==='move'&&now-lastBroadcast<30)return; // 30ms 쓰로틀
+  lastBroadcast=now;
+  broadcastChannel.send({type:'broadcast',event:'draw',payload:{
+    nickname:myNickname,action,
+    nx:p?p.nx:null,ny:p?p.ny:null,
+    color,brushSize,tool
+  }});
+}
+
+/* ── 원격 커서 ── */
+function updateRemoteCursor(nickname,nx,ny){
+  const wrap=document.getElementById('canvas-wrap');
+  const canvas=document.getElementById('draw-canvas');
+  const rect=canvas.getBoundingClientRect();
+  let cursor=document.getElementById('cursor-'+nickname);
+  if(!cursor){
+    cursor=document.createElement('div');
+    cursor.className='remote-cursor';
+    cursor.id='cursor-'+nickname;
+    const names=[...Object.keys(remoteCursors),nickname];
+    const colorIdx=names.indexOf(nickname)%NAME_COLORS.length;
+    cursor.innerHTML=`<div class="remote-cursor-dot" style="background:${NAME_COLORS[colorIdx]}"></div><div class="remote-cursor-name" style="background:${NAME_COLORS[colorIdx]}">${nickname}</div>`;
+    wrap.appendChild(cursor);
+  }
+  remoteCursors[nickname]=true;
+  const x=nx*canvas.offsetWidth;
+  const y=ny*canvas.offsetHeight+36; // 툴바 높이
+  cursor.style.left=x+'px';cursor.style.top=y+'px';cursor.style.display='block';
+}
+
+function hideRemoteCursor(nickname){
+  const cursor=document.getElementById('cursor-'+nickname);
+  if(cursor)cursor.style.display='none';
+  setTimeout(()=>{if(cursor)cursor.style.display='none';},500);
+}
+
+/* ── DB 저장/불러오기 ── */
 async function saveStroke(points){
   if(!points.length)return;
-  const canvas=document.getElementById('draw-canvas');
-  const w=canvas.width,h=canvas.height;
-  const normPoints=points.map(p=>({x:p.x/w,y:p.y/h}));
   await sb.from('shared_canvas').insert([{
     nickname:myNickname,
     color:tool==='eraser'?'eraser':color,
     brush_size:brushSize,
-    points:JSON.stringify(normPoints)
+    points:JSON.stringify(points)
   }]);
 }
 
@@ -239,36 +330,22 @@ async function loadCanvas(){
   const canvas=document.getElementById('draw-canvas');
   const ctx=canvas.getContext('2d');
   ctx.fillStyle='#FFFDF8';ctx.fillRect(0,0,canvas.width,canvas.height);
-  data.forEach(s=>drawStroke(ctx,s,canvas.width,canvas.height));
-}
-
-function drawStroke(ctx,s,w,h){
-  const points=JSON.parse(s.points);
-  if(!points.length)return;
-  ctx.beginPath();
-  ctx.moveTo(points[0].x*w,points[0].y*h);
-  points.forEach(p=>ctx.lineTo(p.x*w,p.y*h));
-  ctx.strokeStyle=s.color==='eraser'?'#FFFDF8':s.color;
-  ctx.lineWidth=s.color==='eraser'?s.brush_size*3:s.brush_size;
-  ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
-}
-
-let lastStrokeId=0;
-function subscribeCanvas(){
-  sb.channel('canvas-rt')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'shared_canvas'},(payload)=>{
-      const canvas=document.getElementById('draw-canvas');
-      const ctx=canvas.getContext('2d');
-      drawStroke(ctx,payload.new,canvas.width,canvas.height);
-    })
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'canvas_stamps'},()=>{loadStamps();})
-    .subscribe();
+  data.forEach(s=>{
+    const points=JSON.parse(s.points);
+    if(!points.length)return;
+    const w=canvas.width,h=canvas.height;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x*w,points[0].y*h);
+    for(let i=1;i<points.length;i++)ctx.lineTo(points[i].x*w,points[i].y*h);
+    ctx.strokeStyle=s.color==='eraser'?'#FFFDF8':s.color;
+    ctx.lineWidth=s.color==='eraser'?s.brush_size*3:s.brush_size;
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+  });
 }
 
 /* ── 이름표 ── */
 async function stampName(){
-  const{error}=await sb.from('canvas_stamps').insert([{nickname:myNickname}]);
-  if(error){alert('이름표 저장 실패');return;}
+  await sb.from('canvas_stamps').insert([{nickname:myNickname}]);
   loadStamps();
 }
 
@@ -277,9 +354,8 @@ async function loadStamps(){
   if(!data)return;
   const el=document.getElementById('stamps-list');
   if(!data.length){el.innerHTML='<span style="font-size:12px;color:var(--text-light)">아직 이름표가 없어요</span>';return;}
-  // 닉네임별 색깔
   const names=[...new Set(data.map(s=>s.nickname))];
-  el.innerHTML=data.map((s,i)=>{
+  el.innerHTML=data.map(s=>{
     const colorIdx=names.indexOf(s.nickname)%NAME_COLORS.length;
     const time=new Date(s.created_at).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'});
     return `<span class="stamp-item" style="background:${NAME_COLORS[colorIdx]}">${s.nickname} <span style="opacity:.7;font-size:10px">${time}</span></span>`;
@@ -292,9 +368,7 @@ function canvasToNotes(){
   const ctx=canvas.getContext('2d');
   const w=canvas.width,h=canvas.height;
   const data=ctx.getImageData(0,0,w,h).data;
-  const COLS=32;
-  const slotW=w/COLS;
-  const notes=[];
+  const COLS=32;const slotW=w/COLS;const notes=[];
   for(let col=0;col<COLS;col++){
     const x0=Math.floor(col*slotW),x1=Math.floor((col+1)*slotW);
     const pixels=[];
@@ -302,7 +376,7 @@ function canvasToNotes(){
       for(let y=0;y<h;y++){
         const i=(y*w+x)*4;
         const r=data[i],g=data[i+1],b=data[i+2],a=data[i+3];
-        if(a>50&&!(r>250&&g>250&&b>240))pixels.push({x,y,r,g,b});
+        if(a>50&&!(r>250&&g>250&&b>240))pixels.push({y,r,g,b});
       }
     }
     if(pixels.length>0){
@@ -329,8 +403,7 @@ function playNote(freq,instrument,vol,duration,ctx){
   const osc=ctx.createOscillator();const gain=ctx.createGain();
   osc.connect(gain);gain.connect(ctx.destination);
   const waveforms={piano:'triangle',xylophone:'sine',guitar:'sawtooth',flute:'sine',trumpet:'square'};
-  osc.type=waveforms[instrument]||'sine';
-  osc.frequency.value=freq;
+  osc.type=waveforms[instrument]||'sine';osc.frequency.value=freq;
   gain.gain.setValueAtTime(0,ctx.currentTime);
   gain.gain.linearRampToValueAtTime(vol*.4,ctx.currentTime+.02);
   gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+duration*.9);
@@ -338,7 +411,11 @@ function playNote(freq,instrument,vol,duration,ctx){
 }
 
 function togglePlay(){
-  if(isPlaying){isPlaying=false;if(playTimeout)clearTimeout(playTimeout);document.getElementById('play-btn').textContent='▶ 음악으로 재생';document.getElementById('play-btn').classList.remove('playing');return;}
+  if(isPlaying){
+    isPlaying=false;if(playTimeout)clearTimeout(playTimeout);
+    document.getElementById('play-btn').textContent='▶ 음악으로 재생';
+    document.getElementById('play-btn').classList.remove('playing');return;
+  }
   const notes=canvasToNotes();
   if(!notes.some(n=>n!==null)){alert('먼저 그림을 그려줘요! 🎨');return;}
   isPlaying=true;
@@ -348,14 +425,16 @@ function togglePlay(){
   const BPM=120,beatDur=60/BPM/2;
   let i=0;
   function step(){
-    if(!isPlaying||i>=notes.length){isPlaying=false;document.getElementById('play-btn').textContent='▶ 음악으로 재생';document.getElementById('play-btn').classList.remove('playing');return;}
+    if(!isPlaying||i>=notes.length){
+      isPlaying=false;document.getElementById('play-btn').textContent='▶ 음악으로 재생';
+      document.getElementById('play-btn').classList.remove('playing');return;
+    }
     if(notes[i])playNote(notes[i].freq,notes[i].instrument,notes[i].vol,beatDur*1.2,ctx);
     i++;playTimeout=setTimeout(step,beatDur*1000);
   }
   step();
 }
 
-/* ── 캔버스 초기화 ── */
 async function confirmClear(){
   if(!confirm('캔버스를 초기화할까요? 모두에게 적용돼요!'))return;
   await sb.from('shared_canvas').delete().neq('id',0);
