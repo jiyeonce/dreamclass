@@ -171,9 +171,9 @@ function rerollAvatar(){
 rerollAvatar();
 
 function enterMain(){
-  const nick=document.getElementById('nick-input').value.trim();
-  if(!nick){alert('이름을 입력해줘요!');return;}
-  myNickname=nick;
+  const nickEl=document.getElementById('nick-input');
+  const nick=nickEl?nickEl.value.trim():'';
+  myNickname=nick||'익명';
   document.getElementById('screen-nick').style.display='none';
   document.getElementById('screen-main').style.display='block';
   loadLayers();
@@ -254,8 +254,7 @@ function resetRecBtn(){
   document.getElementById('rec-btn').classList.remove('recording');
   document.getElementById('rec-icon').textContent='🎙️';
   document.getElementById('rec-text').textContent='누르고 있으면 녹음돼요';
-  document.getElementById('rec-hint').textContent='말하거나 노래해도 좋아요 🎵
-자동으로 화음에 맞게 조정돼요';
+  document.getElementById('rec-hint').textContent='말하거나 노래해도 좋아요 🎵 자동으로 화음에 맞게 조정돼요';
 }
 
 async function processAndSave(blob){
