@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>아바타 떠들기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden}
+:root{--cream:#FFF8F0;--peach:#FFE4CC;--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh}
+
+.header{background:linear-gradient(135deg,#FFD6E8 0%,#D6E4FF 100%);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.65);border:1px solid rgba(200,160,140,.3);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
+.header-sub{font-size:11px;color:var(--text-light)}
+
+/* 닉네임 화면 */
+#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
+.nick-card{background:#fff;border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(200,160,140,.15);text-align:center}
+.nick-preview{font-size:72px;margin-bottom:.5rem;cursor:pointer;transition:transform .2s;display:block;line-height:1}
+.nick-preview:active{transform:scale(.9)}
+.nick-preview-hint{font-size:11px;color:var(--text-light);margin-bottom:1rem}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.3rem}
+.nick-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.8}
+.nick-field{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--text-dark);background:var(--cream);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-field:focus{border-color:rgba(201,123,123,.5)}
+.start-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+.start-btn:active{transform:scale(.98)}
+
+/* 메인 */
+#screen-main{display:none;padding-bottom:200px}
+
+/* 월드맵 */
+.world{width:100%;height:55vh;min-height:300px;position:relative;overflow:hidden;background:linear-gradient(160deg,#FFF0F8 0%,#F0F8FF 50%,#F0FFF0 100%);border-bottom:2px solid rgba(200,160,140,.2)}
+.world-floor{position:absolute;bottom:0;left:0;right:0;height:20px;background:linear-gradient(180deg,rgba(200,220,180,.4),rgba(180,200,160,.6));border-radius:0}
+.world-deco{position:absolute;font-size:24px;opacity:.4;pointer-events:none}
+
+/* 아바타 */
+.avatar{position:absolute;bottom:24px;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;transition:left .3s ease,bottom .3s ease;user-select:none}
+.avatar-emoji{font-size:44px;line-height:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,.15));transition:transform .1s}
+.avatar-emoji.bounce{animation:avatarBounce .3s ease}
+@keyframes avatarBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.avatar-name{font-size:10px;font-weight:600;color:var(--text-mid);background:rgba(255,255,255,.85);border-radius:10px;padding:2px 7px;margin-top:3px;white-space:nowrap}
+.avatar-name.me{color:var(--teal);background:rgba(220,255,235,.9)}
+
+/* 말풍선 */
+.speech-bubble{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#fff;border-radius:16px;padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-dark);white-space:nowrap;max-width:140px;white-space:normal;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.12);border:1.5px solid rgba(200,160,140,.2);margin-bottom:6px;animation:bubbleIn .3s ease;pointer-events:none}
+.speech-bubble::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#fff}
+@keyframes bubbleIn{from{opacity:0;transform:translateX(-50%) scale(.8)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+.speech-bubble.playing{background:linear-gradient(135deg,#FFF0F8,#F0F8FF);border-color:var(--pink)}
+.speech-bubble .effect-tag{font-size:9px;color:var(--pink);font-weight:600;display:block;margin-bottom:2px}
+
+/* 이동 컨트롤 */
+.move-pad{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:1rem;max-width:200px;margin:0 auto}
+.move-btn{width:52px;height:52px;border-radius:50%;border:none;background:#fff;border:1.5px solid rgba(200,160,140,.2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.move-btn:active{transform:scale(.9);background:var(--cream)}
+.move-btn.empty{background:transparent;border:none;box-shadow:none;pointer-events:none}
+
+/* 변조 선택 */
+.effect-wrap{padding:0 1rem 1rem;max-width:480px;margin:0 auto}
+.effect-label{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.6rem;text-transform:uppercase}
+.effect-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.8rem}
+.effect-btn{padding:7px 14px;border-radius:20px;border:1.5px solid rgba(200,160,140,.2);background:#fff;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:var(--text-mid);transition:all .2s}
+.effect-btn.active{background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border-color:transparent}
+.effect-btn:active{transform:scale(.95)}
+
+/* 녹음 버튼 */
+.rec-wrap{padding:0 1rem 1rem;max-width:480px;margin:0 auto}
+.big-rec-btn{width:100%;padding:16px;border-radius:18px;border:2px dashed rgba(200,160,140,.3);background:var(--cream);cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:600;color:var(--pink);display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
+.big-rec-btn.recording{background:linear-gradient(135deg,#FFE0E8,#FFD6E8);border-color:var(--pink);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.big-rec-btn:active{transform:scale(.98)}
+
+/* 최근 소리 목록 */
+.sounds-wrap{padding:0 1rem 1rem;max-width:480px;margin:0 auto}
+.sounds-label{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.6rem;text-transform:uppercase}
+.sound-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:14px;border:1.5px solid rgba(200,160,140,.15);margin-bottom:6px;cursor:pointer}
+.sound-item:active{transform:scale(.98)}
+.sound-avatar{font-size:24px;flex-shrink:0}
+.sound-info{flex:1;min-width:0}
+.sound-name{font-size:12px;font-weight:500;color:var(--text-dark)}
+.sound-effect{font-size:10px;color:var(--pink)}
+.sound-play{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--pink-light));border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">🎭 아바타 떠들기</div>
+  <div class="header-sub">아바타로 돌아다니며 목소리를 남겨요!</div>
+</div>
+
+<!-- 닉네임 화면 -->
+<div id="screen-nick">
+  <div style="height:.5rem"></div>
+  <div class="nick-card">
+    <span class="nick-preview" id="nick-preview" onclick="rerollAvatar()">🐶</span>
+    <div class="nick-preview-hint">탭하면 바뀌어요!</div>
+    <div class="nick-title">아바타 떠들기</div>
+    <div class="nick-sub">아바타로 돌아다니며<br>변조된 목소리를 남겨요 🎭</div>
+    <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterWorld()">
+    <button class="start-btn" onclick="enterWorld()">🎭 입장하기</button>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div id="screen-main">
+  <!-- 월드 -->
+  <div class="world" id="world" onclick="moveToTap(event)">
+    <div class="world-floor"></div>
+    <div class="world-deco" style="top:15%;left:10%">🌸</div>
+    <div class="world-deco" style="top:25%;right:8%">⭐</div>
+    <div class="world-deco" style="top:10%;left:50%">🎵</div>
+    <div class="world-deco" style="top:40%;left:25%">🌿</div>
+    <div class="world-deco" style="top:20%;right:25%">💫</div>
+  </div>
+
+  <!-- 이동 패드 -->
+  <div class="move-pad">
+    <div class="move-btn empty"></div>
+    <button class="move-btn" onclick="moveAvatar(0,-1)">↑</button>
+    <div class="move-btn empty"></div>
+    <button class="move-btn" onclick="moveAvatar(-1,0)">←</button>
+    <div class="move-btn empty"></div>
+    <button class="move-btn" onclick="moveAvatar(1,0)">→</button>
+    <div class="move-btn empty"></div>
+    <button class="move-btn" onclick="moveAvatar(0,1)">↓</button>
+    <div class="move-btn empty"></div>
+  </div>
+
+  <!-- 변조 선택 -->
+  <div class="effect-wrap">
+    <div class="effect-label">🎙️ 변조 효과</div>
+    <div class="effect-row">
+      <button class="effect-btn active" onclick="selectEffect('normal',this)">🎤 그냥</button>
+      <button class="effect-btn" onclick="selectEffect('squirrel',this)">🐿️ 다람쥐</button>
+      <button class="effect-btn" onclick="selectEffect('robot',this)">🤖 로봇</button>
+      <button class="effect-btn" onclick="selectEffect('echo',this)">🌊 에코</button>
+      <button class="effect-btn" onclick="selectEffect('deep',this)">👻 으스스</button>
+      <button class="effect-btn" onclick="selectEffect('alien',this)">👽 외계인</button>
+    </div>
+  </div>
+
+  <!-- 녹음 버튼 -->
+  <div class="rec-wrap">
+    <button class="big-rec-btn" id="rec-btn" ontouchstart="startRec();event.preventDefault()" ontouchend="stopRec();event.preventDefault()" onmousedown="startRec()" onmouseup="stopRec()">
+      <span id="rec-icon">🎙️</span>
+      <span id="rec-text">누르고 있으면 녹음돼요</span>
+    </button>
+  </div>
+
+  <!-- 최근 소리 -->
+  <div class="sounds-wrap">
+    <div class="sounds-label">🔊 최근 소리들</div>
+    <div id="sounds-list"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const AVATARS=['🐶','🐱','🐼','🐰','🐸','🐧','🦊','🐻','🐨','🐯','🦁','🐮','🐷','🐙','🦋','🐢','🦄','🐳','🦖','🐝'];
+const EFFECT_NAMES={normal:'그냥',squirrel:'다람쥐',robot:'로봇',echo:'에코',deep:'으스스',alien:'외계인'};
+
+let myNickname='';
+let myAvatar=AVATARS[0];
+let myEffect='normal';
+let myPos={x:50,y:0};
+let myId=null;
+let channel=null;
+let mediaRec=null,recChunks=[],isRec=false;
+let audioCtx=null;
+let avatarEls={};
+let bubbleTimers={};
+let recentSounds=[];
+
+function getAudioCtx(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+/* ── 아바타 선택 ── */
+function rerollAvatar(){
+  myAvatar=AVATARS[Math.floor(Math.random()*AVATARS.length)];
+  document.getElementById('nick-preview').textContent=myAvatar;
+}
+rerollAvatar();
+
+/* ── 입장 ── */
+async function enterWorld(){
+  const nick=document.getElementById('nick-input').value.trim();
+  if(!nick){alert('이름을 입력해줘요!');return;}
+  myNickname=nick;
+  myPos={x:20+Math.random()*60,y:0};
+  document.getElementById('screen-nick').style.display='none';
+  document.getElementById('screen-main').style.display='block';
+  // DB 등록
+  const{data,error}=await sb.from('avatar_users').insert([{
+    nickname:myNickname,avatar:myAvatar,pos_x:myPos.x,pos_y:myPos.y,effect:myEffect
+  }]).select().single();
+  if(error){alert('입장 실패: '+error.message);return;}
+  myId=data.id;
+  renderMyAvatar();
+  loadAvatars();
+  loadSounds();
+  setupChannel();
+  setInterval(()=>updateMyPos(),10000);
+  setInterval(loadAvatars,5000);
+  setInterval(loadSounds,8000);
+}
+
+/* ── 아바타 렌더 ── */
+function renderMyAvatar(){
+  const world=document.getElementById('world');
+  let el=document.getElementById('avatar-me');
+  if(!el){
+    el=document.createElement('div');
+    el.className='avatar';el.id='avatar-me';
+    el.innerHTML=`<div class="avatar-emoji" id="my-emoji">${myAvatar}</div><div class="avatar-name me">${myNickname}</div>`;
+    world.appendChild(el);
+  }
+  el.style.left=myPos.x+'%';
+  el.style.bottom=(24+myPos.y)+'px';
+}
+
+async function loadAvatars(){
+  const since=new Date(Date.now()-30000).toISOString();
+  const{data}=await sb.from('avatar_users').select('*').gte('last_seen',since);
+  if(!data)return;
+  const world=document.getElementById('world');
+  const seen=new Set();
+  data.forEach(u=>{
+    if(u.id===myId)return;
+    seen.add(u.id);
+    let el=document.getElementById('avatar-'+u.id);
+    if(!el){
+      el=document.createElement('div');
+      el.className='avatar';el.id='avatar-'+u.id;
+      el.innerHTML=`<div class="avatar-emoji">${u.avatar}</div><div class="avatar-name">${u.nickname}</div>`;
+      world.appendChild(el);
+      avatarEls[u.id]=el;
+    }
+    el.style.left=u.pos_x+'%';
+    el.style.bottom=(24+u.pos_y)+'px';
+  });
+  // 나간 사람 제거
+  Object.keys(avatarEls).forEach(id=>{
+    if(!seen.has(+id)){avatarEls[id].remove();delete avatarEls[id];}
+  });
+}
+
+/* ── 이동 ── */
+function moveAvatar(dx,dy){
+  myPos.x=Math.max(2,Math.min(92,myPos.x+dx*8));
+  myPos.y=Math.max(0,Math.min(60,myPos.y+dy*8));
+  renderMyAvatar();
+  bounceMyAvatar();
+  updateMyPos();
+  // broadcast 이동
+  if(channel)channel.send({type:'broadcast',event:'move',payload:{id:myId,x:myPos.x,y:myPos.y}});
+}
+
+function moveToTap(e){
+  const world=document.getElementById('world');
+  const r=world.getBoundingClientRect();
+  const src=e.touches?e.touches[0]:e;
+  myPos.x=Math.max(2,Math.min(92,((src.clientX-r.left)/r.width)*100));
+  renderMyAvatar();bounceMyAvatar();updateMyPos();
+  if(channel)channel.send({type:'broadcast',event:'move',payload:{id:myId,x:myPos.x,y:myPos.y}});
+}
+
+function bounceMyAvatar(){
+  const el=document.getElementById('my-emoji');
+  if(!el)return;
+  el.classList.add('bounce');setTimeout(()=>el.classList.remove('bounce'),300);
+}
+
+async function updateMyPos(){
+  if(!myId)return;
+  await sb.from('avatar_users').update({pos_x:myPos.x,pos_y:myPos.y,last_seen:new Date().toISOString()}).eq('id',myId);
+}
+
+/* ── 변조 선택 ── */
+function selectEffect(name,el){
+  myEffect=name;
+  document.querySelectorAll('.effect-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ── 녹음 & 변조 ── */
+function startRec(){
+  if(isRec)return;
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    mediaRec=new MediaRecorder(stream);recChunks=[];
+    mediaRec.ondataavailable=e=>recChunks.push(e.data);
+    mediaRec.onstop=()=>{
+      const blob=new Blob(recChunks,{type:'audio/webm'});
+      stream.getTracks().forEach(t=>t.stop());
+      processAndSave(blob);
+    };
+    mediaRec.start();isRec=true;
+    document.getElementById('rec-btn').classList.add('recording');
+    document.getElementById('rec-icon').textContent='⏹';
+    document.getElementById('rec-text').textContent='녹음 중... 손 떼면 완료!';
+  }).catch(()=>{alert('마이크 권한이 필요해요!');});
+}
+
+function stopRec(){
+  if(!isRec||!mediaRec||mediaRec.state==='inactive')return;
+  mediaRec.stop();isRec=false;
+  document.getElementById('rec-btn').classList.remove('recording');
+  document.getElementById('rec-icon').textContent='🎙️';
+  document.getElementById('rec-text').textContent='누르고 있으면 녹음돼요';
+}
+
+async function processAndSave(blob){
+  const actx=getAudioCtx();
+  const arrayBuf=await blob.arrayBuffer();
+  let audioBuf;
+  try{audioBuf=await actx.decodeAudioData(arrayBuf);}catch(e){alert('녹음 처리 실패');return;}
+  // 변조 적용
+  const processedBuf=applyEffect(audioBuf,myEffect,actx);
+  // 변조된 오디오를 재생하고 저장
+  playBuffer(processedBuf,actx);
+  // Supabase에 저장 (base64)
+  const wavBlob=bufferToWav(processedBuf);
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    const b64=reader.result.split(',')[1];
+    const{error}=await sb.from('avatar_sounds').insert([{
+      nickname:myNickname,avatar:myAvatar,effect:myEffect,audio_b64:b64
+    }]);
+    if(error){console.log(error);return;}
+    showBubble('me',EFFECT_NAMES[myEffect]+'으로 말했어요!');
+    if(channel)channel.send({type:'broadcast',event:'sound',payload:{nickname:myNickname,avatar:myAvatar,effect:myEffect,pos_x:myPos.x}});
+    loadSounds();
+  };
+  reader.readAsDataURL(wavBlob);
+}
+
+/* ── 음성 변조 ── */
+function applyEffect(buf,effect,actx){
+  const sr=buf.sampleRate;
+  const ch=buf.numberOfChannels;
+  const len=buf.length;
+  const out=actx.createBuffer(ch,len,sr);
+  for(let c=0;c<ch;c++){
+    const inp=buf.getChannelData(c);
+    const outp=out.getChannelData(c);
+    if(effect==='squirrel'){
+      // 다람쥐: 2배 빠르게 (피치 업)
+      for(let i=0;i<len;i++)outp[i]=inp[Math.floor(i*2)%len]||0;
+    }else if(effect==='deep'){
+      // 으스스: 0.5배 느리게
+      for(let i=0;i<len;i++)outp[i]=inp[Math.floor(i*.5)]||0;
+    }else if(effect==='robot'){
+      // 로봇: 링 변조
+      for(let i=0;i<len;i++)outp[i]=(inp[i]||0)*Math.sign(Math.sin(2*Math.PI*50*i/sr));
+    }else if(effect==='echo'){
+      // 에코: 딜레이
+      const delay=Math.floor(sr*.2);
+      for(let i=0;i<len;i++)outp[i]=(inp[i]||0)+(i>=delay?(inp[i-delay]||0)*.5:0)+(i>=delay*2?(inp[i-delay*2]||0)*.25:0);
+    }else if(effect==='alien'){
+      // 외계인: 링 변조 + 피치변조
+      for(let i=0;i<len;i++)outp[i]=(inp[Math.floor(i*1.5)%len]||0)*Math.sin(2*Math.PI*80*i/sr);
+    }else{
+      // 그냥
+      for(let i=0;i<len;i++)outp[i]=inp[i]||0;
+    }
+  }
+  return out;
+}
+
+function playBuffer(buf,actx){
+  const src=actx.createBufferSource();
+  src.buffer=buf;
+  const gain=actx.createGain();gain.gain.value=0.8;
+  src.connect(gain);gain.connect(actx.destination);
+  src.start();
+}
+
+/* ── WAV 변환 ── */
+function bufferToWav(buf){
+  const sr=buf.sampleRate,len=buf.length,ch=buf.numberOfChannels;
+  const wavLen=44+len*ch*2;
+  const ab=new ArrayBuffer(wavLen);const view=new DataView(ab);
+  function ws(offset,str){for(let i=0;i<str.length;i++)view.setUint8(offset+i,str.charCodeAt(i));}
+  ws(0,'RIFF');view.setUint32(4,wavLen-8,true);ws(8,'WAVE');
+  ws(12,'fmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);
+  view.setUint16(22,ch,true);view.setUint32(24,sr,true);
+  view.setUint32(28,sr*ch*2,true);view.setUint16(32,ch*2,true);
+  view.setUint16(34,16,true);ws(36,'data');view.setUint32(40,len*ch*2,true);
+  let offset=44;
+  for(let i=0;i<len;i++){
+    for(let c=0;c<ch;c++){
+      const s=Math.max(-1,Math.min(1,buf.getChannelData(c)[i]));
+      view.setInt16(offset,s<0?s*0x8000:s*0x7FFF,true);offset+=2;
+    }
+  }
+  return new Blob([ab],{type:'audio/wav'});
+}
+
+/* ── 말풍선 ── */
+function showBubble(idOrNickname,text,isPlaying=false){
+  let el;
+  if(idOrNickname==='me')el=document.getElementById('avatar-me');
+  else el=document.querySelector(`[id^="avatar-"]:not(#avatar-me)`);
+  if(!el)return;
+  const old=el.querySelector('.speech-bubble');
+  if(old)old.remove();
+  const bubble=document.createElement('div');
+  bubble.className='speech-bubble'+(isPlaying?' playing':'');
+  bubble.innerHTML=text;
+  el.appendChild(bubble);
+  if(bubbleTimers[idOrNickname])clearTimeout(bubbleTimers[idOrNickname]);
+  bubbleTimers[idOrNickname]=setTimeout(()=>bubble.remove(),4000);
+}
+
+/* ── 소리 목록 ── */
+async function loadSounds(){
+  const{data}=await sb.from('avatar_sounds').select('*').order('created_at',{ascending:false}).limit(15);
+  if(!data)return;
+  recentSounds=data;
+  const el=document.getElementById('sounds-list');
+  if(!data.length){el.innerHTML='<div style="font-size:12px;color:var(--text-light);text-align:center;padding:1rem">아직 소리가 없어요. 먼저 말해봐요! 🎙️</div>';return;}
+  el.innerHTML=data.map((s,i)=>`
+    <div class="sound-item" onclick="playSound(${i})">
+      <div class="sound-avatar">${s.avatar}</div>
+      <div class="sound-info">
+        <div class="sound-name">${s.nickname}</div>
+        <div class="sound-effect">${EFFECT_NAMES[s.effect]||s.effect} 변조</div>
+      </div>
+      <button class="sound-play">▶</button>
+    </div>`).join('');
+}
+
+async function playSound(idx){
+  const s=recentSounds[idx];if(!s||!s.audio_b64)return;
+  const actx=getAudioCtx();
+  const binary=atob(s.audio_b64);
+  const ab=new ArrayBuffer(binary.length);
+  const view=new Uint8Array(ab);
+  for(let i=0;i<binary.length;i++)view[i]=binary.charCodeAt(i);
+  try{
+    const buf=await actx.decodeAudioData(ab);
+    playBuffer(buf,actx);
+  }catch(e){console.log(e);}
+}
+
+/* ── Broadcast ── */
+function setupChannel(){
+  channel=sb.channel('avatar-world',{config:{broadcast:{self:false}}});
+  channel
+    .on('broadcast',{event:'move'},(payload)=>{
+      const{id,x,y}=payload.payload;
+      const el=document.getElementById('avatar-'+id);
+      if(el){el.style.left=x+'%';el.style.bottom=(24+y)+'px';}
+    })
+    .on('broadcast',{event:'sound'},(payload)=>{
+      const{nickname,avatar,effect}=payload.payload;
+      // 해당 아바타에 말풍선
+      const avatarEl=Object.values(avatarEls).find(el=>el.querySelector('.avatar-name')?.textContent===nickname);
+      if(avatarEl){
+        const old=avatarEl.querySelector('.speech-bubble');if(old)old.remove();
+        const bubble=document.createElement('div');
+        bubble.className='speech-bubble playing';
+        bubble.innerHTML=`<span class="effect-tag">${EFFECT_NAMES[effect]}</span>${nickname}이 말했어요!`;
+        avatarEl.appendChild(bubble);
+        setTimeout(()=>bubble.remove(),4000);
+      }
+      setTimeout(loadSounds,1000);
+    })
+    .subscribe();
+}
+</script>
+</body>
+</html>
