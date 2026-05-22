@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>음악 빙고</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden;scroll-behavior:smooth}
+:root{--cream:#FFF8F0;--peach:#FFE4CC;--pink:#C97B7B;--pink-light:#E8A89A;--pink-pale:#FFD6E8;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;--green:#6BCB77;--blue:#4D96FF;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh}
+
+.bingo-header{background:linear-gradient(135deg,#D4E8D0 0%,#D6E4FF 100%);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative}
+.bingo-back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.65);border:1px solid rgba(200,160,140,.3);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);cursor:pointer;font-family:'Noto Sans KR',sans-serif;min-height:36px;text-decoration:none;display:inline-flex;align-items:center}
+.bingo-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
+.bingo-sub{font-size:11px;color:var(--text-light)}
+
+#nickname-screen{padding:2rem 1rem;max-width:400px;margin:0 auto}
+.nickname-card{background:#fff;border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(107,203,119,.2);text-align:center}
+.nickname-card-emoji{font-size:48px;margin-bottom:1rem}
+.nickname-card-title{font-family:'Noto Serif KR',serif;font-size:20px;color:var(--text-dark);margin-bottom:.4rem}
+.nickname-card-sub{font-size:12px;color:var(--text-light);margin-bottom:1.4rem;line-height:1.8}
+.nickname-field{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--text-dark);background:var(--cream);outline:none;text-align:center;margin-bottom:1rem;-webkit-appearance:none}
+.nickname-field:focus{border-color:rgba(107,203,119,.5)}
+.join-btn{width:100%;background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+.join-btn:active{transform:scale(.98)}
+
+#game-screen{display:none;padding:1rem;max-width:480px;margin:0 auto}
+
+.now-playing{background:linear-gradient(135deg,#F0FFF0,#F0F8FF);border-radius:18px;padding:1.2rem;margin-bottom:1rem;border:1.5px solid rgba(107,203,119,.3);text-align:center}
+.now-playing-label{font-size:10px;letter-spacing:2px;color:var(--teal);margin-bottom:.5rem;text-transform:uppercase}
+.now-playing-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.8rem;min-height:28px}
+.now-playing-progress{height:6px;background:rgba(107,203,119,.2);border-radius:3px;overflow:hidden;margin-bottom:.5rem}
+.now-playing-fill{height:100%;background:linear-gradient(90deg,#6BCB77,#4D96FF);border-radius:3px;width:0%;transition:width .5s linear}
+.now-playing-timer{font-size:11px;color:var(--text-light);display:flex;justify-content:space-between}
+.now-playing-status{font-size:13px;color:var(--teal);font-weight:500;margin-top:.5rem;min-height:20px}
+
+.bingo-board-wrap{margin-bottom:1rem}
+.bingo-board-label{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.8rem;text-transform:uppercase;text-align:center}
+.bingo-board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.bingo-cell{aspect-ratio:1;border-radius:14px;border:2px solid rgba(200,160,140,.2);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:500;color:var(--text-dark);text-align:center;padding:6px;line-height:1.4;transition:all .2s;position:relative;overflow:hidden;word-break:keep-all}
+.bingo-cell:active{transform:scale(.95)}
+.bingo-cell.checked{background:linear-gradient(135deg,#D4E8D0,#D6E4FF);border-color:#6BCB77;color:#2d7a3a}
+.bingo-cell.checked::after{content:'✓';position:absolute;top:4px;right:6px;font-size:12px;color:#6BCB77;font-weight:700}
+.bingo-cell.bingo-line{background:linear-gradient(135deg,#FFD700,#FFA500);border-color:#FFD700;color:#7a4a00}
+.bingo-cell.shake{animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+.bingo-counter{display:flex;gap:8px;justify-content:center;margin-bottom:1rem}
+.bingo-line-badge{background:linear-gradient(135deg,#FFD700,#FFA500);color:#7a4a00;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700}
+
+.bingo-shout-btn{width:100%;background:linear-gradient(135deg,#FFD700,#FFA500);color:#7a4a00;border:none;border-radius:14px;padding:15px;font-family:'Noto Serif KR',serif;font-size:18px;font-weight:600;cursor:pointer;min-height:52px;display:none;animation:pulse 1s infinite;margin-bottom:1rem}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
+.bingo-shout-btn.show{display:block}
+.bingo-shout-btn:active{transform:scale(.97)}
+
+.players-box{background:#fff;border-radius:18px;padding:1rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:1rem}
+.players-label{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.8rem;text-transform:uppercase}
+.players-list{display:flex;flex-direction:column;gap:6px}
+.player-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;background:var(--cream);font-size:13px}
+.player-item.me{background:linear-gradient(135deg,#F0FFF0,#F0F8FF);border:1px solid rgba(107,203,119,.3)}
+.player-name{flex:1;font-weight:500;color:var(--text-dark)}
+.player-bingo{font-size:11px;color:var(--teal);font-weight:700}
+.player-finished{font-size:11px;color:#DAA520;font-weight:700}
+
+#finish-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(20,10,5,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem}
+#finish-overlay.show{display:flex}
+.finish-box{background:#fff;border-radius:24px;padding:2rem;text-align:center;max-width:300px;width:100%}
+.finish-emoji{font-size:56px;margin-bottom:1rem}
+.finish-title{font-family:'Noto Serif KR',serif;font-size:22px;color:var(--text-dark);margin-bottom:.4rem}
+.finish-sub{font-size:13px;color:var(--text-light);margin-bottom:1.4rem}
+.finish-close{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer}
+
+#end-screen{display:none;padding:2rem 1rem;max-width:400px;margin:0 auto;text-align:center}
+.end-card{background:#fff;border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(200,160,140,.15)}
+.end-emoji{font-size:56px;margin-bottom:1rem}
+.end-title{font-family:'Noto Serif KR',serif;font-size:22px;color:var(--text-dark);margin-bottom:.5rem}
+.end-sub{font-size:13px;color:var(--text-light);margin-bottom:1.5rem;line-height:1.8}
+.end-ranking{text-align:left;margin-bottom:1.5rem}
+.end-ranking-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(200,160,140,.1)}
+.end-ranking-num{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--peach),var(--pink-pale));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--pink);flex-shrink:0}
+.end-ranking-num.gold{background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff}
+.end-ranking-num.silver{background:linear-gradient(135deg,#C0C0C0,#A0A0A0);color:#fff}
+.end-ranking-num.bronze{background:linear-gradient(135deg,#CD7F32,#A0522D);color:#fff}
+.end-ranking-name{flex:1;font-size:13px;font-weight:500}
+.end-ranking-score{font-size:13px;font-weight:700;color:var(--teal)}
+.retry-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+</style>
+</head>
+<body>
+
+<div class="bingo-header">
+  <a class="bingo-back" href="index.html">← 돌아가기</a>
+  <div class="bingo-title">🎵 음악 빙고</div>
+  <div class="bingo-sub">노래를 듣고 빙고판을 채워요! 🎉</div>
+</div>
+
+<div id="nickname-screen">
+  <div style="height:1.5rem"></div>
+  <div class="nickname-card">
+    <div class="nickname-card-emoji">🎵</div>
+    <div class="nickname-card-title">음악 빙고</div>
+    <div class="nickname-card-sub">노래가 나오면 빙고판에서<br>제목을 찾아 눌러요!<br>먼저 빙고를 완성하면 이겨요 🏆</div>
+    <input class="nickname-field" id="nickname-input" type="text" placeholder="이름을 입력해요 (예: 지민)" maxlength="10" onkeydown="if(event.key==='Enter')joinGame()">
+    <button class="join-btn" onclick="joinGame()">🎮 게임 참가하기</button>
+  </div>
+</div>
+
+<div id="game-screen">
+  <div class="now-playing">
+    <div class="now-playing-label">🎵 지금 재생 중</div>
+    <div class="now-playing-title" id="now-playing-title">잠깐만요...</div>
+    <div class="now-playing-progress">
+      <div class="now-playing-fill" id="now-playing-fill"></div>
+    </div>
+    <div class="now-playing-timer">
+      <span id="timer-cur">0초</span>
+      <span id="timer-total">30초</span>
+    </div>
+    <div class="now-playing-status" id="now-playing-status">노래를 잘 들어봐요 🎧</div>
+  </div>
+
+  <div class="bingo-board-wrap">
+    <div class="bingo-board-label">🎲 나의 빙고판</div>
+    <div class="bingo-board" id="bingo-board"></div>
+    <div class="bingo-counter" id="bingo-counter"></div>
+    <button class="bingo-shout-btn" id="bingo-shout-btn" onclick="shoutBingo()">🎉 빙고!</button>
+  </div>
+
+  <div class="players-box">
+    <div class="players-label">👥 참여자 현황</div>
+    <div class="players-list" id="players-list"></div>
+  </div>
+</div>
+
+<div id="end-screen">
+  <div class="end-card">
+    <div class="end-emoji">🏆</div>
+    <div class="end-title">게임 종료!</div>
+    <div class="end-sub">모든 노래가 재생됐어요!</div>
+    <div class="end-ranking" id="end-ranking"></div>
+    <button class="retry-btn" onclick="location.reload()">🔄 다시 하기</button>
+  </div>
+</div>
+
+<div id="finish-overlay">
+  <div class="finish-box">
+    <div class="finish-emoji" id="finish-emoji">🎉</div>
+    <div class="finish-title" id="finish-title">빙고!</div>
+    <div class="finish-sub" id="finish-sub">빙고를 완성했어요!</div>
+    <button class="finish-close" onclick="closeFinish()">계속 하기</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const SONGS=[
+  {name:'문어의 꿈',file:'audio/octopus.mp3'},
+  {name:'신호등',file:'audio/signal.mp3'},
+  {name:'반짝반짝 작은별',file:'audio/twinkle.mp3'},
+  {name:'곰세마리',file:'audio/threebears.mp3'},
+  {name:'상어가족',file:'audio/babyshark.mp3'},
+  {name:'캐치티니핑',file:'audio/tiniping.mp3'},
+  {name:'타요타요',file:'audio/tayo.mp3'},
+  {name:'뽀로로',file:'audio/pororo.mp3'},
+  {name:'생일축하합니다',file:'audio/birthday.mp3'},
+  {name:'올챙이와 개구리',file:'audio/tadpole.mp3'},
+  {name:'멋쟁이토마토',file:'audio/tomato.mp3'},
+];
+
+const PLAY_SECONDS=30;
+let myId=null;
+let myBoard=[];
+let myChecked=[];
+let myBingoCount=0;
+let gameAudio=null;
+let timerInterval=null;
+let songOrder=[];
+let currentSongIdx=0;
+let elapsed=0;
+let gameEnded=false;
+let shoutedBingo=false;
+let notifiedFinished=new Set();
+
+function makeBoard(){
+  const shuffled=[...SONGS].sort(()=>Math.random()-.5);
+  return shuffled.slice(0,9).map(s=>s.name);
+}
+
+function makeSongOrder(){
+  return [...SONGS].sort(()=>Math.random()-.5);
+}
+
+async function joinGame(){
+  const nick=document.getElementById('nickname-input').value.trim();
+  if(!nick){alert('이름을 입력해줘요!');return;}
+  const board=makeBoard();
+  const{data,error}=await sb.from('bingo_rooms').insert([{nickname:nick,board:board,checked:[],bingo_count:0,finished:false}]).select().single();
+  if(error){alert('참가 실패: '+error.message);return;}
+  myId=data.id;
+  myBoard=board;
+  myChecked=[];
+  myBingoCount=0;
+  shoutedBingo=false;
+  document.getElementById('nickname-screen').style.display='none';
+  document.getElementById('game-screen').style.display='block';
+  renderBoard();
+  startGame();
+  subscribeGame();
+}
+
+function renderBoard(){
+  const el=document.getElementById('bingo-board');
+  const lines=getBingoLines();
+  const lineSet=new Set(lines.flat());
+  el.innerHTML=myBoard.map((name,i)=>{
+    const checked=myChecked.includes(i);
+    const inLine=lineSet.has(i);
+    let cls='bingo-cell';
+    if(checked&&inLine)cls+=' bingo-line';
+    else if(checked)cls+=' checked';
+    return `<div class="${cls}" id="cell-${i}" onclick="checkCell(${i})">${name}</div>`;
+  }).join('');
+}
+
+function checkCell(idx){
+  if(gameEnded)return;
+  const currentSong=songOrder[currentSongIdx];
+  if(!currentSong)return;
+  if(myBoard[idx]!==currentSong.name){
+    const cell=document.getElementById('cell-'+idx);
+    if(cell){cell.classList.add('shake');setTimeout(()=>cell.classList.remove('shake'),300);}
+    return;
+  }
+  if(myChecked.includes(idx))return;
+  myChecked=[...myChecked,idx];
+  renderBoard();
+  checkBingo();
+  updateChecked();
+}
+
+async function updateChecked(){
+  await sb.from('bingo_rooms').update({checked:myChecked,bingo_count:myBingoCount}).eq('id',myId);
+}
+
+function getBingoLines(){
+  const lines=[];
+  for(let r=0;r<3;r++){const row=[r*3,r*3+1,r*3+2];if(row.every(i=>myChecked.includes(i)))lines.push(row);}
+  for(let c=0;c<3;c++){const col=[c,c+3,c+6];if(col.every(i=>myChecked.includes(i)))lines.push(col);}
+  const d1=[0,4,8];if(d1.every(i=>myChecked.includes(i)))lines.push(d1);
+  const d2=[2,4,6];if(d2.every(i=>myChecked.includes(i)))lines.push(d2);
+  return lines;
+}
+
+function checkBingo(){
+  const lines=getBingoLines();
+  const newBingo=lines.length;
+  if(newBingo>myBingoCount){
+    myBingoCount=newBingo;
+    renderBoard();
+    updateBingoCounter();
+    document.getElementById('bingo-shout-btn').classList.add('show');
+  }
+}
+
+function updateBingoCounter(){
+  const el=document.getElementById('bingo-counter');
+  if(myBingoCount>0){
+    el.innerHTML=`<span class="bingo-line-badge">🎉 ${myBingoCount}빙고!</span>`;
+  }else{el.innerHTML='';}
+}
+
+async function shoutBingo(){
+  if(shoutedBingo)return;
+  shoutedBingo=true;
+  document.getElementById('bingo-shout-btn').classList.remove('show');
+  await sb.from('bingo_rooms').update({finished:true,bingo_count:myBingoCount}).eq('id',myId);
+  showFinish('나',myBingoCount);
+}
+
+function showFinish(name,count){
+  document.getElementById('finish-emoji').textContent='🏆';
+  document.getElementById('finish-title').textContent=name==='나'?'빙고 완성!':name+'님이 빙고!';
+  document.getElementById('finish-sub').textContent=count+'줄 빙고를 완성했어요! 🎉';
+  document.getElementById('finish-overlay').classList.add('show');
+}
+
+function closeFinish(){
+  document.getElementById('finish-overlay').classList.remove('show');
+}
+
+function startGame(){
+  songOrder=makeSongOrder();
+  currentSongIdx=0;
+  playSong(0);
+}
+
+function playSong(idx){
+  if(idx>=songOrder.length){endGame();return;}
+  currentSongIdx=idx;
+  const song=songOrder[idx];
+  document.getElementById('now-playing-title').textContent=song.name;
+  document.getElementById('now-playing-status').textContent='노래를 잘 들어봐요 🎧';
+  document.getElementById('now-playing-fill').style.width='0%';
+  document.getElementById('timer-cur').textContent='0초';
+  document.getElementById('timer-total').textContent=PLAY_SECONDS+'초';
+  if(gameAudio){gameAudio.pause();gameAudio.src='';}
+  gameAudio=new Audio(song.file);
+  gameAudio.play().catch(()=>{});
+  elapsed=0;
+  if(timerInterval)clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    elapsed++;
+    const pct=(elapsed/PLAY_SECONDS)*100;
+    document.getElementById('now-playing-fill').style.width=Math.min(pct,100)+'%';
+    document.getElementById('timer-cur').textContent=elapsed+'초';
+    if(elapsed>=PLAY_SECONDS){
+      clearInterval(timerInterval);
+      if(gameAudio)gameAudio.pause();
+      document.getElementById('now-playing-status').textContent='다음 노래로 넘어가요! ⏭';
+      setTimeout(()=>playSong(idx+1),1500);
+    }
+  },1000);
+}
+
+function endGame(){
+  gameEnded=true;
+  if(gameAudio)gameAudio.pause();
+  if(timerInterval)clearInterval(timerInterval);
+  document.getElementById('now-playing-title').textContent='게임 종료!';
+  document.getElementById('now-playing-status').textContent='모든 노래가 끝났어요 🎵';
+  setTimeout(()=>showEndScreen(),1500);
+}
+
+async function showEndScreen(){
+  document.getElementById('game-screen').style.display='none';
+  document.getElementById('end-screen').style.display='block';
+  const{data}=await sb.from('bingo_rooms').select('*').order('bingo_count',{ascending:false}).order('created_at',{ascending:true});
+  const medals=['gold','silver','bronze'];
+  const el=document.getElementById('end-ranking');
+  if(!data||!data.length){el.innerHTML='';return;}
+  el.innerHTML=data.map((p,i)=>`
+    <div class="end-ranking-item">
+      <div class="end-ranking-num ${medals[i]||''}">${i+1}</div>
+      <div class="end-ranking-name">${p.nickname}${p.id===myId?' (나)':''}</div>
+      <div class="end-ranking-score">${p.bingo_count}빙고 ${p.finished?'🏆':''}</div>
+    </div>`).join('');
+}
+
+function subscribeGame(){
+  sb.channel('bingo-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'bingo_rooms'},()=>{loadPlayers();})
+    .subscribe();
+  loadPlayers();
+  setInterval(loadPlayers,5000);
+}
+
+async function loadPlayers(){
+  const{data}=await sb.from('bingo_rooms').select('*').order('created_at',{ascending:true});
+  if(!data)return;
+  const el=document.getElementById('players-list');
+  el.innerHTML=data.map(p=>`
+    <div class="player-item${p.id===myId?' me':''}">
+      <span class="player-name">${p.nickname}${p.id===myId?' (나)':''}</span>
+      ${p.finished
+        ?`<span class="player-finished">🏆 ${p.bingo_count}빙고!</span>`
+        :`<span class="player-bingo">${p.bingo_count>0?p.bingo_count+'빙고':''}</span>`}
+    </div>`).join('');
+  // 다른 사람 빙고 알림
+  data.forEach(p=>{
+    if(p.id!==myId&&p.finished&&!notifiedFinished.has(p.id)){
+      notifiedFinished.add(p.id);
+      if(!document.getElementById('finish-overlay').classList.contains('show')){
+        showFinish(p.nickname,p.bingo_count);
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
