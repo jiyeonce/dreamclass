@@ -38,7 +38,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .color-btn.active{border-color:var(--text-dark);transform:scale(1.2)}
 .tool-btn{padding:4px 10px;border-radius:8px;border:1.5px solid rgba(200,160,140,.2);background:#fff;font-size:11px;font-weight:500;cursor:pointer;color:var(--pink);font-family:'Noto Sans KR',sans-serif}
 .tool-btn.active{background:#FFF0E8;border-color:var(--pink)}
-canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8}
+canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8;border-radius:0 0 16px 16px}
 .note-guide{position:absolute;right:0;top:36px;bottom:0;width:28px;display:flex;flex-direction:column;justify-content:space-between;padding:4px 2px;pointer-events:none;background:rgba(255,255,255,.7)}
 .note-label{font-size:8px;color:var(--text-light);text-align:center;font-weight:500}
 /* 커서 표시 */
@@ -113,7 +113,6 @@ canvas{display:block;touch-action:none;width:100%;height:auto;background:#FFFDF8
       <div class="note-label">도</div>
     </div>
   </div>
-  <button class="stamp-btn" onclick="stampName()">🏷️ 여기에 내 이름표 찍기</button>
   <div class="controls">
     <button class="ctrl-btn play-btn" id="play-btn" onclick="togglePlay()">▶ 음악으로 재생</button>
     <button class="ctrl-btn clear-btn" onclick="confirmClear()">🗑</button>
@@ -201,8 +200,8 @@ function initCanvas(){
     lastPoint=p;strokePoints.push({x:p.nx,y:p.ny});
     broadcastDraw('move',p);
   });
-  canvas.addEventListener('mouseup',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);broadcastDraw('end',null);}});
-  canvas.addEventListener('mouseleave',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);broadcastDraw('end',null);}});
+  canvas.addEventListener('mouseup',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);stampAutoOnCanvas(ctx,strokePoints,canvas.width,canvas.height);broadcastDraw('end',null);}});
+  canvas.addEventListener('mouseleave',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);stampAutoOnCanvas(ctx,strokePoints,canvas.width,canvas.height);broadcastDraw('end',null);}});
 
   canvas.addEventListener('touchstart',e=>{
     e.preventDefault();isDrawing=true;strokePoints=[];
@@ -217,15 +216,23 @@ function initCanvas(){
     lastPoint=p;strokePoints.push({x:p.nx,y:p.ny});
     broadcastDraw('move',p);
   },{passive:false});
-  canvas.addEventListener('touchend',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);broadcastDraw('end',null);}});
+  canvas.addEventListener('touchend',()=>{if(isDrawing){isDrawing=false;saveStroke(strokePoints);stampAutoOnCanvas(ctx,strokePoints,canvas.width,canvas.height);broadcastDraw('end',null);}});
 }
 
 function drawSegment(ctx,from,to){
   if(!from||!to)return;
   ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.lineTo(to.x,to.y);
-  ctx.strokeStyle=tool==='eraser'?'#FFFDF8':color;
-  ctx.lineWidth=tool==='eraser'?brushSize*3:brushSize;
+  if(tool==='eraser'){
+    ctx.globalCompositeOperation='destination-out';
+    ctx.strokeStyle='rgba(0,0,0,1)';
+    ctx.lineWidth=brushSize*3;
+  }else{
+    ctx.globalCompositeOperation='source-over';
+    ctx.strokeStyle=color;
+    ctx.lineWidth=brushSize;
+  }
   ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+  ctx.globalCompositeOperation='source-over';
 }
 
 function setColor(c,el){color=c;document.querySelectorAll('.color-btn').forEach(d=>d.classList.remove('active'));el.classList.add('active');if(tool==='eraser')setTool('pen');}
@@ -243,6 +250,21 @@ function setupBroadcast(){
     .on('broadcast',{event:'cursor'},(payload)=>{
       const{nickname,nx,ny}=payload.payload;
       updateRemoteCursor(nickname,nx,ny);
+    })
+    .on('broadcast',{event:'stamp'},(payload)=>{
+      const{bx,by,tw,text,tagColor}=payload.payload;
+      const canvas=document.getElementById('draw-canvas');
+      const ctx=canvas.getContext('2d');
+      const w=canvas.width,h=canvas.height;
+      const padding=4;
+      ctx.font='bold 11px Noto Sans KR, sans-serif';
+      ctx.fillStyle=tagColor;
+      ctx.beginPath();
+      ctx.roundRect(bx*w,by*h,tw*w+padding*2,18,4);
+      ctx.fill();
+      ctx.fillStyle='#fff';
+      ctx.fillText(text,bx*w+padding,by*h+13);
+      loadStamps();
     })
     .subscribe();
 }
@@ -263,9 +285,17 @@ function handleRemoteDraw(nickname,action,nx,ny,c,bs,t){
     state.lastPoint={x,y};state.color=c;state.brushSize=bs;state.tool=t;
   }else if(action==='move'&&state.lastPoint){
     ctx.beginPath();ctx.moveTo(state.lastPoint.x,state.lastPoint.y);ctx.lineTo(x,y);
-    ctx.strokeStyle=t==='eraser'?'#FFFDF8':c;
-    ctx.lineWidth=t==='eraser'?bs*3:bs;
+    if(t==='eraser'){
+      ctx.globalCompositeOperation='destination-out';
+      ctx.strokeStyle='rgba(0,0,0,1)';
+      ctx.lineWidth=bs*3;
+    }else{
+      ctx.globalCompositeOperation='source-over';
+      ctx.strokeStyle=c;
+      ctx.lineWidth=bs;
+    }
     ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+    ctx.globalCompositeOperation='source-over';
     state.lastPoint={x,y};
     updateRemoteCursor(nickname,nx,ny);
   }else if(action==='end'){
@@ -343,10 +373,39 @@ async function loadCanvas(){
   });
 }
 
-/* ── 이름표 ── */
-async function stampName(){
-  await sb.from('canvas_stamps').insert([{nickname:myNickname}]);
+function stampAutoOnCanvas(ctx,points,w,h){
+  if(!points.length)return;
+  // 마지막 점 근처에 이름표 찍기
+  const last=points[points.length-1];
+  const x=last.x*w;
+  const y=last.y*h;
+  const nameColors={'#E05555':'#E05555','#4D96FF':'#4D96FF','#6BCB77':'#6BCB77','#C77DFF':'#C77DFF','#FFD93D':'#DAA520'};
+  const tagColor=tool==='eraser'?'#aaa':(nameColors[color]||color);
+  // 배경 박스
+  const padding=4;
+  const text=myNickname;
+  ctx.font='bold 11px Noto Sans KR, sans-serif';
+  const tw=ctx.measureText(text).width;
+  const bx=Math.min(x+4,w-tw-padding*2-4);
+  const by=Math.max(y-20,4);
+  ctx.fillStyle=tagColor;
+  ctx.beginPath();
+  ctx.roundRect(bx,by,tw+padding*2,18,4);
+  ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.fillText(text,bx+padding,by+13);
+  // 이름표도 DB에 저장
+  sb.from('canvas_stamps').insert([{nickname:myNickname}]);
   loadStamps();
+  // 이름표 스트로크도 broadcast
+  broadcastStamp(bx,by,tw,text,tagColor,w,h);
+}
+
+function broadcastStamp(bx,by,tw,text,tagColor,w,h){
+  if(!broadcastChannel)return;
+  broadcastChannel.send({type:'broadcast',event:'stamp',payload:{
+    nickname:myNickname,bx:bx/w,by:by/h,tw:tw/w,text,tagColor
+  }});
 }
 
 async function loadStamps(){
