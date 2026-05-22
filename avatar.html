@@ -141,6 +141,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
       <button class="effect-btn" onclick="selectEffect('echo',this)">🌊 에코</button>
       <button class="effect-btn" onclick="selectEffect('deep',this)">👻 으스스</button>
       <button class="effect-btn" onclick="selectEffect('alien',this)">👽 외계인</button>
+      <button class="effect-btn" onclick="selectEffect('autotune',this)">🎵 오토튠</button>
+      <button class="effect-btn" onclick="selectEffect('harmony',this)">🎼 화음</button>
+      <button class="effect-btn" onclick="selectEffect('vibrato',this)">🎤 비브라토</button>
+      <button class="effect-btn" onclick="selectEffect('melody',this)">🎹 멜로디</button>
     </div>
   </div>
 
@@ -166,7 +170,7 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const AVATARS=['🐶','🐱','🐼','🐰','🐸','🐧','🦊','🐻','🐨','🐯','🦁','🐮','🐷','🐙','🦋','🐢','🦄','🐳','🦖','🐝'];
-const EFFECT_NAMES={normal:'그냥',squirrel:'다람쥐',robot:'로봇',echo:'에코',deep:'으스스',alien:'외계인'};
+const EFFECT_NAMES={normal:'그냥',squirrel:'다람쥐',robot:'로봇',echo:'에코',deep:'으스스',alien:'외계인',autotune:'오토튠',harmony:'화음',vibrato:'비브라토',melody:'멜로디'};
 
 let myNickname='';
 let myAvatar=AVATARS[0];
@@ -369,6 +373,42 @@ function applyEffect(buf,effect,actx){
     }else if(effect==='alien'){
       // 외계인: 링 변조 + 피치변조
       for(let i=0;i<len;i++)outp[i]=(inp[Math.floor(i*1.5)%len]||0)*Math.sin(2*Math.PI*80*i/sr);
+    }else if(effect==='autotune'){
+      // 오토튠: 음계에 양자화 + 약간 피치 스냅
+      const scale=[261.63,293.66,329.63,349.23,392.00,440.00,493.88,523.25];
+      for(let i=0;i<len;i++){
+        // 단순 피치 퀀타이즈 근사: 음절 단위로 피치 그리드에 맞추기
+        const t=i/sr;
+        const snapFactor=1+0.03*Math.sin(2*Math.PI*4*t)*Math.round(Math.sin(2*Math.PI*2*t));
+        const srcIdx=Math.floor(i*snapFactor);
+        outp[i]=inp[Math.min(srcIdx,len-1)]||0;
+      }
+    }else if(effect==='harmony'){
+      // 화음: 원음 + 장3도(1.26배) + 완전5도(1.5배) 혼합
+      for(let i=0;i<len;i++){
+        const orig=inp[i]||0;
+        const third=inp[Math.floor(i*1.26)%len]||0;
+        const fifth=inp[Math.floor(i*1.5)%len]||0;
+        outp[i]=(orig*0.5+third*0.3+fifth*0.2);
+      }
+    }else if(effect==='vibrato'){
+      // 비브라토: 주기적 피치 흔들림
+      for(let i=0;i<len;i++){
+        const vibRate=5;const vibDepth=0.015;
+        const offset=Math.floor(vibDepth*sr*Math.sin(2*Math.PI*vibRate*i/sr));
+        const srcIdx=Math.max(0,Math.min(len-1,i+offset));
+        outp[i]=inp[srcIdx]||0;
+      }
+    }else if(effect==='melody'){
+      // 멜로디: 음절마다 음이 계단식으로 올라갔다 내려갔다
+      const steps=[1.0,1.12,1.26,1.0,0.89,1.0,1.12,0.89];
+      const stepLen=Math.floor(sr*0.12);
+      for(let i=0;i<len;i++){
+        const stepIdx=Math.floor(i/stepLen)%steps.length;
+        const pitch=steps[stepIdx];
+        const srcIdx=Math.floor(i*pitch)%len;
+        outp[i]=inp[srcIdx]||0;
+      }
     }else{
       // 그냥
       for(let i=0;i<len;i++)outp[i]=inp[i]||0;
