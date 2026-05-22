@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>함께 연주해요</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden}
+:root{--cream:#FFF8F0;--peach:#FFE4CC;--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh}
+
+.header{background:linear-gradient(135deg,#D6E4FF 0%,#D4E8D0 100%);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.65);border:1px solid rgba(200,160,140,.3);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
+.header-sub{font-size:11px;color:var(--text-light)}
+
+/* 닉네임 */
+#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
+.nick-card{background:#fff;border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(200,160,140,.15);text-align:center}
+.nick-emoji{font-size:44px;margin-bottom:.8rem}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.3rem}
+.nick-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.8}
+.nick-field{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--text-dark);background:var(--cream);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-field:focus{border-color:rgba(107,203,119,.5)}
+
+/* 악기 선택 */
+.instrument-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.instrument-card{background:var(--cream);border:2px solid rgba(200,160,140,.2);border-radius:16px;padding:1rem;text-align:center;cursor:pointer;transition:all .2s}
+.instrument-card:active{transform:scale(.96)}
+.instrument-card.selected{border-color:var(--teal);background:linear-gradient(135deg,#F0FFF0,#F0F8FF)}
+.instrument-emoji{font-size:32px;margin-bottom:.4rem;display:block}
+.instrument-name{font-size:13px;font-weight:500;color:var(--text-dark)}
+.instrument-desc{font-size:10px;color:var(--text-light);margin-top:2px}
+.start-btn{width:100%;background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+.start-btn:active{transform:scale(.98)}
+
+/* 메인 */
+#screen-main{display:none;padding:1rem;max-width:480px;margin:0 auto;padding-bottom:140px}
+
+/* 온라인 */
+.online-box{background:#fff;border-radius:14px;padding:.8rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:.8rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.online-dot{width:8px;height:8px;border-radius:50%;background:#6BCB77;flex-shrink:0;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.online-player{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500;padding:3px 8px;border-radius:20px;background:var(--cream)}
+.online-player.me{background:linear-gradient(135deg,#F0FFF0,#F0F8FF);color:var(--teal)}
+
+/* 피드 */
+.feed-box{background:#fff;border-radius:16px;padding:.8rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:.8rem;height:80px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.feed-item{font-size:11px;color:var(--text-mid);animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.feed-note{font-weight:600}
+
+/* 악기별 영역 */
+.my-instrument-label{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.6rem;text-transform:uppercase;text-align:center}
+
+/* 피아노 */
+.piano-wrap{background:#fff;border-radius:16px;padding:1rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:.8rem;overflow-x:auto}
+.piano-keys{display:flex;gap:3px;min-width:max-content;justify-content:center}
+.piano-key{width:44px;height:100px;border-radius:0 0 10px 10px;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:500;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;transition:all .1s;position:relative;box-shadow:0 3px 6px rgba(0,0,0,.15)}
+.piano-key.white{background:#fff;color:var(--text-light);border:1.5px solid rgba(200,160,140,.3)}
+.piano-key.black{background:#3D2B1F;color:rgba(255,255,255,.6);width:28px;height:65px;margin:0 -14px;z-index:1;font-size:9px}
+.piano-key.white:active,.piano-key.white.pressed{background:linear-gradient(180deg,#E8F4FF,#C8E8FF);transform:scale(.97)}
+.piano-key.black:active,.piano-key.black.pressed{background:#5B4A3F;transform:scale(.97)}
+.piano-key.remote-press{animation:remotePress .4s ease}
+@keyframes remotePress{0%{filter:brightness(1.5)}100%{filter:brightness(1)}}
+
+/* 실로폰 */
+.xylophone-wrap{background:#fff;border-radius:16px;padding:1rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:.8rem}
+.xylophone-keys{display:flex;gap:6px;justify-content:center;align-items:flex-end}
+.xylo-key{border:none;border-radius:8px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:11px;font-weight:500;color:#fff;transition:all .1s;box-shadow:0 4px 8px rgba(0,0,0,.2)}
+.xylo-key:active,.xylo-key.pressed{transform:scale(.93);filter:brightness(1.2)}
+.xylo-key.remote-press{animation:remotePress .4s ease}
+
+/* 드럼 */
+.drum-wrap{background:#fff;border-radius:16px;padding:1rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:.8rem}
+.drum-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.drum-pad{aspect-ratio:1;border-radius:50%;border:none;cursor:pointer;font-size:28px;display:flex;align-items:center;justify-content:center;transition:all .1s;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.drum-pad:active,.drum-pad.pressed{transform:scale(.9);filter:brightness(1.3)}
+.drum-pad.remote-press{animation:remotePress .4s ease}
+
+/* 기타 */
+.guitar-wrap{background:#fff;border-radius:16px;padding:1rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:.8rem}
+.guitar-strings{display:flex;flex-direction:column;gap:8px}
+.guitar-string{height:44px;border-radius:12px;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:600;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .1s;box-shadow:0 3px 8px rgba(0,0,0,.15)}
+.guitar-string:active,.guitar-string.pressed{transform:scale(.97);filter:brightness(1.2)}
+.guitar-string.remote-press{animation:remotePress .4s ease}
+
+/* 악기 변경 */
+.change-btn{width:100%;background:#fff;border:1.5px solid rgba(200,160,140,.3);border-radius:12px;padding:10px;font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-mid);cursor:pointer;margin-bottom:.8rem}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">🎵 함께 연주해요</div>
+  <div class="header-sub">각자 악기를 골라서 같이 연주해요!</div>
+</div>
+
+<!-- 닉네임 & 악기 선택 -->
+<div id="screen-nick">
+  <div style="height:.5rem"></div>
+  <div class="nick-card">
+    <div class="nick-emoji">🎵</div>
+    <div class="nick-title">함께 연주해요</div>
+    <div class="nick-sub">이름을 입력하고 악기를 골라요!</div>
+    <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10">
+    <div class="instrument-grid">
+      <div class="instrument-card selected" onclick="selectInstrument('piano',this)">
+        <span class="instrument-emoji">🎹</span>
+        <div class="instrument-name">피아노</div>
+        <div class="instrument-desc">건반을 눌러요</div>
+      </div>
+      <div class="instrument-card" onclick="selectInstrument('xylophone',this)">
+        <span class="instrument-emoji">🎵</span>
+        <div class="instrument-name">실로폰</div>
+        <div class="instrument-desc">음판을 두드려요</div>
+      </div>
+      <div class="instrument-card" onclick="selectInstrument('drum',this)">
+        <span class="instrument-emoji">🥁</span>
+        <div class="instrument-name">드럼</div>
+        <div class="instrument-desc">패드를 쳐요</div>
+      </div>
+      <div class="instrument-card" onclick="selectInstrument('guitar',this)">
+        <span class="instrument-emoji">🎸</span>
+        <div class="instrument-name">기타</div>
+        <div class="instrument-desc">줄을 튕겨요</div>
+      </div>
+    </div>
+    <button class="start-btn" onclick="startPlay()">🎵 연주 시작!</button>
+  </div>
+</div>
+
+<!-- 연주 화면 -->
+<div id="screen-main">
+  <div class="online-box" id="online-box">
+    <div class="online-dot"></div>
+    <div id="online-players"></div>
+  </div>
+
+  <!-- 피드 -->
+  <div class="feed-box" id="feed-box"></div>
+
+  <!-- 악기 영역 -->
+  <div class="my-instrument-label" id="instrument-label">🎹 피아노</div>
+  <div id="instrument-area"></div>
+
+  <button class="change-btn" onclick="changeInstrument()">🔄 악기 바꾸기</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let myNickname='';
+let myInstrument='piano';
+let audioCtx=null;
+let channel=null;
+
+const INSTRUMENT_EMOJI={piano:'🎹',xylophone:'🎵',drum:'🥁',guitar:'🎸'};
+
+function getAudioCtx(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function selectInstrument(name,el){
+  myInstrument=name;
+  document.querySelectorAll('.instrument-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function startPlay(){
+  const nick=document.getElementById('nick-input').value.trim();
+  if(!nick){alert('이름을 입력해줘요!');return;}
+  myNickname=nick;
+  document.getElementById('screen-nick').style.display='none';
+  document.getElementById('screen-main').style.display='block';
+  renderInstrument();
+  setupChannel();
+  registerOnline();
+  setInterval(registerOnline,15000);
+  setInterval(loadOnline,8000);
+}
+
+function changeInstrument(){
+  document.getElementById('screen-nick').style.display='block';
+  document.getElementById('screen-main').style.display='none';
+}
+
+/* ── 음계 ── */
+const NOTES={
+  do:261.63,re:293.66,mi:329.63,fa:349.23,
+  sol:392.00,la:440.00,si:493.88,
+  do2:523.25,re2:587.33,mi2:659.25,fa2:698.46,sol2:783.99
+};
+const NOTE_NAMES={
+  do:'도',re:'레',mi:'미',fa:'파',
+  sol:'솔',la:'라',si:'시',
+  do2:'도↑',re2:'레↑',mi2:'미↑',fa2:'파↑',sol2:'솔↑'
+};
+
+/* ── 악기 사운드 ── */
+function playSound(instrument,note,vol=0.5){
+  const actx=getAudioCtx();
+  if(instrument==='drum'){
+    playDrum(note,vol,actx);return;
+  }
+  const freq=NOTES[note];if(!freq)return;
+  const osc=actx.createOscillator();
+  const gain=actx.createGain();
+  osc.connect(gain);gain.connect(actx.destination);
+  const waveforms={piano:'triangle',xylophone:'sine',guitar:'sawtooth'};
+  osc.type=waveforms[instrument]||'sine';
+  osc.frequency.value=freq;
+  gain.gain.setValueAtTime(0,actx.currentTime);
+  gain.gain.linearRampToValueAtTime(vol,actx.currentTime+.01);
+  const decay={piano:.8,xylophone:.5,guitar:.6};
+  gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+(decay[instrument]||.5));
+  osc.start(actx.currentTime);
+  osc.stop(actx.currentTime+1.2);
+}
+
+function playDrum(type,vol,actx){
+  const buf=actx.createBuffer(1,actx.sampleRate*.15,actx.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1);
+  const src=actx.createBufferSource();src.buffer=buf;
+  const gain=actx.createGain();
+  const filter=actx.createBiquadFilter();
+  src.connect(filter);filter.connect(gain);gain.connect(actx.destination);
+  if(type==='kick'){filter.type='lowpass';filter.frequency.value=120;gain.gain.setValueAtTime(vol*.9,actx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.2);}
+  else if(type==='snare'){filter.type='bandpass';filter.frequency.value=900;gain.gain.setValueAtTime(vol*.6,actx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.12);}
+  else if(type==='hihat'){filter.type='highpass';filter.frequency.value=9000;gain.gain.setValueAtTime(vol*.3,actx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.06);}
+  else if(type==='clap'){filter.type='bandpass';filter.frequency.value=1400;gain.gain.setValueAtTime(vol*.5,actx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.1);}
+  else if(type==='cymbal'){filter.type='highpass';filter.frequency.value=6000;gain.gain.setValueAtTime(vol*.4,actx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.3);}
+  else{filter.type='lowpass';filter.frequency.value=200;gain.gain.setValueAtTime(vol*.5,actx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.1);}
+  src.start(actx.currentTime);src.stop(actx.currentTime+.4);
+}
+
+/* ── 악기 렌더 ── */
+function renderInstrument(){
+  const label=document.getElementById('instrument-label');
+  const area=document.getElementById('instrument-area');
+  label.textContent=INSTRUMENT_EMOJI[myInstrument]+' '+{piano:'피아노',xylophone:'실로폰',drum:'드럼',guitar:'기타'}[myInstrument];
+  if(myInstrument==='piano')renderPiano(area);
+  else if(myInstrument==='xylophone')renderXylophone(area);
+  else if(myInstrument==='drum')renderDrum(area);
+  else if(myInstrument==='guitar')renderGuitar(area);
+}
+
+function renderPiano(area){
+  const keys=[
+    {note:'do',type:'white',label:'도'},{note:'re',type:'white',label:'레'},
+    {note:'mi',type:'white',label:'미'},{note:'fa',type:'white',label:'파'},
+    {note:'sol',type:'white',label:'솔'},{note:'la',type:'white',label:'라'},
+    {note:'si',type:'white',label:'시'},{note:'do2',type:'white',label:'도'},
+  ];
+  area.innerHTML=`<div class="piano-wrap"><div class="piano-keys">${
+    keys.map(k=>`<button class="piano-key ${k.type}" id="key-${k.note}" ontouchstart="pressKey('${k.note}');event.preventDefault()" onmousedown="pressKey('${k.note}')">${k.label}</button>`).join('')
+  }</div></div>`;
+}
+
+function renderXylophone(area){
+  const keys=[
+    {note:'do',color:'#E05555',w:52,h:110},
+    {note:'re',color:'#FF8C42',w:48,h:100},
+    {note:'mi',color:'#FFD93D',w:44,h:90},
+    {note:'fa',color:'#6BCB77',w:40,h:80},
+    {note:'sol',color:'#4D96FF',w:36,h:70},
+    {note:'la',color:'#9B59B6',w:32,h:60},
+    {note:'si',color:'#E91E8C',w:28,h:50},
+  ];
+  area.innerHTML=`<div class="xylophone-wrap"><div class="xylophone-keys">${
+    keys.map(k=>`<button class="xylo-key" id="key-${k.note}" style="background:${k.color};width:${k.w}px;height:${k.h}px" ontouchstart="pressKey('${k.note}');event.preventDefault()" onmousedown="pressKey('${k.note}')">${NOTE_NAMES[k.note]}</button>`).join('')
+  }</div></div>`;
+}
+
+function renderDrum(area){
+  const pads=[
+    {type:'kick',emoji:'🥁',color:'#C97B7B',label:'킥'},
+    {type:'snare',emoji:'🪘',color:'#8B6B4B',label:'스네어'},
+    {type:'hihat',emoji:'🔔',color:'#DAA520',label:'하이햇'},
+    {type:'clap',emoji:'👏',color:'#5B9B8E',label:'클랩'},
+    {type:'cymbal',emoji:'✨',color:'#7B68EE',label:'심벌'},
+    {type:'tom',emoji:'🎵',color:'#4D96FF',label:'톰'},
+  ];
+  area.innerHTML=`<div class="drum-wrap"><div class="drum-grid">${
+    pads.map(p=>`<button class="drum-pad" id="key-${p.type}" style="background:radial-gradient(circle at 35% 35%,${p.color}dd,${p.color}88)" ontouchstart="pressKey('${p.type}');event.preventDefault()" onmousedown="pressKey('${p.type}')">${p.emoji}</button>`).join('')
+  }</div></div>`;
+}
+
+function renderGuitar(area){
+  const strings=[
+    {note:'do',color:'#E05555',label:'🎸 도  (E)'},
+    {note:'fa',color:'#FF8C42',label:'🎸 파  (A)'},
+    {note:'la',color:'#FFD93D',label:'🎸 라  (D)'},
+    {note:'re',color:'#6BCB77',label:'🎸 레  (G)'},
+    {note:'si',color:'#4D96FF',label:'🎸 시  (B)'},
+    {note:'mi',color:'#C77DFF',label:'🎸 미  (e)'},
+  ];
+  area.innerHTML=`<div class="guitar-wrap"><div class="guitar-strings">${
+    strings.map(s=>`<button class="guitar-string" id="key-${s.note}" style="background:linear-gradient(135deg,${s.color},${s.color}aa)" ontouchstart="pressKey('${s.note}');event.preventDefault()" onmousedown="pressKey('${s.note}')">${s.label}</button>`).join('')
+  }</div></div>`;
+}
+
+/* ── 연주 ── */
+function pressKey(note){
+  playSound(myInstrument,note);
+  flashKey(note,'local');
+  broadcastNote(note);
+  addFeed(myNickname,myInstrument,note,true);
+}
+
+function flashKey(note,type){
+  const el=document.getElementById('key-'+note);
+  if(!el)return;
+  el.classList.add('pressed');
+  setTimeout(()=>el.classList.remove('pressed'),200);
+  if(type==='remote'){
+    el.classList.add('remote-press');
+    setTimeout(()=>el.classList.remove('remote-press'),400);
+  }
+}
+
+/* ── 피드 ── */
+const DRUM_NAMES={kick:'킥',snare:'스네어',hihat:'하이햇',clap:'클랩',cymbal:'심벌',tom:'톰'};
+function addFeed(nickname,instrument,note,isMe=false){
+  const feed=document.getElementById('feed-box');
+  const noteName=instrument==='drum'?(DRUM_NAMES[note]||note):NOTE_NAMES[note]||note;
+  const el=document.createElement('div');
+  el.className='feed-item';
+  el.innerHTML=`<span style="color:${isMe?'var(--teal)':'var(--pink)'}">${INSTRUMENT_EMOJI[instrument]} ${nickname}</span> <span class="feed-note">${noteName}</span>`;
+  feed.appendChild(el);
+  feed.scrollTop=feed.scrollHeight;
+  if(feed.children.length>30)feed.removeChild(feed.firstChild);
+}
+
+/* ── Broadcast ── */
+function setupChannel(){
+  channel=sb.channel('jam-session',{config:{broadcast:{self:false}}});
+  channel
+    .on('broadcast',{event:'note'},(payload)=>{
+      const{nickname,instrument,note}=payload.payload;
+      // 다른 사람 소리도 재생
+      playSound(instrument,note,0.4);
+      // 만약 같은 악기면 건반 하이라이트
+      if(instrument===myInstrument)flashKey(note,'remote');
+      addFeed(nickname,instrument,note,false);
+    })
+    .subscribe();
+}
+
+function broadcastNote(note){
+  if(!channel)return;
+  channel.send({type:'broadcast',event:'note',payload:{
+    nickname:myNickname,instrument:myInstrument,note
+  }});
+}
+
+/* ── 온라인 ── */
+async function registerOnline(){
+  await sb.from('online_users').upsert([{nickname:myNickname,last_seen:new Date().toISOString()}],{onConflict:'nickname'});
+  loadOnline();
+}
+
+async function loadOnline(){
+  const since=new Date(Date.now()-30000).toISOString();
+  const{data}=await sb.from('online_users').select('nickname').gte('last_seen',since);
+  if(!data)return;
+  const el=document.getElementById('online-players');
+  el.innerHTML=data.map(u=>`
+    <div class="online-player${u.nickname===myNickname?' me':''}">
+      ${INSTRUMENT_EMOJI[myInstrument]||'🎵'} ${u.nickname}${u.nickname===myNickname?' (나)':''}
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
