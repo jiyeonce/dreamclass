@@ -298,26 +298,39 @@ function selectEffect(name,el){
 }
 
 /* ── 녹음 & 변조 ── */
+let currentStream=null;
+
 function startRec(){
   if(isRec)return;
   navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    currentStream=stream;
     mediaRec=new MediaRecorder(stream);recChunks=[];
-    mediaRec.ondataavailable=e=>recChunks.push(e.data);
+    mediaRec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};
     mediaRec.onstop=()=>{
+      if(currentStream){currentStream.getTracks().forEach(t=>t.stop());currentStream=null;}
+      if(recChunks.length===0)return;
       const blob=new Blob(recChunks,{type:'audio/webm'});
-      stream.getTracks().forEach(t=>t.stop());
+      recChunks=[];
       processAndSave(blob);
     };
     mediaRec.start();isRec=true;
     document.getElementById('rec-btn').classList.add('recording');
     document.getElementById('rec-icon').textContent='⏹';
     document.getElementById('rec-text').textContent='녹음 중... 손 떼면 완료!';
-  }).catch(()=>{alert('마이크 권한이 필요해요!');});
+  }).catch(()=>{alert('마이크 권한이 필요해요!');resetRecBtn();});
 }
 
 function stopRec(){
-  if(!isRec||!mediaRec||mediaRec.state==='inactive')return;
-  mediaRec.stop();isRec=false;
+  if(!isRec)return;
+  isRec=false;
+  if(mediaRec&&mediaRec.state==='recording'){
+    try{mediaRec.stop();}catch(e){console.log(e);}
+  }
+  resetRecBtn();
+}
+
+function resetRecBtn(){
+  isRec=false;
   document.getElementById('rec-btn').classList.remove('recording');
   document.getElementById('rec-icon').textContent='🎙️';
   document.getElementById('rec-text').textContent='누르고 있으면 녹음돼요';
