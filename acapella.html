@@ -267,8 +267,9 @@ async function processAndSave(blob){
   const harmonyIdx=layers.length%HARMONY.length;
   const ratio=HARMONY[harmonyIdx].ratio;
 
-  // 피치 시프트
-  const shiftedBuf=pitchShift(audioBuf,ratio,actx);
+  // 목소리 피치 분석 → 음계 스냅 → 화음 적용
+  document.getElementById('play-status').textContent='음정 분석 중... 🎵';
+  const shiftedBuf=snapAndHarmonize(audioBuf,ratio,actx);
 
   // 미리 재생
   playBuffer(shiftedBuf,actx);
@@ -291,6 +292,44 @@ async function processAndSave(blob){
   loadLayers();
 }
 
+/* ── 피치 분석 ── */
+// 자기상관 방법으로 주파수 추정
+function estimatePitch(buf){
+  const data=buf.getChannelData(0);
+  const sr=buf.sampleRate;
+  const minP=Math.floor(sr/500); // 최고 500Hz
+  const maxP=Math.floor(sr/80);  // 최저 80Hz
+  let bestCorr=-1,bestPeriod=minP;
+  const sampleLen=Math.min(2048,data.length);
+  for(let p=minP;p<maxP;p++){
+    let corr=0,norm=0;
+    for(let i=0;i<sampleLen;i++){
+      corr+=(data[i]||0)*(data[i+p]||0);
+      norm+=(data[i]||0)*(data[i]||0);
+    }
+    if(norm>0)corr/=norm;
+    if(corr>bestCorr){bestCorr=corr;bestPeriod=p;}
+  }
+  return sr/bestPeriod;
+}
+
+// 가장 가까운 음계 주파수 찾기 (C4~B5 범위)
+const SCALE_FREQS=[
+  261.63,277.18,293.66,311.13,329.63,349.23,
+  369.99,392.00,415.30,440.00,466.16,493.88,
+  523.25,554.37,587.33,622.25,659.25,698.46,
+  739.99,783.99,830.61,880.00,932.33,987.77
+];
+
+function snapToScale(freq){
+  let best=SCALE_FREQS[0],bestDist=Infinity;
+  for(const f of SCALE_FREQS){
+    const dist=Math.abs(Math.log2(freq/f));
+    if(dist<bestDist){bestDist=dist;best=f;}
+  }
+  return best;
+}
+
 /* ── 피치 시프트 ── */
 function pitchShift(buf,ratio,actx){
   const sr=buf.sampleRate,ch=buf.numberOfChannels,len=buf.length;
@@ -307,6 +346,19 @@ function pitchShift(buf,ratio,actx){
     }
   }
   return out;
+}
+
+// 목소리 → 음계 스냅 + 화음 적용
+function snapAndHarmonize(buf,harmonyRatio,actx){
+  // 1. 목소리 평균 피치 분석
+  const detectedFreq=estimatePitch(buf);
+  // 2. 가장 가까운 음계 주파수
+  const snappedFreq=snapToScale(detectedFreq);
+  // 3. 피치 조정 비율 = (목표 음 / 현재 음) * 화음 비율
+  const snapRatio=snappedFreq/detectedFreq;
+  const totalRatio=snapRatio*harmonyRatio;
+  // 4. 피치 시프트 적용
+  return pitchShift(buf,1/totalRatio,actx);
 }
 
 /* ── 재생 ── */
