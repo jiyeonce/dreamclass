@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>보이스 스피너</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden}
+:root{--cream:#FFF8F0;--peach:#FFE4CC;--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
+body{font-family:'Noto Sans KR',sans-serif;background:#1a0a1e;color:#fff;min-height:100vh}
+
+.header{background:linear-gradient(135deg,#2d0a3e 0%,#0a1a3e 100%);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,.8);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:#fff;margin-bottom:.2rem}
+.header-sub{font-size:11px;color:rgba(255,255,255,.5)}
+
+/* 닉네임 */
+#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
+.nick-card{background:rgba(255,255,255,.08);border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(255,255,255,.1);text-align:center;backdrop-filter:blur(10px)}
+.nick-avatar{font-size:56px;margin-bottom:.5rem;cursor:pointer;display:block;transition:transform .2s}
+.nick-avatar:active{transform:scale(.9)}
+.nick-hint{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:.8rem}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:#fff;margin-bottom:.3rem}
+.nick-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:1.2rem;line-height:1.8}
+.nick-field{width:100%;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:#fff;background:rgba(255,255,255,.1);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-field::placeholder{color:rgba(255,255,255,.3)}
+.nick-field:focus{border-color:rgba(180,100,255,.5)}
+.start-btn{width:100%;background:linear-gradient(135deg,#9b59b6,#6c3483);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+.start-btn:active{transform:scale(.98)}
+
+/* 메인 */
+#screen-main{display:none;padding:1rem;max-width:480px;margin:0 auto;padding-bottom:120px}
+
+/* 스피너 */
+.spinner-wrap{position:relative;width:min(320px,85vw);margin:0 auto 1.5rem;aspect-ratio:1;user-select:none}
+.spinner-canvas{width:100%;height:100%;cursor:grab;border-radius:50%;touch-action:none}
+.spinner-canvas:active{cursor:grabbing}
+.spinner-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.spinner-status{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:4px}
+.spinner-rpm{font-family:'Noto Serif KR',serif;font-size:28px;color:#fff;font-weight:600}
+.spinner-dir{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+
+/* 파형 표시 */
+.waveform-wrap{background:rgba(255,255,255,.05);border-radius:14px;padding:.8rem;margin-bottom:1rem;border:1px solid rgba(255,255,255,.08)}
+.waveform-label{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:.5rem;text-transform:uppercase}
+canvas#waveform{width:100%;height:60px;display:block}
+
+/* RPM 슬라이더 */
+.rpm-wrap{background:rgba(255,255,255,.05);border-radius:14px;padding:1rem;margin-bottom:1rem;border:1px solid rgba(255,255,255,.08)}
+.rpm-label{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:.8rem;text-transform:uppercase;display:flex;justify-content:space-between}
+.rpm-track{position:relative;height:8px;background:rgba(255,255,255,.1);border-radius:4px;cursor:pointer;margin:0 8px}
+.rpm-fill{position:absolute;top:0;left:50%;height:100%;background:linear-gradient(90deg,#9b59b6,#e91e8c);border-radius:4px;transform-origin:left;transition:width .05s}
+.rpm-thumb{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:grab;transition:left .05s}
+.rpm-labels{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.3);margin-top:6px;padding:0 8px}
+
+/* 버튼들 */
+.btn-row{display:flex;gap:8px;margin-bottom:1rem}
+.ctrl-btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px}
+.ctrl-btn:active{transform:scale(.97)}
+.rec-btn-main{background:linear-gradient(135deg,#e91e8c,#9b59b6);color:#fff}
+.rec-btn-main.recording{animation:pulse 1s infinite}
+.play-btn-main{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff}
+.rev-btn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.15)!important}
+.rev-btn.active{background:rgba(155,89,182,.4);border-color:rgba(155,89,182,.6)!important}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* 레이어 목록 */
+.layers-wrap{background:rgba(255,255,255,.05);border-radius:14px;padding:1rem;border:1px solid rgba(255,255,255,.08);margin-bottom:1rem}
+.layers-label{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:.8rem;text-transform:uppercase}
+.layer-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.05);margin-bottom:6px;cursor:pointer;transition:all .2s}
+.layer-item:active{transform:scale(.98)}
+.layer-item.active-layer{background:rgba(155,89,182,.3);border:1px solid rgba(155,89,182,.5)}
+.layer-avatar{font-size:22px;flex-shrink:0}
+.layer-info{flex:1}
+.layer-name{font-size:12px;font-weight:500;color:#fff}
+.layer-time{font-size:10px;color:rgba(255,255,255,.4)}
+.layer-waveform{width:60px;height:24px;flex-shrink:0}
+.layer-del{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:14px;padding:4px}
+.layers-empty{font-size:12px;color:rgba(255,255,255,.3);text-align:center;padding:1rem}
+
+/* 온라인 */
+.online-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.online-chip{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.08);border-radius:20px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,.7)}
+.online-dot{width:6px;height:6px;border-radius:50%;background:#6BCB77;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">🎛️ 보이스 스피너</div>
+  <div class="header-sub">목소리를 녹음하고 턴테이블처럼 돌려봐요!</div>
+</div>
+
+<!-- 닉네임 -->
+<div id="screen-nick">
+  <div style="height:.5rem"></div>
+  <div class="nick-card">
+    <span class="nick-avatar" id="nick-avatar" onclick="rerollAvatar()">🎧</span>
+    <div class="nick-hint">탭하면 바뀌어요!</div>
+    <div class="nick-title">보이스 스피너</div>
+    <div class="nick-sub">목소리를 녹음하면<br>턴테이블처럼 돌리고 변형해요 🎛️</div>
+    <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterMain()">
+    <button class="start-btn" onclick="enterMain()">🎛️ 입장하기</button>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div id="screen-main">
+  <!-- 온라인 -->
+  <div class="online-row" id="online-row"></div>
+
+  <!-- 스피너 -->
+  <div class="spinner-wrap">
+    <canvas id="spinner-canvas" class="spinner-canvas"></canvas>
+    <div class="spinner-center">
+      <div class="spinner-status" id="spinner-status">녹음해봐요</div>
+      <div class="spinner-rpm" id="spinner-rpm">0</div>
+      <div class="spinner-dir" id="spinner-dir">RPM</div>
+    </div>
+  </div>
+
+  <!-- 파형 -->
+  <div class="waveform-wrap">
+    <div class="waveform-label">파형</div>
+    <canvas id="waveform" height="60"></canvas>
+  </div>
+
+  <!-- RPM 슬라이더 -->
+  <div class="rpm-wrap">
+    <div class="rpm-label">
+      <span>RPM 조절</span>
+      <span id="rpm-val-label">0</span>
+    </div>
+    <div class="rpm-track" id="rpm-track">
+      <div class="rpm-fill" id="rpm-fill" style="width:0%;left:50%"></div>
+      <div class="rpm-thumb" id="rpm-thumb" style="left:50%"></div>
+    </div>
+    <div class="rpm-labels"><span>← 역방향</span><span>0</span><span>정방향 →</span></div>
+  </div>
+
+  <!-- 버튼 -->
+  <div class="btn-row">
+    <button class="ctrl-btn rec-btn-main" id="rec-btn"
+      ontouchstart="startRec();event.preventDefault()"
+      ontouchend="stopRec();event.preventDefault()"
+      onmousedown="startRec()" onmouseup="stopRec()">
+      <span id="rec-icon">⏺</span><span id="rec-text">녹음</span>
+    </button>
+    <button class="ctrl-btn play-btn-main" id="play-btn" onclick="togglePlay()">
+      <span id="play-icon">▶</span><span>재생</span>
+    </button>
+    <button class="ctrl-btn rev-btn" id="rev-btn" onclick="toggleReverse()">
+      <span>↩ 역재생</span>
+    </button>
+  </div>
+
+  <!-- 레이어 -->
+  <div class="layers-wrap">
+    <div class="layers-label">🎵 녹음된 목소리들</div>
+    <div id="layers-list"><div class="layers-empty">아직 없어요. 녹음해봐요! 🎙️</div></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const AVATARS=['🎧','🎵','🎤','🎸','🥁','🎹','🎺','🎻','🎶','🦄','🐶','🐱','🐼','🦊','🐸'];
+let myNickname='',myAvatar='🎧';
+let audioCtx=null;
+let mediaRec=null,recChunks=[],isRec=false,currentStream=null;
+let layers=[]; // {id,nickname,avatar,audioBuf,b64}
+let activeLayerIdx=0;
+let rpm=0; // -100 ~ 100
+let isPlaying=false;
+let isReverse=false;
+let playSource=null;
+let spinAngle=0;
+let spinAnimId=null;
+let isDragging=false;
+let lastDragX=0;
+let channel=null;
+
+// 파형 애니메이션
+let analyser=null;
+let waveAnimId=null;
+
+function getAudioCtx(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function rerollAvatar(){
+  myAvatar=AVATARS[Math.floor(Math.random()*AVATARS.length)];
+  document.getElementById('nick-avatar').textContent=myAvatar;
+}
+rerollAvatar();
+
+function enterMain(){
+  const nick=document.getElementById('nick-input').value.trim()||'익명';
+  myNickname=nick;
+  document.getElementById('screen-nick').style.display='none';
+  document.getElementById('screen-main').style.display='block';
+  initSpinner();
+  initRPM();
+  loadLayers();
+  setupChannel();
+  registerOnline();
+  setInterval(registerOnline,15000);
+  setInterval(loadOnline,8000);
+}
+
+/* ── 스피너 캔버스 ── */
+function initSpinner(){
+  const canvas=document.getElementById('spinner-canvas');
+  const size=canvas.offsetWidth;
+  canvas.width=size;canvas.height=size;
+  drawSpinner(canvas,0);
+
+  // 드래그로 RPM 조절
+  canvas.addEventListener('mousedown',e=>{isDragging=true;lastDragX=e.clientX;});
+  canvas.addEventListener('touchstart',e=>{isDragging=true;lastDragX=e.touches[0].clientX;},{passive:true});
+  window.addEventListener('mousemove',e=>{
+    if(!isDragging)return;
+    const dx=e.clientX-lastDragX;lastDragX=e.clientX;
+    rpm=Math.max(-100,Math.min(100,rpm+dx*0.8));
+    updateRPMUI();
+    if(isPlaying)restartPlay();
+  });
+  window.addEventListener('touchmove',e=>{
+    if(!isDragging)return;
+    const dx=e.touches[0].clientX-lastDragX;lastDragX=e.touches[0].clientX;
+    rpm=Math.max(-100,Math.min(100,rpm+dx*0.8));
+    updateRPMUI();
+    if(isPlaying)restartPlay();
+  },{passive:true});
+  window.addEventListener('mouseup',()=>isDragging=false);
+  window.addEventListener('touchend',()=>isDragging=false);
+
+  // 스피너 애니메이션
+  function animSpin(){
+    spinAngle+=rpm*0.02;
+    drawSpinner(canvas,spinAngle);
+    spinAnimId=requestAnimationFrame(animSpin);
+  }
+  animSpin();
+}
+
+function drawSpinner(canvas,angle){
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,r=w/2-4;
+  ctx.clearRect(0,0,w,h);
+
+  // 바깥 원
+  const grad=ctx.createRadialGradient(cx,cy,r*.3,cx,cy,r);
+  grad.addColorStop(0,'#3d1a5e');
+  grad.addColorStop(1,'#1a0a2e');
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle=grad;ctx.fill();
+
+  // 레코드 홈 (원형 선들)
+  for(let i=0;i<6;i++){
+    const ri=r*(.4+i*.1);
+    ctx.beginPath();ctx.arc(cx,cy,ri,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(255,255,255,${0.03+i*0.01})`;
+    ctx.lineWidth=1;ctx.stroke();
+  }
+
+  // 파형을 원 위에 표시
+  if(layers[activeLayerIdx]&&layers[activeLayerIdx].audioBuf){
+    const buf=layers[activeLayerIdx].audioBuf;
+    const data=buf.getChannelData(0);
+    const numPts=180;
+    ctx.beginPath();
+    for(let i=0;i<numPts;i++){
+      const a=angle*(Math.PI/180)+(i/numPts)*Math.PI*2;
+      const sample=data[Math.floor((i/numPts)*data.length)]||0;
+      const ri=r*.55+sample*r*.2;
+      const x=cx+Math.cos(a)*ri;const y=cy+Math.sin(a)*ri;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle='rgba(233,30,140,.6)';ctx.lineWidth=2;ctx.stroke();
+  }
+
+  // 회전 바늘
+  const needleAngle=angle*(Math.PI/180);
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.lineTo(cx+Math.cos(needleAngle)*r*.7,cy+Math.sin(needleAngle)*r*.7);
+  ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2;ctx.stroke();
+
+  // 중앙 원
+  ctx.beginPath();ctx.arc(cx,cy,r*.12,0,Math.PI*2);
+  ctx.fillStyle='#9b59b6';ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,r*.06,0,Math.PI*2);
+  ctx.fillStyle='#fff';ctx.fill();
+}
+
+/* ── RPM 슬라이더 ── */
+function initRPM(){
+  const track=document.getElementById('rpm-track');
+  function setFromX(clientX){
+    const r=track.getBoundingClientRect();
+    const pct=(clientX-r.left)/r.width;
+    rpm=Math.max(-100,Math.min(100,(pct-.5)*200));
+    updateRPMUI();
+    if(isPlaying)restartPlay();
+  }
+  track.addEventListener('mousedown',e=>{setFromX(e.clientX);
+    function mm(e){setFromX(e.clientX);}
+    function mu(){window.removeEventListener('mousemove',mm);window.removeEventListener('mouseup',mu);}
+    window.addEventListener('mousemove',mm);window.addEventListener('mouseup',mu);
+  });
+  track.addEventListener('touchstart',e=>{setFromX(e.touches[0].clientX);
+    function tm(e){setFromX(e.touches[0].clientX);}
+    function tu(){window.removeEventListener('touchmove',tm);window.removeEventListener('touchend',tu);}
+    window.addEventListener('touchmove',tm,{passive:true});window.addEventListener('touchend',tu);
+  },{passive:true});
+}
+
+function updateRPMUI(){
+  const pct=((rpm+100)/200)*100;
+  const thumb=document.getElementById('rpm-thumb');
+  const fill=document.getElementById('rpm-fill');
+  thumb.style.left=pct+'%';
+  if(rpm>=0){fill.style.left='50%';fill.style.width=(pct-50)+'%';}
+  else{fill.style.left=pct+'%';fill.style.width=(50-pct)+'%';}
+  document.getElementById('rpm-val-label').textContent=Math.round(rpm);
+  document.getElementById('spinner-rpm').textContent=Math.abs(Math.round(rpm));
+  document.getElementById('spinner-dir').textContent=rpm>0?'▶ 정방향':rpm<0?'◀ 역방향':'정지';
+}
+
+/* ── 녹음 ── */
+function startRec(){
+  if(isRec)return;
+  if(isPlaying)stopPlay();
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    currentStream=stream;
+    mediaRec=new MediaRecorder(stream);recChunks=[];
+    mediaRec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};
+    mediaRec.onstop=async()=>{
+      if(currentStream){currentStream.getTracks().forEach(t=>t.stop());currentStream=null;}
+      if(!recChunks.length)return;
+      const blob=new Blob(recChunks,{type:'audio/webm'});
+      recChunks=[];
+      await saveLayer(blob);
+    };
+    mediaRec.start();isRec=true;
+    document.getElementById('rec-btn').classList.add('recording');
+    document.getElementById('rec-icon').textContent='⏹';
+    document.getElementById('rec-text').textContent='녹음 중...';
+    document.getElementById('spinner-status').textContent='녹음 중 🔴';
+  }).catch(()=>{alert('마이크 권한이 필요해요!');resetRecBtn();});
+}
+
+function stopRec(){
+  if(!isRec)return;isRec=false;
+  if(mediaRec&&mediaRec.state==='recording'){try{mediaRec.stop();}catch(e){}}
+  resetRecBtn();
+}
+
+function resetRecBtn(){
+  isRec=false;
+  document.getElementById('rec-btn').classList.remove('recording');
+  document.getElementById('rec-icon').textContent='⏺';
+  document.getElementById('rec-text').textContent='녹음';
+  document.getElementById('spinner-status').textContent='드래그해봐요';
+}
+
+async function saveLayer(blob){
+  document.getElementById('spinner-status').textContent='저장 중...';
+  const actx=getAudioCtx();
+  const arrayBuf=await blob.arrayBuffer();
+  let audioBuf;
+  try{audioBuf=await actx.decodeAudioData(arrayBuf);}catch(e){alert('처리 실패');return;}
+  // WAV 변환
+  const wavBlob=bufferToWav(audioBuf);
+  const b64=await blobToB64(wavBlob);
+  const{data,error}=await sb.from('voice_spinner_layers').insert([{
+    nickname:myNickname,avatar:myAvatar,audio_b64:b64
+  }]).select().single();
+  if(error){alert('저장 실패');return;}
+  layers.push({id:data.id,nickname:myNickname,avatar:myAvatar,audioBuf,b64});
+  activeLayerIdx=layers.length-1;
+  drawWaveform(audioBuf);
+  renderLayers();
+  document.getElementById('spinner-status').textContent='드래그해봐요';
+  if(channel)channel.send({type:'broadcast',event:'new_layer',payload:{nickname:myNickname,avatar:myAvatar}});
+}
+
+/* ── 재생 ── */
+function togglePlay(){
+  if(isPlaying){stopPlay();return;}
+  if(!layers.length){alert('먼저 녹음해봐요! 🎙️');return;}
+  startPlay();
+}
+
+function startPlay(){
+  const actx=getAudioCtx();
+  const layer=layers[activeLayerIdx];
+  if(!layer||!layer.audioBuf)return;
+  stopPlay();
+  isPlaying=true;
+  document.getElementById('play-icon').textContent='⏹';
+  document.getElementById('spinner-status').textContent='재생 중 🎵';
+
+  const playbackRate=Math.abs(rpm)/33*(isReverse||rpm<0?-1:1);
+  const rate=playbackRate===0?0.001:Math.abs(playbackRate);
+
+  playSource=actx.createBufferSource();
+  playSource.buffer=layer.audioBuf;
+  playSource.loop=true;
+  playSource.playbackRate.value=Math.max(0.1,Math.min(4,rate));
+
+  // 파형 시각화
+  analyser=actx.createAnalyser();
+  analyser.fftSize=256;
+  playSource.connect(analyser);
+  analyser.connect(actx.destination);
+
+  if(isReverse||rpm<0){
+    // 역재생: 버퍼 뒤집기
+    const reversed=reverseBuffer(layer.audioBuf,actx);
+    playSource.buffer=reversed;
+  }
+
+  playSource.start();
+  animateWaveform();
+
+  playSource.onended=()=>{if(isPlaying)stopPlay();};
+}
+
+function stopPlay(){
+  isPlaying=false;
+  document.getElementById('play-icon').textContent='▶';
+  document.getElementById('spinner-status').textContent='드래그해봐요';
+  if(playSource){try{playSource.stop();}catch(e){}playSource=null;}
+  if(waveAnimId){cancelAnimationFrame(waveAnimId);waveAnimId=null;}
+}
+
+function restartPlay(){
+  if(!isPlaying)return;
+  stopPlay();startPlay();
+}
+
+function toggleReverse(){
+  isReverse=!isReverse;
+  document.getElementById('rev-btn').classList.toggle('active',isReverse);
+  if(isPlaying)restartPlay();
+}
+
+function reverseBuffer(buf,actx){
+  const rev=actx.createBuffer(buf.numberOfChannels,buf.length,buf.sampleRate);
+  for(let c=0;c<buf.numberOfChannels;c++){
+    const inp=buf.getChannelData(c);
+    const outp=rev.getChannelData(c);
+    for(let i=0;i<buf.length;i++)outp[i]=inp[buf.length-1-i];
+  }
+  return rev;
+}
+
+/* ── 파형 시각화 ── */
+function drawWaveform(buf){
+  const canvas=document.getElementById('waveform');
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth;
+  const w=canvas.width,h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  const data=buf.getChannelData(0);
+  const step=Math.floor(data.length/w);
+  ctx.beginPath();
+  ctx.strokeStyle='rgba(233,30,140,.7)';ctx.lineWidth=1.5;
+  for(let i=0;i<w;i++){
+    const sample=data[i*step]||0;
+    const y=h/2+sample*(h/2*.8);
+    i===0?ctx.moveTo(i,y):ctx.lineTo(i,y);
+  }
+  ctx.stroke();
+}
+
+function animateWaveform(){
+  if(!analyser)return;
+  const canvas=document.getElementById('waveform');
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth;
+  const w=canvas.width,h=canvas.height;
+  const bufLen=analyser.frequencyBinCount;
+  const dataArr=new Uint8Array(bufLen);
+  function draw(){
+    if(!isPlaying){return;}
+    waveAnimId=requestAnimationFrame(draw);
+    analyser.getByteTimeDomainData(dataArr);
+    ctx.clearRect(0,0,w,h);
+    ctx.beginPath();ctx.strokeStyle='#e91e8c';ctx.lineWidth=2;
+    for(let i=0;i<bufLen;i++){
+      const v=dataArr[i]/128;const y=v*h/2;
+      i===0?ctx.moveTo(0,y):ctx.lineTo((i/bufLen)*w,y);
+    }
+    ctx.stroke();
+  }
+  draw();
+}
+
+/* ── 레이어 렌더 ── */
+function renderLayers(){
+  const el=document.getElementById('layers-list');
+  if(!layers.length){el.innerHTML='<div class="layers-empty">아직 없어요. 녹음해봐요! 🎙️</div>';return;}
+  el.innerHTML=layers.map((l,i)=>`
+    <div class="layer-item${i===activeLayerIdx?' active-layer':''}" onclick="selectLayer(${i})">
+      <div class="layer-avatar">${l.avatar}</div>
+      <div class="layer-info">
+        <div class="layer-name">${l.nickname}</div>
+        <div class="layer-time">${l.audioBuf?Math.round(l.audioBuf.duration*10)/10+'초':''}</div>
+      </div>
+      <canvas class="layer-waveform" id="lwav-${i}" width="60" height="24"></canvas>
+    </div>`).join('');
+  // 미니 파형 그리기
+  layers.forEach((l,i)=>{
+    if(!l.audioBuf)return;
+    const c=document.getElementById('lwav-'+i);if(!c)return;
+    const ctx=c.getContext('2d');
+    const data=l.audioBuf.getChannelData(0);
+    const step=Math.floor(data.length/60);
+    ctx.clearRect(0,0,60,24);
+    ctx.beginPath();ctx.strokeStyle='rgba(233,30,140,.6)';ctx.lineWidth=1;
+    for(let j=0;j<60;j++){
+      const s=data[j*step]||0;const y=12+s*10;
+      j===0?ctx.moveTo(j,y):ctx.lineTo(j,y);
+    }
+    ctx.stroke();
+  });
+}
+
+function selectLayer(idx){
+  activeLayerIdx=idx;
+  renderLayers();
+  if(layers[idx]&&layers[idx].audioBuf)drawWaveform(layers[idx].audioBuf);
+  if(isPlaying)restartPlay();
+}
+
+/* ── DB 불러오기 ── */
+async function loadLayers(){
+  const{data}=await sb.from('voice_spinner_layers').select('*').order('created_at',{ascending:true}).limit(8);
+  if(!data||!data.length)return;
+  const actx=getAudioCtx();
+  layers=[];
+  for(const d of data){
+    if(!d.audio_b64)continue;
+    try{
+      const binary=atob(d.audio_b64);
+      const ab=new ArrayBuffer(binary.length);
+      const view=new Uint8Array(ab);
+      for(let i=0;i<binary.length;i++)view[i]=binary.charCodeAt(i);
+      const audioBuf=await actx.decodeAudioData(ab);
+      layers.push({id:d.id,nickname:d.nickname,avatar:d.avatar,audioBuf,b64:d.audio_b64});
+    }catch(e){console.log(e);}
+  }
+  if(layers.length){
+    activeLayerIdx=0;
+    drawWaveform(layers[0].audioBuf);
+  }
+  renderLayers();
+}
+
+/* ── 실시간 ── */
+function setupChannel(){
+  channel=sb.channel('voice-spinner',{config:{broadcast:{self:false}}});
+  channel
+    .on('broadcast',{event:'new_layer'},()=>{setTimeout(loadLayers,1000);})
+    .subscribe();
+}
+
+/* ── 온라인 ── */
+async function registerOnline(){
+  await sb.from('online_users').upsert([{nickname:myNickname,last_seen:new Date().toISOString()}],{onConflict:'nickname'});
+  loadOnline();
+}
+
+async function loadOnline(){
+  const since=new Date(Date.now()-30000).toISOString();
+  const{data}=await sb.from('online_users').select('nickname').gte('last_seen',since);
+  if(!data)return;
+  document.getElementById('online-row').innerHTML=data.map(u=>`
+    <div class="online-chip">
+      <div class="online-dot"></div>
+      ${u.nickname}${u.nickname===myNickname?' (나)':''}
+    </div>`).join('');
+}
+
+/* ── 유틸 ── */
+function bufferToWav(buf){
+  const sr=buf.sampleRate,len=buf.length,ch=buf.numberOfChannels;
+  const wavLen=44+len*ch*2;const ab=new ArrayBuffer(wavLen);const view=new DataView(ab);
+  function ws(o,s){for(let i=0;i<s.length;i++)view.setUint8(o+i,s.charCodeAt(i));}
+  ws(0,'RIFF');view.setUint32(4,wavLen-8,true);ws(8,'WAVE');
+  ws(12,'fmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);
+  view.setUint16(22,ch,true);view.setUint32(24,sr,true);
+  view.setUint32(28,sr*ch*2,true);view.setUint16(32,ch*2,true);
+  view.setUint16(34,16,true);ws(36,'data');view.setUint32(40,len*ch*2,true);
+  let offset=44;
+  for(let i=0;i<len;i++){for(let c=0;c<ch;c++){
+    const s=Math.max(-1,Math.min(1,buf.getChannelData(c)[i]));
+    view.setInt16(offset,s<0?s*0x8000:s*0x7FFF,true);offset+=2;
+  }}
+  return new Blob([ab],{type:'audio/wav'});
+}
+
+function blobToB64(blob){
+  return new Promise(res=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(',')[1]);
+    r.readAsDataURL(blob);
+  });
+}
+</script>
+</body>
+</html>
