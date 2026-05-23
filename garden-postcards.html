@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>꽃밭 엽서</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden}
+:root{--cream:#FFF8F0;--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
+body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(180deg,#87CEEB 0%,#B0E0FF 30%,#90EE90 70%,#228B22 100%);min-height:100vh}
+
+.header{background:rgba(255,255,255,.25);backdrop-filter:blur(10px);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative;border-bottom:1px solid rgba(255,255,255,.3)}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.5);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
+.header-sub{font-size:11px;color:var(--text-mid)}
+
+/* 닉네임 */
+#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
+.nick-card{background:rgba(255,255,255,.75);border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(255,255,255,.6);text-align:center;backdrop-filter:blur(10px)}
+.nick-emoji{font-size:56px;margin-bottom:.5rem;cursor:pointer;display:block;transition:transform .2s}
+.nick-emoji:active{transform:scale(.9) rotate(10deg)}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.3rem}
+.nick-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.8}
+.nick-field{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--text-dark);background:rgba(255,255,255,.7);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-field:focus{border-color:rgba(201,123,123,.5)}
+.start-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+
+/* 꽃밭 공간 */
+#screen-main{display:none;position:relative;min-height:100vh}
+
+/* 꽃밭 배경 */
+.garden{width:100%;height:55vh;min-height:320px;position:relative;overflow:hidden;background:linear-gradient(180deg,#87CEEB 0%,#B8E4FF 40%,#7DC87D 70%,#3A8A3A 100%)}
+.garden-grass{position:absolute;bottom:0;left:0;right:0;height:30%;background:linear-gradient(180deg,#5CAD5C,#3A8A3A);border-radius:50% 50% 0 0 / 20px 20px 0 0}
+.garden-flowers{position:absolute;bottom:0;left:0;right:0;height:35%;display:flex;align-items:flex-end;padding:0 8px;gap:4px;flex-wrap:wrap;overflow:hidden}
+.bg-flower{font-size:18px;opacity:.6;margin-bottom:4px}
+
+/* 엽서 */
+.postcard{position:absolute;cursor:pointer;transition:transform .2s;user-select:none}
+.postcard:hover{transform:scale(1.05) rotate(0deg)!important;z-index:50!important}
+.postcard:active{transform:scale(.97)!important}
+.postcard-inner{background:#fff;border-radius:14px;padding:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);border:2px solid rgba(255,255,255,.9);width:120px;min-height:140px;display:flex;flex-direction:column;gap:6px}
+.postcard-drawing{width:100%;height:70px;border-radius:8px;overflow:hidden;background:#FFF8F0;flex-shrink:0}
+.postcard-drawing img{width:100%;height:100%;object-fit:cover}
+.postcard-drawing-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px}
+.postcard-msg{font-size:10px;color:var(--text-dark);line-height:1.5;word-break:break-all;flex:1}
+.postcard-from{font-size:9px;color:var(--text-light);text-align:right;margin-top:auto}
+.postcard-music{font-size:9px;color:var(--pink);display:flex;align-items:center;gap:3px}
+.postcard.new-card{animation:flyIn .8s ease forwards}
+@keyframes flyIn{from{opacity:0;transform:translateY(-80px) rotate(var(--rot))!important}to{opacity:1;transform:translateY(0) rotate(var(--rot))}}
+
+/* 작성 버튼 */
+.write-fab{position:fixed;bottom:2rem;right:1.2rem;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--pink-light));border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(201,123,123,.4);z-index:100;display:flex;align-items:center;justify-content:center;transition:transform .2s}
+.write-fab:active{transform:scale(.9)}
+
+/* 엽서 작성 모달 */
+#write-modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center}
+#write-modal.open{display:flex}
+.write-sheet{background:#fff;border-radius:24px 24px 0 0;padding:1.5rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.write-sheet-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:1.2rem;text-align:center}
+.write-label{font-size:11px;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:.5rem;margin-top:1rem}
+
+/* 그림 캔버스 */
+.canvas-wrap{border-radius:14px;overflow:hidden;border:1.5px solid rgba(200,160,140,.2);margin-bottom:.5rem}
+.canvas-tools{display:flex;gap:5px;padding:6px 8px;background:#FFF5F0;border-bottom:1px solid rgba(200,160,140,.1);flex-wrap:wrap;align-items:center}
+.c-color{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .15s;flex-shrink:0}
+.c-color.active{border-color:#333;transform:scale(1.2)}
+.c-tool{padding:3px 8px;border-radius:6px;border:1px solid rgba(200,160,140,.2);background:#fff;font-size:10px;cursor:pointer;color:var(--pink);font-family:'Noto Sans KR',sans-serif}
+.c-tool.active{background:#FFF0E8;border-color:var(--pink)}
+canvas#postcard-canvas{display:block;touch-action:none;width:100%;background:#FFFAF7}
+
+/* 메시지 */
+.msg-input{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:10px 12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;color:var(--text-dark);background:var(--cream);outline:none;resize:none;-webkit-appearance:none}
+.msg-input:focus{border-color:rgba(201,123,123,.5)}
+
+/* 음악 선택 */
+.music-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.music-btn{padding:10px 6px;border-radius:12px;border:1.5px solid rgba(200,160,140,.2);background:var(--cream);cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:500;color:var(--text-dark);text-align:center;transition:all .2s}
+.music-btn.selected{background:linear-gradient(135deg,#FFE4CC,#FFD6E8);border-color:var(--pink)}
+.music-btn:active{transform:scale(.95)}
+.music-emoji{font-size:20px;display:block;margin-bottom:3px}
+
+/* 보내기 버튼 */
+.send-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:14px;padding:14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:600;cursor:pointer;min-height:50px;margin-top:.5rem}
+.send-btn:active{transform:scale(.98)}
+.close-sheet{width:100%;background:transparent;border:none;color:var(--text-light);font-family:'Noto Sans KR',sans-serif;font-size:13px;cursor:pointer;padding:8px;margin-top:4px}
+
+/* 엽서 뷰 모달 */
+#view-modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem}
+#view-modal.open{display:flex}
+.view-card{background:#fff;border-radius:22px;padding:1.5rem;max-width:320px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.view-drawing{width:100%;height:160px;border-radius:14px;overflow:hidden;background:#FFF8F0;margin-bottom:1rem}
+.view-drawing img{width:100%;height:100%;object-fit:cover}
+.view-msg{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--text-dark);margin-bottom:.5rem;line-height:1.6}
+.view-from{font-size:12px;color:var(--text-light);margin-bottom:1rem}
+.view-music{font-size:13px;color:var(--pink);margin-bottom:1rem}
+.view-close{background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:10px 24px;font-family:'Noto Sans KR',sans-serif;font-size:13px;cursor:pointer}
+.view-play{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:12px;padding:10px 24px;font-family:'Noto Sans KR',sans-serif;font-size:13px;cursor:pointer;margin-right:8px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">🌸 꽃밭 엽서</div>
+  <div class="header-sub">엽서를 만들어 꽃밭에 날려요!</div>
+</div>
+
+<!-- 닉네임 -->
+<div id="screen-nick">
+  <div style="height:.5rem"></div>
+  <div class="nick-card">
+    <span class="nick-emoji" id="nick-avatar" onclick="rerollAvatar()">🌸</span>
+    <div class="nick-title">꽃밭 엽서</div>
+    <div class="nick-sub">그림을 그리고 한마디를 적어<br>꽃밭에 엽서를 날려봐요 🌸<br>음악과 함께 쌓여요!</div>
+    <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterMain()">
+    <button class="start-btn" onclick="enterMain()">🌸 꽃밭으로!</button>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div id="screen-main">
+  <!-- 꽃밭 -->
+  <div class="garden" id="garden">
+    <div class="garden-grass"></div>
+    <div class="garden-flowers" id="garden-flowers"></div>
+  </div>
+
+  <!-- 엽서 작성 FAB -->
+  <button class="write-fab" onclick="openWriteModal()">✉️</button>
+</div>
+
+<!-- 엽서 작성 모달 -->
+<div id="write-modal">
+  <div class="write-sheet">
+    <div class="write-sheet-title">✉️ 엽서 만들기</div>
+
+    <div class="write-label">그림 그리기</div>
+    <div class="canvas-wrap">
+      <div class="canvas-tools">
+        <div class="c-color active" style="background:#C97B7B" onclick="setCColor('#C97B7B',this)"></div>
+        <div class="c-color" style="background:#4D96FF" onclick="setCColor('#4D96FF',this)"></div>
+        <div class="c-color" style="background:#6BCB77" onclick="setCColor('#6BCB77',this)"></div>
+        <div class="c-color" style="background:#FFD93D" onclick="setCColor('#FFD93D',this)"></div>
+        <div class="c-color" style="background:#C77DFF" onclick="setCColor('#C77DFF',this)"></div>
+        <div class="c-color" style="background:#3D2B1F" onclick="setCColor('#3D2B1F',this)"></div>
+        <button class="c-tool active" id="c-pen" onclick="setCTool('pen')">펜</button>
+        <button class="c-tool" id="c-eraser" onclick="setCTool('eraser')">지우개</button>
+        <button class="c-tool" onclick="clearCCanvas()">지우기</button>
+      </div>
+      <canvas id="postcard-canvas" height="120"></canvas>
+    </div>
+
+    <div class="write-label">한마디</div>
+    <textarea class="msg-input" id="msg-input" rows="2" maxlength="50" placeholder="따뜻한 한마디를 적어요..."></textarea>
+
+    <div class="write-label">배경 음악</div>
+    <div class="music-grid">
+      <button class="music-btn selected" onclick="selectMusic('calm',this)">
+        <span class="music-emoji">🎹</span>잔잔하게
+      </button>
+      <button class="music-btn" onclick="selectMusic('bright',this)">
+        <span class="music-emoji">🎵</span>밝게
+      </button>
+      <button class="music-btn" onclick="selectMusic('dreamy',this)">
+        <span class="music-emoji">✨</span>몽환적
+      </button>
+      <button class="music-btn" onclick="selectMusic('cheerful',this)">
+        <span class="music-emoji">🎶</span>신나게
+      </button>
+      <button class="music-btn" onclick="selectMusic('warm',this)">
+        <span class="music-emoji">🌸</span>따뜻하게
+      </button>
+      <button class="music-btn" onclick="selectMusic('healing',this)">
+        <span class="music-emoji">🌿</span>힐링
+      </button>
+    </div>
+
+    <button class="send-btn" onclick="sendPostcard()">🌸 꽃밭에 날리기!</button>
+    <button class="close-sheet" onclick="closeWriteModal()">취소</button>
+  </div>
+</div>
+
+<!-- 엽서 보기 모달 -->
+<div id="view-modal">
+  <div class="view-card">
+    <div class="view-drawing"><img id="view-img" src="" alt=""></div>
+    <div class="view-msg" id="view-msg"></div>
+    <div class="view-from" id="view-from"></div>
+    <div class="view-music" id="view-music"></div>
+    <div>
+      <button class="view-play" onclick="playCardMusic()">🎵 음악 듣기</button>
+      <button class="view-close" onclick="closeViewModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const AVATARS=['🌸','🌺','🌻','🌹','🌼','💐','🦋','🐝','🌿','🍀'];
+const BG_FLOWERS=['🌸','🌺','🌻','🌼','🌹','💐','🌷','🌱','🍀','🦋'];
+const MUSIC_INFO={
+  calm:{name:'잔잔하게',emoji:'🎹',notes:[261.63,329.63,392,523.25],tempo:60,wave:'sine'},
+  bright:{name:'밝게',emoji:'🎵',notes:[523.25,659.25,783.99,1046.5],tempo:120,wave:'triangle'},
+  dreamy:{name:'몽환적',emoji:'✨',notes:[392,493.88,587.33,783.99],tempo:70,wave:'sine'},
+  cheerful:{name:'신나게',emoji:'🎶',notes:[523.25,587.33,659.25,698.46,783.99],tempo:140,wave:'square'},
+  warm:{name:'따뜻하게',emoji:'🌸',notes:[349.23,440,523.25,659.25],tempo:80,wave:'triangle'},
+  healing:{name:'힐링',emoji:'🌿',notes:[261.63,293.66,329.63,392,440],tempo:55,wave:'sine'},
+};
+
+let myNickname='',myAvatar='🌸';
+let selectedMusicType='calm';
+let cColor='#C97B7B',cTool='pen',cBrushSize=4,cDrawing=false;
+let audioCtx=null;
+let musicNodes=[];
+let viewingCard=null;
+let channel=null;
+let postcards=[];
+
+function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+
+function rerollAvatar(){myAvatar=AVATARS[Math.floor(Math.random()*AVATARS.length)];document.getElementById('nick-avatar').textContent=myAvatar;}
+rerollAvatar();
+
+function enterMain(){
+  const nick=document.getElementById('nick-input').value.trim()||'익명';
+  myNickname=nick;
+  document.getElementById('screen-nick').style.display='none';
+  document.getElementById('screen-main').style.display='block';
+  spawnBgFlowers();
+  initCCanvas();
+  loadPostcards();
+  setupChannel();
+}
+
+/* ── 꽃밭 배경 꽃 ── */
+function spawnBgFlowers(){
+  const el=document.getElementById('garden-flowers');
+  for(let i=0;i<30;i++){
+    const f=document.createElement('span');
+    f.className='bg-flower';
+    f.textContent=BG_FLOWERS[Math.floor(Math.random()*BG_FLOWERS.length)];
+    f.style.fontSize=(12+Math.random()*16)+'px';
+    f.style.opacity=.3+Math.random()*.5;
+    el.appendChild(f);
+  }
+}
+
+/* ── 캔버스 ── */
+let cCanvasInited=false;
+function initCCanvas(){
+  if(cCanvasInited)return;cCanvasInited=true;
+  const canvas=document.getElementById('postcard-canvas');
+  const ctx=canvas.getContext('2d');
+  function resize(){
+    const w=canvas.parentElement.clientWidth;
+    canvas.width=w;canvas.height=120;
+    ctx.fillStyle='#FFFAF7';ctx.fillRect(0,0,w,120);
+  }
+  resize();
+  function pos(e){const r=canvas.getBoundingClientRect();const src=e.touches?e.touches[0]:e;return{x:(src.clientX-r.left)*(canvas.width/r.width),y:(src.clientY-r.top)*(canvas.height/r.height)};}
+  canvas.addEventListener('mousedown',e=>{cDrawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+  canvas.addEventListener('mousemove',e=>{if(!cDrawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.strokeStyle=cTool==='eraser'?'#FFFAF7':cColor;ctx.lineWidth=cTool==='eraser'?12:cBrushSize;ctx.lineCap='round';ctx.stroke();});
+  canvas.addEventListener('mouseup',()=>cDrawing=false);
+  canvas.addEventListener('mouseleave',()=>cDrawing=false);
+  canvas.addEventListener('touchstart',e=>{e.preventDefault();cDrawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);},{passive:false});
+  canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!cDrawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.strokeStyle=cTool==='eraser'?'#FFFAF7':cColor;ctx.lineWidth=cTool==='eraser'?12:cBrushSize;ctx.lineCap='round';ctx.stroke();},{passive:false});
+  canvas.addEventListener('touchend',()=>cDrawing=false);
+}
+function setCColor(c,el){cColor=c;document.querySelectorAll('.c-color').forEach(d=>d.classList.remove('active'));el.classList.add('active');if(cTool==='eraser')setCTool('pen');}
+function setCTool(t){cTool=t;document.getElementById('c-pen').classList.toggle('active',t==='pen');document.getElementById('c-eraser').classList.toggle('active',t==='eraser');}
+function clearCCanvas(){const c=document.getElementById('postcard-canvas');const ctx=c.getContext('2d');ctx.fillStyle='#FFFAF7';ctx.fillRect(0,0,c.width,c.height);}
+
+/* ── 음악 선택 ── */
+function selectMusic(name,el){
+  selectedMusicType=name;
+  document.querySelectorAll('.music-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+/* ── 모달 ── */
+function openWriteModal(){document.getElementById('write-modal').classList.add('open');initCCanvas();}
+function closeWriteModal(){document.getElementById('write-modal').classList.remove('open');}
+
+/* ── 엽서 보내기 ── */
+async function sendPostcard(){
+  const msg=document.getElementById('msg-input').value.trim();
+  if(!msg){alert('한마디를 적어줘요! 🌸');return;}
+  const canvas=document.getElementById('postcard-canvas');
+  const imageData=canvas.toDataURL('image/png');
+  const{error}=await sb.from('garden_postcards').insert([{
+    nickname:myNickname,avatar:myAvatar,
+    message:msg,music:selectedMusicType,
+    image_data:imageData
+  }]);
+  if(error){alert('저장 실패: '+error.message);return;}
+  closeWriteModal();
+  clearCCanvas();
+  document.getElementById('msg-input').value='';
+  if(channel)channel.send({type:'broadcast',event:'new_postcard',payload:{nickname:myNickname}});
+  loadPostcards();
+}
+
+/* ── 엽서 불러오기 & 렌더 ── */
+async function loadPostcards(){
+  const{data}=await sb.from('garden_postcards').select('*').order('created_at',{ascending:true}).limit(30);
+  if(!data)return;
+  postcards=data;
+  renderPostcards(data);
+}
+
+function renderPostcards(data){
+  const garden=document.getElementById('garden');
+  // 기존 엽서 제거
+  garden.querySelectorAll('.postcard').forEach(p=>p.remove());
+  const gw=garden.offsetWidth||360;
+  const gh=garden.offsetHeight||320;
+  data.forEach((p,i)=>{
+    const el=document.createElement('div');
+    el.className='postcard';
+    const rot=(Math.random()*30-15);
+    const x=Math.random()*(gw-130);
+    const y=Math.random()*(gh*.55)+gh*.3;
+    el.style.cssText=`left:${x}px;top:${y}px;transform:rotate(${rot}deg);--rot:${rot}deg;z-index:${10+i}`;
+    el.innerHTML=`
+      <div class="postcard-inner">
+        <div class="postcard-drawing">
+          ${p.image_data?`<img src="${p.image_data}" alt="">`:`<div class="postcard-drawing-empty">${p.avatar}</div>`}
+        </div>
+        <div class="postcard-msg">${p.message}</div>
+        <div class="postcard-music">${MUSIC_INFO[p.music]?.emoji||'🎵'} ${MUSIC_INFO[p.music]?.name||''}</div>
+        <div class="postcard-from">— ${p.nickname}</div>
+      </div>`;
+    el.addEventListener('click',()=>openViewModal(p));
+    // 새로 온 거면 애니메이션
+    if(i===data.length-1&&data.length>1)el.classList.add('new-card');
+    garden.appendChild(el);
+  });
+}
+
+/* ── 엽서 보기 ── */
+function openViewModal(card){
+  viewingCard=card;
+  document.getElementById('view-img').src=card.image_data||'';
+  document.getElementById('view-msg').textContent=card.message;
+  document.getElementById('view-from').textContent='— '+card.nickname+' '+card.avatar;
+  document.getElementById('view-music').textContent=(MUSIC_INFO[card.music]?.emoji||'🎵')+' '+(MUSIC_INFO[card.music]?.name||'');
+  document.getElementById('view-modal').classList.add('open');
+}
+function closeViewModal(){
+  document.getElementById('view-modal').classList.remove('open');
+  stopMusic();
+}
+
+/* ── 음악 재생 ── */
+function playCardMusic(){
+  if(!viewingCard)return;
+  stopMusic();
+  const m=MUSIC_INFO[viewingCard.music];if(!m)return;
+  const actx=getAudioCtx();
+  const pattern=[0,1,2,1,0,2,1,0];
+  const beatDur=60/m.tempo;
+  let t=actx.currentTime+.05;
+  function loop(){
+    pattern.forEach((ni,i)=>{
+      const osc=actx.createOscillator();
+      const gain=actx.createGain();
+      osc.type=m.wave;
+      osc.frequency.value=m.notes[ni%m.notes.length];
+      osc.connect(gain);gain.connect(actx.destination);
+      gain.gain.setValueAtTime(0,t+i*beatDur);
+      gain.gain.linearRampToValueAtTime(.3,t+i*beatDur+.02);
+      gain.gain.exponentialRampToValueAtTime(.001,t+i*beatDur+beatDur*.9);
+      osc.start(t+i*beatDur);osc.stop(t+i*beatDur+beatDur);
+      musicNodes.push(osc);
+    });
+    t+=pattern.length*beatDur;
+    const tid=setTimeout(loop,(pattern.length*beatDur-.1)*1000);
+    musicNodes.push({stop:()=>clearTimeout(tid)});
+  }
+  loop();
+}
+function stopMusic(){musicNodes.forEach(n=>{try{n.stop?n.stop():null;}catch(e){}});musicNodes=[];}
+
+/* ── 실시간 ── */
+function setupChannel(){
+  channel=sb.channel('garden-postcards',{config:{broadcast:{self:false}}});
+  channel
+    .on('broadcast',{event:'new_postcard'},()=>{setTimeout(loadPostcards,500);})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'garden_postcards'},()=>{loadPostcards();})
+    .subscribe();
+}
+</script>
+</body>
+</html>
