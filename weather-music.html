@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>오늘의 날씨 음악</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden}
+:root{--cream:#FFF8F0;--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
+body{font-family:'Noto Sans KR',sans-serif;min-height:100vh;transition:background 2s}
+
+/* 날씨별 배경 */
+body.sunny{background:linear-gradient(160deg,#FFF8E0 0%,#FFE8A0 50%,#FFD060 100%)}
+body.cloudy{background:linear-gradient(160deg,#E8EEF8 0%,#C8D8E8 50%,#A8B8C8 100%)}
+body.rainy{background:linear-gradient(160deg,#D0D8E8 0%,#A0B0C8 50%,#7090B0 100%)}
+body.stormy{background:linear-gradient(160deg,#2A2A3A 0%,#1A1A2A 50%,#0A0A1A 100%)}
+body.rainbow{background:linear-gradient(160deg,#FFE8F0 0%,#E8D0FF 30%,#D0E8FF 60%,#D0FFE8 100%)}
+body.snowy{background:linear-gradient(160deg,#F0F8FF 0%,#E0EEFF 50%,#D0E4FF 100%)}
+body.default{background:linear-gradient(160deg,#FFF8F0 0%,#FFE8D8 50%,#FFD6E8 100%)}
+
+.header{padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative;background:rgba(255,255,255,.2);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.3)}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.4);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
+.header-sub{font-size:11px;color:var(--text-mid)}
+
+/* 닉네임 */
+#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
+.nick-card{background:rgba(255,255,255,.7);border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(255,255,255,.5);text-align:center;backdrop-filter:blur(10px)}
+.nick-emoji{font-size:56px;margin-bottom:.5rem;cursor:pointer;display:block;transition:transform .2s}
+.nick-emoji:active{transform:scale(.9) rotate(10deg)}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.3rem}
+.nick-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.8}
+.nick-field{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--text-dark);background:rgba(255,255,255,.6);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-field:focus{border-color:rgba(201,123,123,.5)}
+.start-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+
+/* 메인 */
+#screen-main{display:none;padding:1rem;max-width:480px;margin:0 auto;padding-bottom:140px}
+
+/* 날씨 선택 */
+.weather-card{background:rgba(255,255,255,.65);border-radius:22px;padding:1.5rem;border:1.5px solid rgba(255,255,255,.5);margin-bottom:1rem;backdrop-filter:blur(8px);text-align:center}
+.weather-card-title{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--text-dark);margin-bottom:.4rem}
+.weather-card-sub{font-size:11px;color:var(--text-light);margin-bottom:1.2rem}
+.weather-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
+.weather-btn{aspect-ratio:1;border-radius:18px;border:2px solid rgba(255,255,255,.4);background:rgba(255,255,255,.4);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .2s;backdrop-filter:blur(4px)}
+.weather-btn:active{transform:scale(.93)}
+.weather-btn.selected{border-color:rgba(255,255,255,.9);background:rgba(255,255,255,.7);transform:scale(1.05);box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.weather-emoji{font-size:32px;line-height:1}
+.weather-name{font-size:11px;font-weight:500;color:var(--text-dark)}
+.confirm-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:14px;padding:14px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:600;cursor:pointer;min-height:48px}
+.confirm-btn:disabled{opacity:.4;cursor:default}
+
+/* 오늘의 날씨 현황 */
+.today-card{background:rgba(255,255,255,.65);border-radius:22px;padding:1.2rem;border:1.5px solid rgba(255,255,255,.5);margin-bottom:1rem;backdrop-filter:blur(8px)}
+.today-label{font-size:10px;letter-spacing:2px;color:var(--text-light);margin-bottom:.8rem;text-transform:uppercase}
+.weather-bubbles{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:.8rem;min-height:44px}
+.weather-bubble{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.6);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;color:var(--text-dark);border:1.5px solid rgba(255,255,255,.7);animation:popIn .3s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+.weather-bubble.me{background:rgba(201,123,123,.2);border-color:rgba(201,123,123,.4)}
+.weather-stats{display:flex;gap:6px;flex-wrap:wrap}
+.stat-chip{background:rgba(255,255,255,.5);border-radius:12px;padding:4px 10px;font-size:11px;color:var(--text-mid)}
+
+/* 음악 컨트롤 */
+.music-card{background:rgba(255,255,255,.65);border-radius:22px;padding:1.2rem;border:1.5px solid rgba(255,255,255,.5);margin-bottom:1rem;backdrop-filter:blur(8px);text-align:center}
+.music-status{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.5rem;min-height:28px}
+.music-sub{font-size:11px;color:var(--text-light);margin-bottom:1rem;min-height:16px}
+.viz-wrap{height:60px;display:flex;align-items:center;justify-content:center;gap:3px;margin-bottom:1rem}
+.viz-bar{width:6px;border-radius:3px;background:linear-gradient(180deg,var(--pink),var(--pink-light));transition:height .15s ease;min-height:4px}
+.play-music-btn{width:100%;background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:14px;padding:14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:600;cursor:pointer;min-height:50px}
+.play-music-btn.playing{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
+
+/* 날씨 파티클 */
+.particle{position:fixed;pointer-events:none;font-size:20px;animation:fall linear infinite;opacity:.6;z-index:0}
+@keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:.7}100%{transform:translateY(110vh) rotate(360deg);opacity:0}}
+
+/* 내 날씨 표시 */
+.my-weather{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.5);border-radius:14px;padding:.6rem 1rem;margin-bottom:.8rem;font-size:13px;font-weight:500;color:var(--text-dark)}
+.my-weather-emoji{font-size:24px}
+</style>
+</head>
+<body class="default">
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">🌈 오늘의 날씨 음악</div>
+  <div class="header-sub">오늘 기분을 날씨로 표현해요!</div>
+</div>
+
+<!-- 닉네임 -->
+<div id="screen-nick">
+  <div style="height:.5rem"></div>
+  <div class="nick-card">
+    <span class="nick-emoji" id="nick-avatar" onclick="rerollAvatar()">☀️</span>
+    <div class="nick-title">오늘의 날씨 음악</div>
+    <div class="nick-sub">오늘 내 기분을 날씨로 골라요!<br>다같이 모인 날씨가 음악이 돼요 🎵</div>
+    <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterMain()">
+    <button class="start-btn" onclick="enterMain()">🌈 입장하기</button>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div id="screen-main">
+  <!-- 내 날씨 -->
+  <div class="my-weather" id="my-weather-bar" style="display:none">
+    <span class="my-weather-emoji" id="my-weather-emoji">☀️</span>
+    <span id="my-weather-text">내 날씨: 맑음</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-light);cursor:pointer" onclick="resetWeather()">바꾸기</span>
+  </div>
+
+  <!-- 날씨 선택 -->
+  <div class="weather-card" id="weather-select-card">
+    <div class="weather-card-title">오늘 나는 어떤 날씨예요?</div>
+    <div class="weather-card-sub">지금 기분과 가장 비슷한 날씨를 골라요</div>
+    <div class="weather-grid">
+      <button class="weather-btn" onclick="selectWeather('sunny',this)">
+        <div class="weather-emoji">☀️</div><div class="weather-name">맑음</div>
+      </button>
+      <button class="weather-btn" onclick="selectWeather('cloudy',this)">
+        <div class="weather-emoji">⛅</div><div class="weather-name">흐림</div>
+      </button>
+      <button class="weather-btn" onclick="selectWeather('rainy',this)">
+        <div class="weather-emoji">🌧️</div><div class="weather-name">비</div>
+      </button>
+      <button class="weather-btn" onclick="selectWeather('stormy',this)">
+        <div class="weather-emoji">⛈️</div><div class="weather-name">천둥</div>
+      </button>
+      <button class="weather-btn" onclick="selectWeather('rainbow',this)">
+        <div class="weather-emoji">🌈</div><div class="weather-name">무지개</div>
+      </button>
+      <button class="weather-btn" onclick="selectWeather('snowy',this)">
+        <div class="weather-emoji">❄️</div><div class="weather-name">눈</div>
+      </button>
+    </div>
+    <button class="confirm-btn" id="confirm-btn" onclick="confirmWeather()" disabled>오늘 날씨 등록하기 🌤️</button>
+  </div>
+
+  <!-- 오늘 날씨 현황 -->
+  <div class="today-card">
+    <div class="today-label">🌍 오늘 병동 날씨</div>
+    <div class="weather-bubbles" id="weather-bubbles"></div>
+    <div class="weather-stats" id="weather-stats"></div>
+  </div>
+
+  <!-- 음악 -->
+  <div class="music-card">
+    <div class="music-status" id="music-status">날씨를 등록하면 음악이 시작돼요</div>
+    <div class="music-sub" id="music-sub"></div>
+    <div class="viz-wrap" id="viz-wrap">
+      <div class="viz-bar" style="height:8px"></div>
+      <div class="viz-bar" style="height:14px"></div>
+      <div class="viz-bar" style="height:20px"></div>
+      <div class="viz-bar" style="height:12px"></div>
+      <div class="viz-bar" style="height:18px"></div>
+      <div class="viz-bar" style="height:8px"></div>
+      <div class="viz-bar" style="height:16px"></div>
+      <div class="viz-bar" style="height:10px"></div>
+    </div>
+    <button class="play-music-btn" id="play-music-btn" onclick="toggleMusic()">🎵 날씨 음악 듣기</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const WEATHERS={
+  sunny:{emoji:'☀️',name:'맑음',color:'#FFD060',
+    desc:'밝고 따뜻한 음악',
+    notes:[523.25,659.25,783.99,1046.5], // C5 E5 G5 C6
+    wave:'sine',tempo:120,reverb:.1},
+  cloudy:{emoji:'⛅',name:'흐림',color:'#A8B8C8',
+    desc:'잔잔하고 부드러운 음악',
+    notes:[392,493.88,587.33,698.46], // G4 B4 D5 F5
+    wave:'triangle',tempo:80,reverb:.3},
+  rainy:{emoji:'🌧️',name:'비',color:'#7090B0',
+    desc:'빗소리 같은 음악',
+    notes:[293.66,349.23,440,523.25], // D4 F4 A4 C5
+    wave:'sine',tempo:100,reverb:.5},
+  stormy:{emoji:'⛈️',name:'천둥',color:'#1A1A2A',
+    desc:'강렬하고 웅장한 음악',
+    notes:[130.81,164.81,196,261.63], // C3 E3 G3 C4
+    wave:'sawtooth',tempo:140,reverb:.2},
+  rainbow:{emoji:'🌈',name:'무지개',color:'#E8D0FF',
+    desc:'색깔처럼 다채로운 음악',
+    notes:[523.25,587.33,659.25,698.46,783.99,880,987.77,1046.5],
+    wave:'sine',tempo:110,reverb:.4},
+  snowy:{emoji:'❄️',name:'눈',color:'#D0E4FF',
+    desc:'고요하고 맑은 음악',
+    notes:[659.25,783.99,987.77,1174.66], // E5 G5 B5 D6
+    wave:'sine',tempo:60,reverb:.6},
+};
+
+const AVATARS=['☀️','⛅','🌧️','⛈️','🌈','❄️','🌤️','🌊','🍃','🌸'];
+let myNickname='',myAvatar='☀️';
+let myWeather=null;
+let selectedWeather=null;
+let todayWeathers=[];
+let audioCtx=null;
+let isPlaying=false;
+let musicNodes=[];
+let vizAnimId=null;
+let channel=null;
+let particleInterval=null;
+let myDbId=null;
+
+function getAudioCtx(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function rerollAvatar(){
+  myAvatar=AVATARS[Math.floor(Math.random()*AVATARS.length)];
+  document.getElementById('nick-avatar').textContent=myAvatar;
+}
+rerollAvatar();
+
+function enterMain(){
+  const nick=document.getElementById('nick-input').value.trim()||'익명';
+  myNickname=nick;
+  document.getElementById('screen-nick').style.display='none';
+  document.getElementById('screen-main').style.display='block';
+  loadTodayWeathers();
+  setupChannel();
+  setInterval(loadTodayWeathers,15000);
+}
+
+/* ── 날씨 선택 ── */
+function selectWeather(name,el){
+  selectedWeather=name;
+  document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('confirm-btn').disabled=false;
+  // 배경 미리보기
+  document.body.className=name;
+}
+
+async function confirmWeather(){
+  if(!selectedWeather)return;
+  myWeather=selectedWeather;
+  const w=WEATHERS[myWeather];
+  // DB 저장
+  const today=new Date().toISOString().slice(0,10);
+  // 기존 내 오늘 날씨 삭제 후 새로 저장
+  await sb.from('weather_music').delete().eq('nickname',myNickname).eq('date',today);
+  const{data,error}=await sb.from('weather_music').insert([{
+    nickname:myNickname,avatar:myAvatar,weather:myWeather,date:today
+  }]).select().single();
+  if(error){alert('저장 실패');return;}
+  myDbId=data.id;
+  // UI 업데이트
+  document.getElementById('weather-select-card').style.display='none';
+  document.getElementById('my-weather-bar').style.display='flex';
+  document.getElementById('my-weather-emoji').textContent=w.emoji;
+  document.getElementById('my-weather-text').textContent='내 날씨: '+w.name;
+  // 파티클
+  startParticles(myWeather);
+  if(channel)channel.send({type:'broadcast',event:'weather_update',payload:{nickname:myNickname,avatar:myAvatar,weather:myWeather}});
+  loadTodayWeathers();
+}
+
+function resetWeather(){
+  myWeather=null;selectedWeather=null;
+  document.getElementById('weather-select-card').style.display='block';
+  document.getElementById('my-weather-bar').style.display='none';
+  document.querySelectorAll('.weather-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('confirm-btn').disabled=true;
+  stopMusic();
+  stopParticles();
+  document.body.className='default';
+}
+
+/* ── 오늘 날씨 현황 ── */
+async function loadTodayWeathers(){
+  const today=new Date().toISOString().slice(0,10);
+  const{data}=await sb.from('weather_music').select('*').eq('date',today).order('created_at',{ascending:true});
+  if(!data)return;
+  todayWeathers=data;
+  renderWeatherBubbles();
+  updateBackground();
+}
+
+function renderWeatherBubbles(){
+  const el=document.getElementById('weather-bubbles');
+  const stats=document.getElementById('weather-stats');
+  if(!todayWeathers.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text-light);padding:.5rem">아직 아무도 없어요. 첫 번째로 날씨를 등록해봐요!</div>';
+    stats.innerHTML='';return;
+  }
+  el.innerHTML=todayWeathers.map(w=>`
+    <div class="weather-bubble${w.nickname===myNickname?' me':''}">
+      <span>${WEATHERS[w.weather]?.emoji||'🌤️'}</span>
+      <span>${w.nickname}</span>
+    </div>`).join('');
+  // 통계
+  const counts={};
+  todayWeathers.forEach(w=>{counts[w.weather]=(counts[w.weather]||0)+1;});
+  stats.innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([w,c])=>`
+    <div class="stat-chip">${WEATHERS[w]?.emoji||'🌤️'} ${c}명</div>`).join('');
+  updateMusicStatus();
+}
+
+function updateBackground(){
+  if(!todayWeathers.length)return;
+  // 가장 많은 날씨로 배경 결정
+  const counts={};
+  todayWeathers.forEach(w=>{counts[w.weather]=(counts[w.weather]||0)+1;});
+  const dominant=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0];
+  if(!myWeather)document.body.className=dominant;
+}
+
+function updateMusicStatus(){
+  if(!todayWeathers.length)return;
+  const counts={};
+  todayWeathers.forEach(w=>{counts[w.weather]=(counts[w.weather]||0)+1;});
+  const total=todayWeathers.length;
+  const weatherList=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const desc=weatherList.map(([w,c])=>`${WEATHERS[w]?.emoji} ${c}명`).join('  ');
+  document.getElementById('music-status').textContent='오늘 병동 날씨 🌍';
+  document.getElementById('music-sub').textContent=desc;
+}
+
+/* ── 날씨 음악 생성 ── */
+function toggleMusic(){
+  if(isPlaying){stopMusic();return;}
+  if(!todayWeathers.length){alert('아직 날씨를 등록한 친구가 없어요!');return;}
+  startWeatherMusic();
+}
+
+function startWeatherMusic(){
+  const actx=getAudioCtx();
+  isPlaying=true;
+  document.getElementById('play-music-btn').textContent='⏹ 음악 멈추기';
+  document.getElementById('play-music-btn').classList.add('playing');
+
+  // 날씨별 인원 집계
+  const counts={};
+  todayWeathers.forEach(w=>{counts[w.weather]=(counts[w.weather]||0)+1;});
+  const total=todayWeathers.length;
+
+  // 각 날씨에 해당하는 음악 레이어 생성
+  Object.entries(counts).forEach(([weatherName,count])=>{
+    const w=WEATHERS[weatherName];if(!w)return;
+    const vol=count/total*.4; // 인원 비율만큼 볼륨
+    playWeatherLayer(actx,w,vol);
+  });
+
+  startVizAnimation();
+  document.getElementById('music-status').textContent='🎵 날씨 음악 재생 중...';
+}
+
+function playWeatherLayer(actx,w,vol){
+  const gain=actx.createGain();
+  gain.gain.value=vol;
+
+  // 리버브
+  const convolver=actx.createConvolver();
+  const reverbLen=actx.sampleRate*w.reverb*3;
+  const reverbBuf=actx.createBuffer(2,reverbLen,actx.sampleRate);
+  for(let c=0;c<2;c++){
+    const d=reverbBuf.getChannelData(c);
+    for(let i=0;i<reverbLen;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/reverbLen,2);
+  }
+  convolver.buffer=reverbBuf;
+
+  const dryGain=actx.createGain();dryGain.gain.value=1-w.reverb;
+  const wetGain=actx.createGain();wetGain.gain.value=w.reverb;
+
+  // 멜로디 패턴 생성
+  const beatDur=60/w.tempo;
+  const pattern=generatePattern(w);
+
+  function playNote(freq,time,dur){
+    const osc=actx.createOscillator();
+    const ng=actx.createGain();
+    osc.type=w.wave;osc.frequency.value=freq;
+    osc.connect(ng);
+    ng.connect(dryGain);ng.connect(convolver);
+    convolver.connect(wetGain);
+    dryGain.connect(gain);wetGain.connect(gain);
+    gain.connect(actx.destination);
+    ng.gain.setValueAtTime(0,time);
+    ng.gain.linearRampToValueAtTime(vol*.8,time+.02);
+    ng.gain.exponentialRampToValueAtTime(.001,time+dur*.9);
+    osc.start(time);osc.stop(time+dur);
+    musicNodes.push(osc);
+  }
+
+  let t=actx.currentTime+.1;
+  function scheduleLoop(){
+    if(!isPlaying)return;
+    pattern.forEach((noteIdx,i)=>{
+      if(noteIdx>=0)playNote(w.notes[noteIdx%w.notes.length],t+i*beatDur,beatDur*.9);
+    });
+    t+=pattern.length*beatDur;
+    const timeout=setTimeout(scheduleLoop,(pattern.length*beatDur-.1)*1000);
+    musicNodes.push({stop:()=>clearTimeout(timeout)});
+  }
+  scheduleLoop();
+}
+
+function generatePattern(w){
+  // 날씨별 리듬 패턴
+  const patterns={
+    sunny:[0,2,1,3,0,2,3,1],    // 밝고 경쾌
+    cloudy:[0,-1,1,-1,2,-1,1,-1], // 잔잔 (쉼표 많음)
+    rainy:[0,1,0,2,1,0,2,1],     // 빗소리처럼 규칙적
+    stormy:[0,0,2,0,3,0,2,3],    // 강렬
+    rainbow:[0,1,2,3,4,3,2,1],   // 올라갔다 내려옴
+    snowy:[-1,0,-1,1,-1,2,-1,1], // 조용히 드문드문
+  };
+  return patterns[w.name]||patterns.sunny;
+  // 여기서 w.name 대신 키로 찾아야 해서 아래에서 수정
+}
+
+function stopMusic(){
+  isPlaying=false;
+  musicNodes.forEach(n=>{try{n.stop?n.stop():n.stop();}catch(e){}});
+  musicNodes=[];
+  if(vizAnimId){cancelAnimationFrame(vizAnimId);vizAnimId=null;}
+  document.getElementById('play-music-btn').textContent='🎵 날씨 음악 듣기';
+  document.getElementById('play-music-btn').classList.remove('playing');
+  document.getElementById('music-status').textContent='오늘 병동 날씨 🌍';
+  // 바 초기화
+  document.querySelectorAll('.viz-bar').forEach((b,i)=>{b.style.height=[8,14,20,12,18,8,16,10][i]+'px';});
+}
+
+/* ── 비주얼라이저 ── */
+function startVizAnimation(){
+  const bars=document.querySelectorAll('.viz-bar');
+  function animate(){
+    if(!isPlaying)return;
+    vizAnimId=requestAnimationFrame(animate);
+    bars.forEach(b=>{
+      const h=10+Math.random()*40;
+      b.style.height=h+'px';
+    });
+  }
+  animate();
+}
+
+/* ── 파티클 ── */
+const PARTICLES={
+  sunny:['☀️','✨','🌟'],
+  cloudy:['☁️','🌫️'],
+  rainy:['💧','🌧️','💦'],
+  stormy:['⚡','🌪️','💨'],
+  rainbow:['🌈','✨','💜','💙','💚','💛','❤️'],
+  snowy:['❄️','⛄','🌨️'],
+};
+
+function startParticles(weather){
+  stopParticles();
+  const emojis=PARTICLES[weather]||['✨'];
+  particleInterval=setInterval(()=>{
+    const el=document.createElement('div');
+    el.className='particle';
+    el.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left=Math.random()*100+'vw';
+    el.style.animationDuration=(3+Math.random()*4)+'s';
+    el.style.animationDelay=(-Math.random()*4)+'s';
+    el.style.fontSize=(14+Math.random()*16)+'px';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),8000);
+  },600);
+}
+
+function stopParticles(){
+  if(particleInterval)clearInterval(particleInterval);
+  document.querySelectorAll('.particle').forEach(p=>p.remove());
+}
+
+/* ── 실시간 ── */
+function setupChannel(){
+  channel=sb.channel('weather-music-rt',{config:{broadcast:{self:false}}});
+  channel
+    .on('broadcast',{event:'weather_update'},()=>{loadTodayWeathers();})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'weather_music'},()=>{loadTodayWeathers();})
+    .subscribe();
+}
+
+// generatePattern 버그 수정: w 객체 대신 weatherName key 사용
+const WEATHER_PATTERNS={
+  sunny:[0,2,1,3,0,2,3,1],
+  cloudy:[0,-1,1,-1,2,-1,1,-1],
+  rainy:[0,1,0,2,1,0,2,1],
+  stormy:[0,0,2,0,3,0,2,3],
+  rainbow:[0,1,2,3,4,3,2,1],
+  snowy:[-1,0,-1,1,-1,2,-1,1],
+};
+
+// playWeatherLayer 수정: generatePattern 대신 WEATHER_PATTERNS 직접 사용
+// (위 함수 재정의)
+function playWeatherLayer(actx,w,vol,weatherKey){
+  const gain=actx.createGain();
+  gain.gain.value=vol;
+  const reverbLen=actx.sampleRate*w.reverb*3;
+  const reverbBuf=actx.createBuffer(2,Math.max(1,Math.floor(reverbLen)),actx.sampleRate);
+  for(let c=0;c<2;c++){
+    const d=reverbBuf.getChannelData(c);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
+  }
+  const convolver=actx.createConvolver();convolver.buffer=reverbBuf;
+  const dryGain=actx.createGain();dryGain.gain.value=1-w.reverb;
+  const wetGain=actx.createGain();wetGain.gain.value=w.reverb*.5;
+  const beatDur=60/w.tempo;
+  const pattern=WEATHER_PATTERNS[weatherKey]||WEATHER_PATTERNS.sunny;
+
+  function playNote(freq,time,dur){
+    const osc=actx.createOscillator();const ng=actx.createGain();
+    osc.type=w.wave;osc.frequency.value=freq;
+    osc.connect(ng);ng.connect(dryGain);ng.connect(convolver);
+    convolver.connect(wetGain);dryGain.connect(gain);wetGain.connect(gain);
+    gain.connect(actx.destination);
+    ng.gain.setValueAtTime(0,time);
+    ng.gain.linearRampToValueAtTime(vol*.7,time+.03);
+    ng.gain.exponentialRampToValueAtTime(.001,time+dur*.85);
+    osc.start(time);osc.stop(time+dur);
+    musicNodes.push(osc);
+  }
+
+  let t=actx.currentTime+.1;
+  function scheduleLoop(){
+    if(!isPlaying)return;
+    pattern.forEach((noteIdx,i)=>{
+      if(noteIdx>=0&&noteIdx<w.notes.length)playNote(w.notes[noteIdx],t+i*beatDur,beatDur*.85);
+    });
+    t+=pattern.length*beatDur;
+    const tid=setTimeout(scheduleLoop,(pattern.length*beatDur-.15)*1000);
+    musicNodes.push({stop:()=>clearTimeout(tid)});
+  }
+  scheduleLoop();
+}
+
+// startWeatherMusic 수정
+function startWeatherMusic(){
+  const actx=getAudioCtx();
+  isPlaying=true;
+  document.getElementById('play-music-btn').textContent='⏹ 음악 멈추기';
+  document.getElementById('play-music-btn').classList.add('playing');
+  const counts={};
+  todayWeathers.forEach(w=>{counts[w.weather]=(counts[w.weather]||0)+1;});
+  const total=todayWeathers.length;
+  Object.entries(counts).forEach(([weatherKey,count])=>{
+    const w=WEATHERS[weatherKey];if(!w)return;
+    const vol=(count/total)*.45;
+    playWeatherLayer(actx,w,vol,weatherKey);
+  });
+  startVizAnimation();
+  document.getElementById('music-status').textContent='🎵 날씨 음악 재생 중...';
+  // 파티클 - 가장 많은 날씨
+  const dominant=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0];
+  startParticles(dominant);
+}
+</script>
+</body>
+</html>
