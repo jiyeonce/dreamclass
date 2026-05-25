@@ -105,7 +105,7 @@ let gameState='ready';
 let currentStep=0;
 let score=0;
 let holdTimer=0;
-let holdRequired=30; // 약 0.5초
+let holdRequired=20; // 약 0.5초
 let particles=[];
 let stars=[];
 let successAnim=0;
@@ -265,7 +265,7 @@ function update(){
   const targetNote=NOTES[CHALLENGE[currentStep]];
   const currentZone=getCurrentZone();
   // 목표 구역과 현재 구역 비교 (±1 허용)
-  if(Math.abs(currentZone-targetNote.zone)<=1){
+  if(Math.abs(currentZone-targetNote.zone)<=2){
     holdTimer++;
     if(holdTimer>=holdRequired){
       // 통과!
