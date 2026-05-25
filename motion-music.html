@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>멀티 모션 합주</title>
+<title>움직임 음악</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -14,12 +14,18 @@ body{font-family:'Noto Sans KR',sans-serif;min-height:100vh;color:#fff}
 .header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:#fff;margin-bottom:.2rem}
 .header-sub{font-size:11px;color:rgba(255,255,255,.5)}
 
-#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
+/* 모드 탭 */
+.mode-tabs{display:flex;background:rgba(255,255,255,.06);padding:4px;border-radius:14px;margin:1rem auto;max-width:280px;gap:4px}
+.mode-tab{flex:1;padding:9px;border-radius:10px;border:none;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;color:rgba(255,255,255,.5);background:transparent;transition:all .2s}
+.mode-tab.active{background:linear-gradient(135deg,#9b59b6,#e91e8c);color:#fff;box-shadow:0 2px 10px rgba(155,89,182,.4)}
+
+/* 닉네임 */
+#screen-nick{padding:1.5rem 1rem;max-width:400px;margin:0 auto}
 .nick-card{background:rgba(255,255,255,.08);border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(255,255,255,.12);text-align:center}
-.nick-emoji{font-size:56px;margin-bottom:.8rem;display:block;cursor:pointer;transition:transform .2s}
+.nick-emoji{font-size:52px;margin-bottom:.6rem;display:block;cursor:pointer;transition:transform .2s}
 .nick-emoji:active{transform:scale(.9) rotate(10deg)}
-.nick-hint{font-size:11px;color:rgba(255,255,255,.3);margin-bottom:.8rem}
-.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:#fff;margin-bottom:.4rem}
+.nick-hint{font-size:11px;color:rgba(255,255,255,.3);margin-bottom:.6rem}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:#fff;margin-bottom:.3rem}
 .nick-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:1.2rem;line-height:1.8}
 .nick-field{width:100%;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:#fff;background:rgba(255,255,255,.1);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
 .nick-field::placeholder{color:rgba(255,255,255,.3)}
@@ -33,121 +39,170 @@ body{font-family:'Noto Sans KR',sans-serif;min-height:100vh;color:#fff}
 .inst-card-name{font-size:10px;color:rgba(255,255,255,.7)}
 .start-btn{width:100%;background:linear-gradient(135deg,#9b59b6,#e91e8c);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
 
-#screen-main{display:none;padding:1rem;max-width:480px;margin:0 auto;padding-bottom:120px}
+/* 메인 공통 */
+.main-content{display:none;padding:1rem;max-width:480px;margin:0 auto;padding-bottom:120px}
 
-/* 합주 무대 */
-.stage{width:100%;aspect-ratio:16/9;background:radial-gradient(ellipse at center,#1a0a2e 0%,#0a0a1a 100%);border-radius:18px;position:relative;overflow:hidden;margin-bottom:1rem;border:1px solid rgba(155,89,182,.2)}
-.stage-floor{position:absolute;bottom:0;left:0;right:0;height:20%;background:linear-gradient(180deg,transparent,rgba(155,89,182,.1))}
-/* 별 배경 */
-.stage-star{position:absolute;border-radius:50%;background:#fff;animation:twinkle 2s infinite}
-@keyframes twinkle{0%,100%{opacity:.3}50%{opacity:.8}}
-
-/* 플레이어 아바타 */
-.player-avatar{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;transition:left .15s ease,bottom .15s ease;pointer-events:none}
-.player-emoji{font-size:32px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,255,255,.4));transition:transform .1s}
-.player-emoji.active{animation:playerPulse .2s ease}
-@keyframes playerPulse{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
-.player-name-tag{font-size:9px;font-weight:600;color:#fff;background:rgba(0,0,0,.5);border-radius:8px;padding:1px 6px;white-space:nowrap}
-.player-note{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-size:16px;color:#fff;opacity:0;transition:opacity .15s;white-space:nowrap;text-shadow:0 0 10px rgba(255,255,255,.8)}
-.player-note.show{opacity:1}
-.player-ripple{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.5);animation:ripple .5s ease forwards;pointer-events:none}
-@keyframes ripple{0%{transform:translate(-50%,-50%) scale(.5);opacity:.8}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
-
-/* 내 카메라 */
+/* 카메라 */
 .camera-wrap{position:relative;border-radius:16px;overflow:hidden;margin-bottom:.8rem;aspect-ratio:4/3;background:#000}
 #camera-video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
 #motion-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.4;pointer-events:none}
 .motion-bar{position:absolute;bottom:8px;left:8px;right:8px;height:6px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden}
 .motion-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#6BCB77,#e91e8c);transition:width .1s}
 .cam-label{position:absolute;top:8px;left:8px;font-size:9px;color:#fff;background:rgba(0,0,0,.4);border-radius:8px;padding:2px 8px}
+.zone-labels{position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-between;padding:0 12px;pointer-events:none}
+.zone-label{font-size:9px;color:rgba(255,255,255,.6);background:rgba(0,0,0,.3);border-radius:8px;padding:2px 6px}
+.note-popup{position:absolute;top:20%;left:50%;transform:translateX(-50%);font-family:'Noto Serif KR',serif;font-size:30px;color:#fff;text-shadow:0 0 20px rgba(255,255,255,.8);opacity:0;transition:opacity .15s;pointer-events:none}
+.note-popup.show{opacity:1}
 
-/* 음계 모드 */
-.scale-row{display:flex;gap:6px;margin-bottom:.8rem;overflow-x:auto;padding-bottom:2px}
-.scale-btn{flex-shrink:0;padding:5px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);font-size:11px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap}
-.scale-btn.active{background:rgba(107,203,119,.25);border-color:#6BCB77;color:#6BCB77}
+/* 솔로 전용 */
+.current-note{text-align:center;padding:.8rem;background:rgba(255,255,255,.06);border-radius:14px;border:1px solid rgba(255,255,255,.08);margin-bottom:.8rem}
+.note-display{font-family:'Noto Serif KR',serif;font-size:34px;color:#fff;margin-bottom:.2rem;min-height:42px}
+.note-name-sub{font-size:11px;color:rgba(255,255,255,.4)}
+.viz-wrap{background:rgba(255,255,255,.06);border-radius:14px;padding:.8rem;border:1px solid rgba(255,255,255,.08);margin-bottom:.8rem}
+.viz-label{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:.5rem;text-transform:uppercase}
+.viz-bars{display:flex;gap:3px;align-items:flex-end;height:50px}
+.viz-bar{flex:1;border-radius:2px;background:linear-gradient(180deg,#e91e8c,#9b59b6);min-height:3px;transition:height .08s}
 
-/* 컨트롤 */
-.controls{display:flex;gap:8px;margin-bottom:.8rem}
-.ctrl-btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:44px}
-.ctrl-btn:active{transform:scale(.97)}
-.start-btn-main{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff}
-.start-btn-main.active{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse 1.5s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
-
-/* 감도 */
-.sens-wrap{background:rgba(255,255,255,.05);border-radius:12px;padding:.8rem;border:1px solid rgba(255,255,255,.07);margin-bottom:.8rem}
-.sens-label{font-size:10px;color:rgba(255,255,255,.4);margin-bottom:.5rem;display:flex;justify-content:space-between;text-transform:uppercase;letter-spacing:1px}
-.sens-slider{width:100%;accent-color:#e91e8c}
-
-/* 참여자 */
-.players-box{background:rgba(255,255,255,.05);border-radius:12px;padding:.8rem;border:1px solid rgba(255,255,255,.07)}
+/* 멀티 전용 - 무대 */
+.stage{width:100%;aspect-ratio:16/9;background:radial-gradient(ellipse at center,#1a0a2e 0%,#0a0a1a 100%);border-radius:18px;position:relative;overflow:hidden;margin-bottom:.8rem;border:1px solid rgba(155,89,182,.2)}
+.stage-floor{position:absolute;bottom:0;left:0;right:0;height:20%;background:linear-gradient(180deg,transparent,rgba(155,89,182,.1))}
+.stage-star{position:absolute;border-radius:50%;background:#fff;animation:twinkle 2s infinite}
+@keyframes twinkle{0%,100%{opacity:.3}50%{opacity:.8}}
+.player-avatar{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;transition:left .15s ease,bottom .15s ease;pointer-events:none}
+.player-emoji{font-size:32px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,255,255,.4));transition:transform .1s}
+.player-emoji.active{animation:playerPulse .2s ease}
+@keyframes playerPulse{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+.player-name-tag{font-size:9px;font-weight:600;color:#fff;background:rgba(0,0,0,.5);border-radius:8px;padding:1px 6px;white-space:nowrap}
+.player-note-tag{position:absolute;top:-26px;left:50%;transform:translateX(-50%);font-size:14px;color:#fff;opacity:0;transition:opacity .15s;white-space:nowrap;text-shadow:0 0 10px rgba(255,255,255,.8)}
+.player-note-tag.show{opacity:1}
+.player-ripple{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.5);animation:ripple .5s ease forwards;pointer-events:none}
+@keyframes ripple{0%{transform:translate(-50%,-50%) scale(.5);opacity:.8}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+.players-box{background:rgba(255,255,255,.05);border-radius:12px;padding:.8rem;border:1px solid rgba(255,255,255,.07);margin-bottom:.8rem}
 .players-label{font-size:10px;color:rgba(255,255,255,.4);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:1px}
 .player-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.08);border-radius:16px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,.8);margin:2px}
 .player-chip.me{background:rgba(155,89,182,.3)}
+
+/* 공통 컨트롤 */
+.inst-row{display:flex;gap:6px;margin-bottom:.8rem;overflow-x:auto;padding-bottom:2px}
+.inst-btn{flex-shrink:0;padding:7px 14px;border-radius:18px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s}
+.inst-btn.active{background:linear-gradient(135deg,#9b59b6,#e91e8c);border-color:transparent;color:#fff}
+.scale-row{display:flex;gap:6px;margin-bottom:.8rem;overflow-x:auto;padding-bottom:2px}
+.scale-btn{flex-shrink:0;padding:5px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);font-size:11px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap}
+.scale-btn.active{background:rgba(107,203,119,.25);border-color:#6BCB77;color:#6BCB77}
+.controls{display:flex;gap:8px;margin-bottom:.8rem}
+.ctrl-btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:44px}
+.ctrl-btn:active{transform:scale(.97)}
+.start-music-btn{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff}
+.start-music-btn.active{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
+.sens-wrap{background:rgba(255,255,255,.05);border-radius:12px;padding:.8rem;border:1px solid rgba(255,255,255,.07);margin-bottom:.8rem}
+.sens-label{font-size:10px;color:rgba(255,255,255,.4);margin-bottom:.5rem;display:flex;justify-content:space-between;text-transform:uppercase;letter-spacing:1px}
+.sens-slider{width:100%;accent-color:#e91e8c}
 </style>
 </head>
 <body>
 <div class="header">
   <a class="back" href="index.html">← 돌아가기</a>
-  <div class="header-title">👥 멀티 모션 합주</div>
-  <div class="header-sub">다같이 움직이면 합주가 돼요!</div>
+  <div class="header-title">🎵 움직임 음악</div>
+  <div class="header-sub">몸을 움직이면 음악이 나와요!</div>
 </div>
 
+<!-- 모드 탭 -->
+<div class="mode-tabs" id="mode-tabs" style="display:none">
+  <button class="mode-tab active" onclick="switchMode('solo',this)">🕺 솔로</button>
+  <button class="mode-tab" onclick="switchMode('multi',this)">👥 멀티 합주</button>
+</div>
+
+<!-- 닉네임 화면 -->
 <div id="screen-nick">
   <div style="height:.5rem"></div>
   <div class="nick-card">
-    <span class="nick-emoji" id="nick-avatar" onclick="rerollAvatar()">🎸</span>
+    <span class="nick-emoji" id="nick-avatar" onclick="rerollAvatar()">🕺</span>
     <div class="nick-hint">탭하면 바뀌어요!</div>
-    <div class="nick-title">멀티 모션 합주</div>
-    <div class="nick-sub">각자 악기를 골라 접속하면<br>움직임이 합주가 돼요! 🎵</div>
+    <div class="nick-title">움직임 음악</div>
+    <div class="nick-sub">카메라 앞에서 움직여봐요!<br>솔로로 혼자 하거나<br>👥 멀티로 다같이 합주해요!</div>
     <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterMain()">
-    <div class="inst-select-label">악기 선택</div>
-    <div class="inst-grid">
-      <div class="inst-card selected" onclick="selectInst('piano',this)"><span class="inst-card-emoji">🎹</span><span class="inst-card-name">피아노</span></div>
-      <div class="inst-card" onclick="selectInst('xylophone',this)"><span class="inst-card-emoji">🎵</span><span class="inst-card-name">실로폰</span></div>
-      <div class="inst-card" onclick="selectInst('flute',this)"><span class="inst-card-emoji">🪈</span><span class="inst-card-name">플루트</span></div>
-      <div class="inst-card" onclick="selectInst('guitar',this)"><span class="inst-card-emoji">🎸</span><span class="inst-card-name">기타</span></div>
-      <div class="inst-card" onclick="selectInst('bell',this)"><span class="inst-card-emoji">🔔</span><span class="inst-card-name">벨</span></div>
-      <div class="inst-card" onclick="selectInst('drum',this)"><span class="inst-card-emoji">🥁</span><span class="inst-card-name">드럼</span></div>
+    <div class="inst-select-label" id="inst-label-nick" style="display:none">악기 선택 (멀티용)</div>
+    <div class="inst-grid" id="inst-grid-nick" style="display:none">
+      <div class="inst-card selected" onclick="selectInstNick('piano',this)"><span class="inst-card-emoji">🎹</span><span class="inst-card-name">피아노</span></div>
+      <div class="inst-card" onclick="selectInstNick('xylophone',this)"><span class="inst-card-emoji">🎵</span><span class="inst-card-name">실로폰</span></div>
+      <div class="inst-card" onclick="selectInstNick('flute',this)"><span class="inst-card-emoji">🪈</span><span class="inst-card-name">플루트</span></div>
+      <div class="inst-card" onclick="selectInstNick('guitar',this)"><span class="inst-card-emoji">🎸</span><span class="inst-card-name">기타</span></div>
+      <div class="inst-card" onclick="selectInstNick('bell',this)"><span class="inst-card-emoji">🔔</span><span class="inst-card-name">벨</span></div>
+      <div class="inst-card" onclick="selectInstNick('drum',this)"><span class="inst-card-emoji">🥁</span><span class="inst-card-name">드럼</span></div>
     </div>
-    <button class="start-btn" onclick="enterMain()">🎵 합주 참가!</button>
+    <button class="start-btn" onclick="enterMain()">🎵 시작하기</button>
   </div>
 </div>
 
-<div id="screen-main">
-  <!-- 합주 무대 -->
-  <div class="stage" id="stage"></div>
-
-  <!-- 내 카메라 -->
+<!-- 솔로 메인 -->
+<div class="main-content" id="screen-solo">
   <div class="camera-wrap">
     <video id="camera-video" autoplay playsinline muted></video>
     <canvas id="motion-canvas"></canvas>
-    <div class="cam-label" id="cam-label">내 카메라</div>
+    <div class="zone-labels">
+      <span class="zone-label">← 낮은 음</span>
+      <span class="zone-label">높은 음 →</span>
+    </div>
+    <div class="note-popup" id="note-popup"></div>
     <div class="motion-bar"><div class="motion-bar-fill" id="motion-fill" style="width:0%"></div></div>
   </div>
-
-  <!-- 음계 -->
-  <div class="scale-row">
+  <div class="inst-row" id="solo-inst-row">
+    <button class="inst-btn active" onclick="selectInst('piano',this)">🎹 피아노</button>
+    <button class="inst-btn" onclick="selectInst('xylophone',this)">🎵 실로폰</button>
+    <button class="inst-btn" onclick="selectInst('flute',this)">🪈 플루트</button>
+    <button class="inst-btn" onclick="selectInst('guitar',this)">🎸 기타</button>
+    <button class="inst-btn" onclick="selectInst('bell',this)">🔔 벨</button>
+  </div>
+  <div class="scale-row" id="solo-scale-row">
     <button class="scale-btn active" onclick="selectScale('pentatonic',this)">🎵 5음계</button>
     <button class="scale-btn" onclick="selectScale('major',this)">🎶 장음계</button>
     <button class="scale-btn" onclick="selectScale('minor',this)">🎼 단음계</button>
     <button class="scale-btn" onclick="selectScale('chromatic',this)">🌈 반음계</button>
   </div>
-
-  <!-- 컨트롤 -->
+  <div class="current-note">
+    <div class="note-display" id="note-display">—</div>
+    <div class="note-name-sub" id="note-name-sub">움직여봐요!</div>
+  </div>
+  <div class="viz-wrap">
+    <div class="viz-label">음악 파형</div>
+    <div class="viz-bars" id="viz-bars"></div>
+  </div>
   <div class="controls">
-    <button class="ctrl-btn start-btn-main" id="start-btn-main" onclick="toggleMotion()">
-      <span id="motion-icon">🎵</span> <span id="motion-text">합주 시작</span>
+    <button class="ctrl-btn start-music-btn" id="solo-start-btn" onclick="toggleSolo()">
+      <span id="solo-icon">🎵</span> <span id="solo-text">음악 시작</span>
     </button>
   </div>
-
-  <!-- 감도 -->
   <div class="sens-wrap">
     <div class="sens-label"><span>감도</span><span id="sens-val">50</span></div>
     <input class="sens-slider" type="range" min="10" max="100" value="50" oninput="sensitivity=+this.value;document.getElementById('sens-val').textContent=this.value">
   </div>
+</div>
 
-  <!-- 참여자 -->
+<!-- 멀티 메인 -->
+<div class="main-content" id="screen-multi">
+  <div class="stage" id="stage"></div>
+  <div class="camera-wrap">
+    <video id="camera-video-multi" autoplay playsinline muted></video>
+    <canvas id="motion-canvas-multi"></canvas>
+    <div class="cam-label" id="cam-label">내 카메라</div>
+    <div class="motion-bar"><div class="motion-bar-fill" id="motion-fill-multi" style="width:0%"></div></div>
+  </div>
+  <div class="scale-row" id="multi-scale-row">
+    <button class="scale-btn active" onclick="selectScale('pentatonic',this)">🎵 5음계</button>
+    <button class="scale-btn" onclick="selectScale('major',this)">🎶 장음계</button>
+    <button class="scale-btn" onclick="selectScale('minor',this)">🎼 단음계</button>
+    <button class="scale-btn" onclick="selectScale('chromatic',this)">🌈 반음계</button>
+  </div>
+  <div class="controls">
+    <button class="ctrl-btn start-music-btn" id="multi-start-btn" onclick="toggleMulti()">
+      <span id="multi-icon">🎵</span> <span id="multi-text">합주 시작</span>
+    </button>
+  </div>
+  <div class="sens-wrap">
+    <div class="sens-label"><span>감도</span><span id="sens-val-multi">50</span></div>
+    <input class="sens-slider" type="range" min="10" max="100" value="50" oninput="sensitivity=+this.value;document.getElementById('sens-val-multi').textContent=this.value">
+  </div>
   <div class="players-box">
     <div class="players-label">👥 지금 함께</div>
     <div id="players-chips"></div>
@@ -160,7 +215,7 @@ const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const AVATARS=['🎸','🎹','🥁','🎺','🎻','🪈','🎤','🎵','🎶','🌟','🐶','🐱','🦊','🐸','🦄'];
+const AVATARS=['🕺','💃','🎸','🎹','🥁','🎺','🎻','🪈','🎤','🎵','🐶','🐱','🦊','🐸','🦄'];
 const INST_EMOJI={piano:'🎹',xylophone:'🎵',flute:'🪈',guitar:'🎸',bell:'🔔',drum:'🥁'};
 const INST_WAVE={piano:'triangle',xylophone:'sine',flute:'sine',guitar:'sawtooth',bell:'sine',drum:'square'};
 const INST_DECAY={piano:.8,xylophone:.4,flute:1.0,guitar:.6,bell:1.2,drum:.15};
@@ -171,40 +226,59 @@ const SCALES={
   minor:[261.63,293.66,311.13,349.23,392,415.30,466.16,523.25,587.33,622.25],
   chromatic:[261.63,277.18,293.66,311.13,329.63,349.23,369.99,392,415.30,440],
 };
-const NOTE_NAMES={
+const NOTE_NAMES_MAP={
   pentatonic:['도','레','미','솔','라','도↑','레↑','미↑','솔↑','라↑'],
   major:['도','레','미','파','솔','라','시','도↑','레↑','미↑'],
   minor:['도','레','레♭','파','솔','솔♭','시♭','도↑','레↑','레♭↑'],
   chromatic:['도','도#','레','레#','미','파','파#','솔','솔#','라'],
 };
 
-let myNickname='',myAvatar='🎸',myInstrument='piano';
+let myNickname='',myAvatar='🕺',myInstrument='piano';
 let myId=null;
 let audioCtx=null;
-let video=null,motionCanvas=null,motionCtx=null;
-let prevFrame=null;
-let isRunning=false;
-let animId=null;
-let lastNoteTime=0;
+let currentMode='solo'; // 'solo' | 'multi'
 let currentScale='pentatonic';
+let currentInstrument='piano';
 let sensitivity=50;
-let channel=null;
-let players={};// id -> {nickname,avatar,instrument,x,y,level}
-let stageStars=[];
+
+// 솔로
+let soloVideo=null,soloCanvas=null,soloCtx=null;
+let soloPrevFrame=null,soloRunning=false,soloAnimId=null,soloLastNote=0;
+
+// 멀티
+let multiVideo=null,multiCanvas=null,multiCtx=null;
+let multiPrevFrame=null,multiRunning=false,multiAnimId=null,multiLastNote=0;
+let channel=null,players={};
 
 function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
-
 function rerollAvatar(){myAvatar=AVATARS[Math.floor(Math.random()*AVATARS.length)];document.getElementById('nick-avatar').textContent=myAvatar;}
 rerollAvatar();
 
-function selectInst(name,el){
+function switchMode(mode,el){
+  currentMode=mode;
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  // 멀티면 악기 선택 보이기
+  document.getElementById('inst-label-nick').style.display=mode==='multi'?'block':'none';
+  document.getElementById('inst-grid-nick').style.display=mode==='multi'?'grid':'none';
+}
+
+function selectInstNick(name,el){
   myInstrument=name;
   document.querySelectorAll('.inst-card').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
 }
+
+function selectInst(name,el){
+  currentInstrument=name;
+  document.querySelectorAll('.inst-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
 function selectScale(name,el){
   currentScale=name;
-  document.querySelectorAll('.scale-btn').forEach(b=>b.classList.remove('active'));
+  // 해당 탭 내 버튼만 업데이트
+  el.closest('.scale-row').querySelectorAll('.scale-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
 }
 
@@ -212,291 +286,283 @@ async function enterMain(){
   const nick=document.getElementById('nick-input').value.trim()||'익명';
   myNickname=nick;
   document.getElementById('screen-nick').style.display='none';
-  document.getElementById('screen-main').style.display='block';
-  initStage();
-  await startCamera();
-  await registerPlayer();
-  loadPlayers();
-  setupChannel();
-  setInterval(()=>{if(myId)sb.from('motion_sessions').update({last_seen:new Date().toISOString()}).eq('id',myId);},10000);
-  setInterval(loadPlayers,8000);
-}
+  document.getElementById('mode-tabs').style.display='flex';
 
-/* ── 무대 초기화 ── */
-function initStage(){
-  const stage=document.getElementById('stage');
-  // 별 배경
-  for(let i=0;i<20;i++){
-    const star=document.createElement('div');
-    star.className='stage-star';
-    const size=1+Math.random()*2;
-    star.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*80}%;animation-delay:${Math.random()*2}s;animation-duration:${1.5+Math.random()*2}s`;
-    stage.appendChild(star);
+  if(currentMode==='solo'){
+    document.getElementById('screen-solo').style.display='block';
+    initVizBars();
+    await initCamera('solo');
+  }else{
+    document.getElementById('screen-multi').style.display='block';
+    initStage();
+    await initCamera('multi');
+    await registerPlayer();
+    loadPlayers();
+    setupChannel();
+    setInterval(()=>{if(myId)sb.from('motion_sessions').update({last_seen:new Date().toISOString()}).eq('id',myId);},10000);
+    setInterval(loadPlayers,8000);
   }
-  const floor=document.createElement('div');
-  floor.className='stage-floor';
-  stage.appendChild(floor);
 }
 
 /* ── 카메라 ── */
-async function startCamera(){
+async function initCamera(mode){
   try{
     const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
-    video=document.getElementById('camera-video');
-    video.srcObject=stream;
-    await video.play();
-    motionCanvas=document.getElementById('motion-canvas');
-    motionCtx=motionCanvas.getContext('2d');
+    if(mode==='solo'){
+      soloVideo=document.getElementById('camera-video');
+      soloVideo.srcObject=stream;await soloVideo.play();
+      soloCanvas=document.getElementById('motion-canvas');
+      soloCtx=soloCanvas.getContext('2d');
+    }else{
+      multiVideo=document.getElementById('camera-video-multi');
+      multiVideo.srcObject=stream;await multiVideo.play();
+      multiCanvas=document.getElementById('motion-canvas-multi');
+      multiCtx=multiCanvas.getContext('2d');
+    }
   }catch(e){alert('카메라 권한이 필요해요!');}
 }
 
-/* ── DB 등록 ── */
-async function registerPlayer(){
-  const{data,error}=await sb.from('motion_sessions').insert([{
-    nickname:myNickname,avatar:myAvatar,instrument:myInstrument,
-    motion_x:.5,motion_y:.5,motion_level:0,
-    last_seen:new Date().toISOString()
-  }]).select().single();
-  if(error){console.log(error);return;}
-  myId=data.id;
+/* ── 솔로 ── */
+function toggleSolo(){
+  if(soloRunning){stopSolo();return;}
+  startSolo();
 }
-
-async function loadPlayers(){
-  const since=new Date(Date.now()-20000).toISOString();
-  const{data}=await sb.from('motion_sessions').select('*').gte('last_seen',since);
-  if(!data)return;
-  players={};
-  data.forEach(p=>{players[p.id]=p;});
-  renderStage();
-  renderPlayerChips();
+function startSolo(){
+  soloRunning=true;
+  document.getElementById('solo-start-btn').classList.add('active');
+  document.getElementById('solo-icon').textContent='⏹';
+  document.getElementById('solo-text').textContent='음악 멈추기';
+  soloLoop();
 }
-
-/* ── 무대 렌더 ── */
-function renderStage(){
-  const stage=document.getElementById('stage');
-  // 기존 아바타 제거
-  stage.querySelectorAll('.player-avatar').forEach(el=>el.remove());
-  const sw=stage.offsetWidth||300;
-  const sh=stage.offsetHeight||168;
-  Object.values(players).forEach(p=>{
-    const el=document.createElement('div');
-    el.className='player-avatar';
-    el.id='player-'+p.id;
-    const color=INST_COLOR[p.instrument]||'#fff';
-    el.innerHTML=`
-      <div class="player-note" id="note-${p.id}"></div>
-      <div class="player-emoji" id="emoji-${p.id}" style="filter:drop-shadow(0 0 8px ${color})">${p.avatar}</div>
-      <div class="player-name-tag" style="background:${color}88">${p.nickname}${p.id===myId?' (나)':''}</div>`;
-    const x=Math.max(5,Math.min(85,p.motion_x*100));
-    const y=Math.max(10,Math.min(60,p.motion_y*100));
-    el.style.cssText=`left:${x}%;bottom:${y}%;transform:translateX(-50%)`;
-    stage.appendChild(el);
-  });
-}
-
-function renderPlayerChips(){
-  const el=document.getElementById('players-chips');
-  el.innerHTML=Object.values(players).map(p=>`
-    <span class="player-chip${p.id===myId?' me':''}">
-      ${p.avatar} ${p.nickname} ${INST_EMOJI[p.instrument]||'🎵'}
-    </span>`).join('');
-}
-
-/* ── 모션 토글 ── */
-function toggleMotion(){
-  if(isRunning){stopMotion();return;}
-  startMotion();
-}
-function startMotion(){
-  isRunning=true;
-  document.getElementById('start-btn-main').classList.add('active');
-  document.getElementById('motion-icon').textContent='⏹';
-  document.getElementById('motion-text').textContent='합주 중... 멈추기';
-  detectLoop();
-}
-function stopMotion(){
-  isRunning=false;
-  if(animId)cancelAnimationFrame(animId);
-  document.getElementById('start-btn-main').classList.remove('active');
-  document.getElementById('motion-icon').textContent='🎵';
-  document.getElementById('motion-text').textContent='합주 시작';
+function stopSolo(){
+  soloRunning=false;
+  if(soloAnimId)cancelAnimationFrame(soloAnimId);
+  document.getElementById('solo-start-btn').classList.remove('active');
+  document.getElementById('solo-icon').textContent='🎵';
+  document.getElementById('solo-text').textContent='음악 시작';
   document.getElementById('motion-fill').style.width='0%';
+  document.getElementById('note-display').textContent='—';
+  resetVizBars();
+}
+function soloLoop(){
+  if(!soloRunning)return;
+  soloAnimId=requestAnimationFrame(soloLoop);
+  if(!soloVideo||soloVideo.readyState<2)return;
+  const w=soloVideo.videoWidth,h=soloVideo.videoHeight;
+  if(!w||!h)return;
+  soloCanvas.width=w;soloCanvas.height=h;
+  soloCtx.drawImage(soloVideo,0,0,w,h);
+  const frame=soloCtx.getImageData(0,0,w,h);
+  if(!soloPrevFrame){soloPrevFrame=frame;return;}
+  const{motions,avgMotion}=analyzeMotion(frame,soloPrevFrame,w,h,10);
+  soloPrevFrame=frame;
+  const pct=Math.min(100,(avgMotion/sensitivity)*100);
+  document.getElementById('motion-fill').style.width=pct+'%';
+  updateVizBars(motions);
+  // 모션 시각화
+  soloCtx.clearRect(0,0,w,h);
+  motions.forEach((m,z)=>{
+    const intensity=Math.min(1,m/(sensitivity*2));
+    if(intensity>0.05){const hue=280+z*8;soloCtx.fillStyle=`hsla(${hue},80%,60%,${intensity*.6})`;soloCtx.fillRect(z*(w/10),0,w/10,h);}
+  });
+  const now=Date.now();
+  if(avgMotion>sensitivity*0.3&&now-soloLastNote>80){
+    const maxZone=motions.indexOf(Math.max(...motions));
+    const noteIdx=Math.floor((maxZone/10)*SCALES[currentScale].length);
+    const freq=SCALES[currentScale][noteIdx];
+    const noteName=NOTE_NAMES_MAP[currentScale][noteIdx];
+    playNote(freq,Math.min(.5,(avgMotion/sensitivity)*.5),currentInstrument);
+    document.getElementById('note-display').textContent=['🎵','🎶','🎼','🎹','🎸','🎺','🎻','🥁','🎤','✨'][noteIdx%10]+' '+noteName;
+    document.getElementById('note-name-sub').textContent=freq.toFixed(0)+'Hz';
+    const popup=document.getElementById('note-popup');popup.textContent=noteName;popup.classList.add('show');setTimeout(()=>popup.classList.remove('show'),300);
+    soloLastNote=now;
+  }
 }
 
-/* ── 움직임 감지 루프 ── */
-function detectLoop(){
-  if(!isRunning)return;
-  animId=requestAnimationFrame(detectLoop);
-  if(!video||video.readyState<2)return;
-  const w=video.videoWidth,h=video.videoHeight;
+/* ── 멀티 ── */
+function toggleMulti(){
+  if(multiRunning){stopMulti();return;}
+  startMulti();
+}
+function startMulti(){
+  multiRunning=true;
+  document.getElementById('multi-start-btn').classList.add('active');
+  document.getElementById('multi-icon').textContent='⏹';
+  document.getElementById('multi-text').textContent='합주 중... 멈추기';
+  multiLoop();
+}
+function stopMulti(){
+  multiRunning=false;
+  if(multiAnimId)cancelAnimationFrame(multiAnimId);
+  document.getElementById('multi-start-btn').classList.remove('active');
+  document.getElementById('multi-icon').textContent='🎵';
+  document.getElementById('multi-text').textContent='합주 시작';
+  document.getElementById('motion-fill-multi').style.width='0%';
+}
+function multiLoop(){
+  if(!multiRunning)return;
+  multiAnimId=requestAnimationFrame(multiLoop);
+  if(!multiVideo||multiVideo.readyState<2)return;
+  const w=multiVideo.videoWidth,h=multiVideo.videoHeight;
   if(!w||!h)return;
-  motionCanvas.width=w;motionCanvas.height=h;
-  motionCtx.drawImage(video,0,0,w,h);
-  const frame=motionCtx.getImageData(0,0,w,h);
-  if(!prevFrame){prevFrame=frame;return;}
+  multiCanvas.width=w;multiCanvas.height=h;
+  multiCtx.drawImage(multiVideo,0,0,w,h);
+  const frame=multiCtx.getImageData(0,0,w,h);
+  if(!multiPrevFrame){multiPrevFrame=frame;return;}
+  const{motions,avgMotion,vMotions}=analyzeMotion(frame,multiPrevFrame,w,h,10,5);
+  multiPrevFrame=frame;
+  const pct=Math.min(100,(avgMotion/sensitivity)*100);
+  document.getElementById('motion-fill-multi').style.width=pct+'%';
+  multiCtx.clearRect(0,0,w,h);
+  motions.forEach((m,z)=>{
+    const intensity=Math.min(1,m/(sensitivity*2));
+    if(intensity>0.05){const hue=280+z*8;multiCtx.fillStyle=`hsla(${hue},80%,60%,${intensity*.5})`;multiCtx.fillRect(z*(w/10),0,w/10,h);}
+  });
+  const now=Date.now();
+  if(avgMotion>sensitivity*0.3){
+    const maxZone=motions.indexOf(Math.max(...motions));
+    const maxVZone=vMotions?vMotions.indexOf(Math.max(...vMotions)):2;
+    const motionX=maxZone/10;
+    const motionY=1-(maxVZone/5);
+    const noteIdx=Math.floor(motionX*SCALES[currentScale].length);
+    const noteName=NOTE_NAMES_MAP[currentScale][noteIdx];
+    const freq=SCALES[currentScale][noteIdx];
+    if(now-multiLastNote>100){
+      playNote(freq,Math.min(.45,(avgMotion/sensitivity)*.45),myInstrument);
+      showMyNoteOnStage(noteName);
+      multiLastNote=now;
+    }
+    if(myId&&now%400<50){
+      sb.from('motion_sessions').update({motion_x:motionX,motion_y:motionY,motion_level:pct/100,last_seen:new Date().toISOString()}).eq('id',myId);
+      if(channel)channel.send({type:'broadcast',event:'motion',payload:{id:myId,x:motionX,y:motionY,noteIdx,noteName,instrument:myInstrument}});
+      updateAvatarPos(myId,motionX,motionY);
+    }
+  }
+}
 
-  const zones=10;const zoneW=Math.floor(w/zones);
-  const motions=new Array(zones).fill(0);
-  let totalMotion=0;
-  // 세로 구역도 분석 (위아래 움직임 감지)
-  const vZones=5;const zoneH=Math.floor(h/vZones);
-  const vMotions=new Array(vZones).fill(0);
-
-  for(let z=0;z<zones;z++){
+/* ── 움직임 분석 ── */
+function analyzeMotion(frame,prev,w,h,hZones,vZones){
+  const zoneW=Math.floor(w/hZones);
+  const motions=new Array(hZones).fill(0);
+  let total=0;
+  for(let z=0;z<hZones;z++){
     let diff=0,count=0;
     for(let x=z*zoneW;x<(z+1)*zoneW;x+=3){
       for(let y=0;y<h;y+=3){
         const i=(y*w+x)*4;
-        const dr=Math.abs(frame.data[i]-prevFrame.data[i]);
-        const dg=Math.abs(frame.data[i+1]-prevFrame.data[i+1]);
-        const db=Math.abs(frame.data[i+2]-prevFrame.data[i+2]);
-        diff+=dr+dg+db;count++;
+        diff+=Math.abs(frame.data[i]-prev.data[i])+Math.abs(frame.data[i+1]-prev.data[i+1])+Math.abs(frame.data[i+2]-prev.data[i+2]);
+        count++;
       }
     }
-    motions[z]=count>0?diff/count:0;
-    totalMotion+=motions[z];
+    motions[z]=count>0?diff/count:0;total+=motions[z];
   }
-  for(let v=0;v<vZones;v++){
-    let diff=0,count=0;
-    for(let y=v*zoneH;y<(v+1)*zoneH;y+=3){
-      for(let x=0;x<w;x+=3){
-        const i=(y*w+x)*4;
-        const dr=Math.abs(frame.data[i]-prevFrame.data[i]);
-        const dg=Math.abs(frame.data[i+1]-prevFrame.data[i+1]);
-        const db=Math.abs(frame.data[i+2]-prevFrame.data[i+2]);
-        diff+=dr+dg+db;count++;
+  let vMotions=null;
+  if(vZones){
+    const zoneH=Math.floor(h/vZones);
+    vMotions=new Array(vZones).fill(0);
+    for(let v=0;v<vZones;v++){
+      let diff=0,count=0;
+      for(let y=v*zoneH;y<(v+1)*zoneH;y+=3){
+        for(let x=0;x<w;x+=3){
+          const i=(y*w+x)*4;
+          diff+=Math.abs(frame.data[i]-prev.data[i])+Math.abs(frame.data[i+1]-prev.data[i+1])+Math.abs(frame.data[i+2]-prev.data[i+2]);
+          count++;
+        }
       }
-    }
-    vMotions[v]=count>0?diff/count:0;
-  }
-  prevFrame=frame;
-
-  const avgMotion=totalMotion/zones;
-  const motionPct=Math.min(100,(avgMotion/sensitivity)*100);
-  document.getElementById('motion-fill').style.width=motionPct+'%';
-
-  // 가장 많이 움직인 가로 구역 → 음
-  const maxZone=motions.indexOf(Math.max(...motions));
-  // 가장 많이 움직인 세로 구역 → y 위치
-  const maxVZone=vMotions.indexOf(Math.max(...vMotions));
-  const motionX=maxZone/zones;
-  const motionY=1-(maxVZone/vZones);
-
-  const threshold=sensitivity*0.3;
-  const now=Date.now();
-
-  if(avgMotion>threshold){
-    const noteIdx=Math.floor(motionX*SCALES[currentScale].length);
-    const freq=SCALES[currentScale][noteIdx];
-    const noteName=NOTE_NAMES[currentScale][noteIdx];
-    const vol=Math.min(.5,(avgMotion/sensitivity)*.5);
-
-    if(now-lastNoteTime>100){
-      playNote(freq,vol);
-      showMyNoteOnStage(noteName,noteIdx);
-      lastNoteTime=now;
-    }
-
-    // DB & broadcast 업데이트
-    if(myId&&now%500<100){
-      sb.from('motion_sessions').update({
-        motion_x:motionX,motion_y:motionY,
-        motion_level:motionPct/100,
-        last_seen:new Date().toISOString()
-      }).eq('id',myId);
-      if(channel)channel.send({type:'broadcast',event:'motion',payload:{
-        id:myId,x:motionX,y:motionY,level:motionPct/100,
-        noteIdx,noteName,instrument:myInstrument
-      }});
-    }
-    // 내 아바타 위치 업데이트
-    updateAvatarPos(myId,motionX,motionY);
-  }
-
-  // 모션 캔버스 시각화
-  motionCtx.clearRect(0,0,w,h);
-  for(let z=0;z<zones;z++){
-    const intensity=Math.min(1,motions[z]/(sensitivity*2));
-    if(intensity>0.05){
-      const hue=280+z*8;
-      motionCtx.fillStyle=`hsla(${hue},80%,60%,${intensity*.6})`;
-      motionCtx.fillRect(z*zoneW,0,zoneW,h);
+      vMotions[v]=count>0?diff/count:0;
     }
   }
-}
-
-function updateAvatarPos(id,x,y){
-  const el=document.getElementById('player-'+id);
-  if(!el)return;
-  const px=Math.max(5,Math.min(85,x*100));
-  const py=Math.max(10,Math.min(60,y*100));
-  el.style.left=px+'%';
-  el.style.bottom=py+'%';
+  return{motions,avgMotion:total/hZones,vMotions};
 }
 
 /* ── 음 재생 ── */
-function playNote(freq,vol){
+function playNote(freq,vol,instrument){
   const actx=getAudioCtx();
-  const osc=actx.createOscillator();
-  const gain=actx.createGain();
-  osc.type=INST_WAVE[myInstrument]||'sine';
-  osc.frequency.value=freq;
+  const osc=actx.createOscillator();const gain=actx.createGain();
+  osc.type=INST_WAVE[instrument]||'sine';osc.frequency.value=freq;
   osc.connect(gain);gain.connect(actx.destination);
   gain.gain.setValueAtTime(0,actx.currentTime);
   gain.gain.linearRampToValueAtTime(vol,actx.currentTime+.02);
-  const decay=INST_DECAY[myInstrument]||.8;
-  gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+decay);
-  osc.start(actx.currentTime);osc.stop(actx.currentTime+decay+.1);
-}
-
-function playRemoteNote(instrument,noteIdx,vol){
-  const actx=getAudioCtx();
-  const scale=SCALES[currentScale];
-  const freq=scale[noteIdx%scale.length];
-  const osc=actx.createOscillator();
-  const gain=actx.createGain();
-  osc.type=INST_WAVE[instrument]||'sine';
-  osc.frequency.value=freq;
-  osc.connect(gain);gain.connect(actx.destination);
-  gain.gain.setValueAtTime(0,actx.currentTime);
-  gain.gain.linearRampToValueAtTime(vol*.35,actx.currentTime+.02);
   const decay=INST_DECAY[instrument]||.8;
   gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+decay);
   osc.start(actx.currentTime);osc.stop(actx.currentTime+decay+.1);
 }
 
-/* ── 음 표시 ── */
-function showMyNoteOnStage(noteName,noteIdx){
-  const noteEl=document.getElementById('note-'+myId);
-  const emojiEl=document.getElementById('emoji-'+myId);
-  if(noteEl){noteEl.textContent=noteName;noteEl.classList.add('show');setTimeout(()=>noteEl.classList.remove('show'),300);}
-  if(emojiEl){emojiEl.classList.add('active');setTimeout(()=>emojiEl.classList.remove('active'),200);}
+/* ── 솔로 시각화 ── */
+function initVizBars(){
+  const el=document.getElementById('viz-bars');el.innerHTML='';
+  for(let i=0;i<10;i++){const b=document.createElement('div');b.className='viz-bar';b.style.height='3px';el.appendChild(b);}
 }
+function updateVizBars(motions){
+  const bars=document.querySelectorAll('.viz-bar');
+  bars.forEach((bar,i)=>{
+    const h=Math.min(50,Math.max(3,(motions[i]||0)/sensitivity*50));
+    bar.style.height=h+'px';
+    bar.style.background=`linear-gradient(180deg,hsl(${280+i*8},80%,60%),hsl(${300+i*8},80%,40%))`;
+  });
+}
+function resetVizBars(){document.querySelectorAll('.viz-bar').forEach(b=>b.style.height='3px');}
 
-function showRemoteNoteOnStage(id,noteName){
-  const noteEl=document.getElementById('note-'+id);
-  const emojiEl=document.getElementById('emoji-'+id);
-  if(noteEl){noteEl.textContent=noteName;noteEl.classList.add('show');setTimeout(()=>noteEl.classList.remove('show'),300);}
-  if(emojiEl){emojiEl.classList.add('active');setTimeout(()=>emojiEl.classList.remove('active'),200);}
-  // 리플 효과
-  const playerEl=document.getElementById('player-'+id);
-  if(playerEl){
-    const ripple=document.createElement('div');
-    ripple.className='player-ripple';
-    playerEl.appendChild(ripple);
-    setTimeout(()=>ripple.remove(),500);
+/* ── 멀티 무대 ── */
+function initStage(){
+  const stage=document.getElementById('stage');
+  for(let i=0;i<20;i++){
+    const star=document.createElement('div');star.className='stage-star';
+    const size=1+Math.random()*2;
+    star.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*80}%;animation-delay:${Math.random()*2}s;animation-duration:${1.5+Math.random()*2}s`;
+    stage.appendChild(star);
   }
+  const floor=document.createElement('div');floor.className='stage-floor';stage.appendChild(floor);
 }
-
-/* ── 실시간 ── */
+function renderStage(){
+  const stage=document.getElementById('stage');
+  stage.querySelectorAll('.player-avatar').forEach(el=>el.remove());
+  Object.values(players).forEach(p=>{
+    const el=document.createElement('div');el.className='player-avatar';el.id='player-'+p.id;
+    const color=INST_COLOR[p.instrument]||'#fff';
+    el.innerHTML=`<div class="player-note-tag" id="note-${p.id}"></div><div class="player-emoji" id="emoji-${p.id}" style="filter:drop-shadow(0 0 8px ${color})">${p.avatar}</div><div class="player-name-tag" style="background:${color}88">${p.nickname}${p.id===myId?' (나)':''}</div>`;
+    const x=Math.max(5,Math.min(85,p.motion_x*100));const y=Math.max(10,Math.min(60,p.motion_y*100));
+    el.style.cssText=`left:${x}%;bottom:${y}%;transform:translateX(-50%)`;
+    stage.appendChild(el);
+  });
+}
+function updateAvatarPos(id,x,y){
+  const el=document.getElementById('player-'+id);if(!el)return;
+  el.style.left=Math.max(5,Math.min(85,x*100))+'%';
+  el.style.bottom=Math.max(10,Math.min(60,y*100))+'%';
+}
+function showMyNoteOnStage(noteName){
+  const noteEl=document.getElementById('note-'+myId);const emojiEl=document.getElementById('emoji-'+myId);
+  if(noteEl){noteEl.textContent=noteName;noteEl.classList.add('show');setTimeout(()=>noteEl.classList.remove('show'),300);}
+  if(emojiEl){emojiEl.classList.add('active');setTimeout(()=>emojiEl.classList.remove('active'),200);}
+}
+function showRemoteNote(id,noteName){
+  const noteEl=document.getElementById('note-'+id);const emojiEl=document.getElementById('emoji-'+id);
+  if(noteEl){noteEl.textContent=noteName;noteEl.classList.add('show');setTimeout(()=>noteEl.classList.remove('show'),300);}
+  if(emojiEl){emojiEl.classList.add('active');setTimeout(()=>emojiEl.classList.remove('active'),200);}
+  const playerEl=document.getElementById('player-'+id);
+  if(playerEl){const r=document.createElement('div');r.className='player-ripple';playerEl.appendChild(r);setTimeout(()=>r.remove(),500);}
+}
+async function registerPlayer(){
+  const{data,error}=await sb.from('motion_sessions').insert([{nickname:myNickname,avatar:myAvatar,instrument:myInstrument,motion_x:.5,motion_y:.5,motion_level:0,last_seen:new Date().toISOString()}]).select().single();
+  if(error){console.log(error);return;}myId=data.id;
+}
+async function loadPlayers(){
+  const since=new Date(Date.now()-20000).toISOString();
+  const{data}=await sb.from('motion_sessions').select('*').gte('last_seen',since);
+  if(!data)return;
+  players={};data.forEach(p=>{players[p.id]=p;});
+  renderStage();
+  document.getElementById('players-chips').innerHTML=Object.values(players).map(p=>`<span class="player-chip${p.id===myId?' me':''}">${p.avatar} ${p.nickname} ${INST_EMOJI[p.instrument]||'🎵'}</span>`).join('');
+}
 function setupChannel(){
   channel=sb.channel('motion-jam',{config:{broadcast:{self:false}}});
   channel
     .on('broadcast',{event:'motion'},(payload)=>{
       const{id,x,y,noteIdx,noteName,instrument}=payload.payload;
       updateAvatarPos(id,x,y);
-      playRemoteNote(instrument,noteIdx,0.3);
-      showRemoteNoteOnStage(id,noteName);
+      playNote(SCALES[currentScale][noteIdx%SCALES[currentScale].length],.3,instrument);
+      showRemoteNote(id,noteName);
     })
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'motion_sessions'},()=>{loadPlayers();})
     .subscribe();
