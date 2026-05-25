@@ -1,1 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>도레미 챌린지</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow:hidden;background:#0a0a2a}
+body{font-family:'Noto Sans KR',sans-serif;min-height:100vh;color:#fff}
+.header{background:rgba(255,255,255,.06);backdrop-filter:blur(10px);padding:2rem 1.2rem 1rem;text-align:center;position:relative;border-bottom:1px solid rgba(255,255,255,.08)}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,.8);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.3rem;color:#fff;margin-bottom:.1rem}
+.header-sub{font-size:11px;color:rgba(255,255,255,.4)}
 
+/* 닉네임 */
+#screen-nick{padding:1.5rem 1rem;max-width:380px;margin:0 auto}
+.nick-card{background:rgba(255,255,255,.07);border-radius:22px;padding:1.8rem 1.5rem;border:1.5px solid rgba(255,255,255,.1);text-align:center}
+.nick-emoji{font-size:56px;margin-bottom:.6rem;display:block}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:#fff;margin-bottom:.3rem}
+.nick-sub{font-size:12px;color:rgba(255,255,255,.4);margin-bottom:1.2rem;line-height:1.9}
+.nick-field{width:100%;border:1.5px solid rgba(255,255,255,.15);border-radius:12px;padding:11px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:#fff;background:rgba(255,255,255,.08);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-field::placeholder{color:rgba(255,255,255,.25)}
+.nick-field:focus{border-color:rgba(107,203,119,.5)}
+.start-btn{width:100%;background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+
+/* 게임 */
+#screen-game{display:none;height:calc(100vh - 80px);position:relative}
+
+/* 음계 바 */
+.scale-bars{position:absolute;left:0;top:0;bottom:0;width:70px;display:flex;flex-direction:column}
+.scale-bar{flex:1;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:rgba(255,255,255,.9);border-right:2px solid rgba(255,255,255,.08);transition:all .2s;position:relative}
+.scale-bar.target{border-right-color:rgba(255,255,255,.5)}
+.scale-bar.active{filter:brightness(1.5)}
+.scale-bar-label{font-size:18px;text-shadow:0 0 10px currentColor}
+
+/* 게임 캔버스 */
+#game-canvas{position:absolute;left:70px;top:0;right:0;bottom:0}
+
+/* 마이크 버튼 */
+.mic-btn{position:absolute;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#6BCB77,#4D96FF);border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 20px rgba(107,203,119,.4);display:flex;align-items:center;justify-content:center;z-index:10}
+.mic-btn.active{background:linear-gradient(135deg,#e91e8c,#9b59b6);animation:micPulse 1s infinite}
+@keyframes micPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+/* HUD */
+.hud{position:absolute;top:10px;left:80px;right:80px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;z-index:5}
+.hud-mission{font-family:'Noto Serif KR',serif;font-size:13px;color:rgba(255,255,255,.6)}
+.hud-score{font-family:'Noto Serif KR',serif;font-size:18px;color:#FFD700}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">🎵 도레미 챌린지</div>
+  <div class="header-sub">목소리로 음계를 맞춰봐요!</div>
+</div>
+
+<div id="screen-nick">
+  <div style="height:.5rem"></div>
+  <div class="nick-card">
+    <span class="nick-emoji">🎵</span>
+    <div class="nick-title">도레미 챌린지</div>
+    <div class="nick-sub">화면 왼쪽에 목표 음이 표시돼요!<br>그 높이에 맞게 소리를 내면 통과!<br><br>도(낮) ↔ 시(높)<br>높은 소리 → 위쪽 구역<br>낮은 소리 → 아래쪽 구역</div>
+    <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterGame()">
+    <button class="start-btn" onclick="enterGame()">🎵 시작하기</button>
+  </div>
+</div>
+
+<div id="screen-game">
+  <!-- 음계 바 -->
+  <div class="scale-bars" id="scale-bars"></div>
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-mission" id="hud-mission">마이크를 눌러 시작!</div>
+    <div class="hud-score" id="hud-score">0점</div>
+  </div>
+  <!-- 캔버스 -->
+  <canvas id="game-canvas"></canvas>
+  <!-- 마이크 -->
+  <button class="mic-btn" id="mic-btn" onclick="toggleMic()">🎤</button>
+</div>
+
+<script>
+const NOTES=[
+  {name:'도',color:'#E05555',zone:6},
+  {name:'레',color:'#FF8C42',zone:5},
+  {name:'미',color:'#FFD93D',zone:4},
+  {name:'파',color:'#6BCB77',zone:3},
+  {name:'솔',color:'#4D96FF',zone:2},
+  {name:'라',color:'#9B59B6',zone:1},
+  {name:'시',color:'#E91E8C',zone:0},
+];
+// 챌린지 순서 (도레미파솔라시도)
+const CHALLENGE=[0,1,2,3,4,5,6,0]; // 인덱스
+const CHALLENGE_NAMES=['도','레','미','파','솔','라','시','도↑'];
+
+let myNickname='';
+let audioCtx=null,analyser=null,micStream=null;
+let micActive=false;
+let pitchLevel=0.5;
+let canvas,ctx;
+let gameState='ready';
+let currentStep=0;
+let score=0;
+let holdTimer=0;
+let holdRequired=30; // 약 0.5초
+let particles=[];
+let stars=[];
+let successAnim=0;
+
+// 음 재생용
+let playAudioCtx=null;
+
+function getPlayCtx(){if(!playAudioCtx)playAudioCtx=new(window.AudioContext||window.webkitAudioContext)();return playAudioCtx;}
+
+function playNoteSound(freq,vol=0.3,duration=0.4){
+  const actx=getPlayCtx();
+  const osc=actx.createOscillator();const gain=actx.createGain();
+  osc.type='sine';osc.frequency.value=freq;
+  osc.connect(gain);gain.connect(actx.destination);
+  gain.gain.setValueAtTime(0,actx.currentTime);
+  gain.gain.linearRampToValueAtTime(vol,actx.currentTime+.03);
+  gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+duration);
+  osc.start(actx.currentTime);osc.stop(actx.currentTime+duration+.05);
+}
+
+const NOTE_FREQS=[261.63,293.66,329.63,349.23,392,440,493.88,523.25];
+
+function enterGame(){
+  const nick=document.getElementById('nick-input').value.trim()||'익명';
+  myNickname=nick;
+  document.getElementById('screen-nick').style.display='none';
+  document.getElementById('screen-game').style.display='block';
+  initScaleBars();
+  initCanvas();
+  initStars();
+  gameLoop();
+}
+
+function initScaleBars(){
+  const el=document.getElementById('scale-bars');
+  el.innerHTML='';
+  // 시(위) ~ 도(아래) 순서
+  [...NOTES].reverse().forEach((n,i)=>{
+    const bar=document.createElement('div');
+    bar.className='scale-bar';
+    bar.id='bar-'+n.name;
+    bar.style.background=`linear-gradient(90deg,${n.color}33,${n.color}11)`;
+    bar.style.borderRight=`3px solid ${n.color}44`;
+    bar.innerHTML=`<span class="scale-bar-label" style="color:${n.color}">${n.name}</span>`;
+    el.appendChild(bar);
+  });
+}
+
+function initCanvas(){
+  canvas=document.getElementById('game-canvas');
+  ctx=canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize',resizeCanvas);
+}
+
+function resizeCanvas(){
+  const parent=canvas.parentElement;
+  canvas.width=parent.offsetWidth-70;
+  canvas.height=parent.offsetHeight;
+}
+
+function initStars(){
+  stars=[];
+  for(let i=0;i<50;i++)stars.push({x:Math.random()*2000,y:Math.random()*800,r:.5+Math.random()*1.5,speed:.3+Math.random()*.5,opacity:.2+Math.random()*.6});
+}
+
+/* ── 마이크 ── */
+async function toggleMic(){
+  if(micActive){stopMic();return;}
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    analyser=audioCtx.createAnalyser();
+    analyser.fftSize=1024;analyser.smoothingTimeConstant=0.7;
+    const src=audioCtx.createMediaStreamSource(micStream);
+    src.connect(analyser);
+    micActive=true;
+    document.getElementById('mic-btn').classList.add('active');
+    document.getElementById('mic-btn').textContent='⏹';
+    if(gameState==='ready'||gameState==='done')startGame();
+    pitchLoop();
+  }catch(e){alert('마이크 권한이 필요해요!');}
+}
+
+function stopMic(){
+  if(micStream)micStream.getTracks().forEach(t=>t.stop());
+  micActive=false;
+  pitchLevel=0.5;
+  document.getElementById('mic-btn').classList.remove('active');
+  document.getElementById('mic-btn').textContent='🎤';
+}
+
+function pitchLoop(){
+  if(!micActive)return;
+  requestAnimationFrame(pitchLoop);
+  if(!analyser)return;
+  const buf=new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(buf);
+  const sr=audioCtx.sampleRate;
+  const fftSize=analyser.fftSize;
+  const lowBin=Math.floor(80*fftSize/sr);
+  const highBin=Math.floor(1200*fftSize/sr);
+  let weightedSum=0,totalWeight=0,totalEnergy=0;
+  for(let i=lowBin;i<Math.min(highBin,buf.length);i++){
+    if(buf[i]>15){
+      const w=(i-lowBin)/(highBin-lowBin);
+      weightedSum+=w*buf[i];totalWeight+=buf[i];
+    }
+    totalEnergy+=buf[i];
+  }
+  const avgEnergy=totalEnergy/(highBin-lowBin);
+  if(totalWeight>0&&avgEnergy>8){
+    const raw=weightedSum/totalWeight;
+    pitchLevel=pitchLevel*.6+raw*.4;
+  }else{
+    pitchLevel=pitchLevel*.92+0.5*.08;
+  }
+}
+
+/* ── 게임 ── */
+function startGame(){
+  gameState='playing';
+  currentStep=0;
+  score=0;
+  holdTimer=0;
+  particles=[];
+  document.getElementById('hud-score').textContent='0점';
+  updateMission();
+  // 목표 음 들려주기
+  playNoteSound(NOTE_FREQS[CHALLENGE[0]],0.3,0.5);
+}
+
+function updateMission(){
+  if(currentStep>=CHALLENGE.length){
+    gameState='done';
+    document.getElementById('hud-mission').textContent='🎉 완주!';
+    return;
+  }
+  const noteName=CHALLENGE_NAMES[currentStep];
+  document.getElementById('hud-mission').textContent=`🎵 "${noteName}" 을 내봐요!`;
+  // 목표 음 하이라이트
+  document.querySelectorAll('.scale-bar').forEach(b=>b.classList.remove('target'));
+  const targetNote=NOTES[CHALLENGE[currentStep]];
+  const bar=document.getElementById('bar-'+targetNote.name);
+  if(bar)bar.classList.add('target');
+  // 음 미리 들려주기
+  playNoteSound(NOTE_FREQS[currentStep%8],0.25,0.4);
+}
+
+function getCurrentZone(){
+  // pitchLevel 0~1 → 7구역 (0=최저=도, 6=최고=시)
+  return Math.floor(pitchLevel*7);
+}
+
+function update(){
+  if(gameState!=='playing'||!micActive)return;
+  const targetNote=NOTES[CHALLENGE[currentStep]];
+  const currentZone=getCurrentZone();
+  // 목표 구역과 현재 구역 비교 (±1 허용)
+  if(Math.abs(currentZone-targetNote.zone)<=1){
+    holdTimer++;
+    if(holdTimer>=holdRequired){
+      // 통과!
+      score+=10;
+      holdTimer=0;
+      successAnim=30;
+      spawnParticles(targetNote.color);
+      playNoteSound(NOTE_FREQS[currentStep%8],0.4,0.5);
+      document.getElementById('hud-score').textContent=score+'점';
+      currentStep++;
+      updateMission();
+    }
+  }else{
+    holdTimer=Math.max(0,holdTimer-2);
+  }
+  // 음계 바 하이라이트
+  document.querySelectorAll('.scale-bar').forEach(b=>b.classList.remove('active'));
+  const activeNote=[...NOTES].reverse()[6-currentZone];
+  if(activeNote){
+    const bar=document.getElementById('bar-'+activeNote.name);
+    if(bar)bar.classList.add('active');
+  }
+  // 파티클
+  particles=particles.filter(p=>p.life>0);
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.life--;p.r*=.97;});
+  if(successAnim>0)successAnim--;
+}
+
+function spawnParticles(color){
+  const w=canvas.width,h=canvas.height;
+  for(let i=0;i<20;i++){
+    particles.push({x:w/2,y:h/2,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8-3,r:4+Math.random()*6,color,life:40+Math.random()*20});
+  }
+}
+
+/* ── 그리기 ── */
+function gameLoop(){
+  requestAnimationFrame(gameLoop);
+  update();
+  draw();
+}
+
+function draw(){
+  const w=canvas.width,h=canvas.height;
+  // 배경
+  const grad=ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,'#0a0a2a');grad.addColorStop(1,'#1a0a3a');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+
+  // 별
+  stars.forEach(s=>{
+    s.x-=s.speed;if(s.x<0)s.x=w+10;
+    ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${s.opacity})`;ctx.fill();
+  });
+
+  // 7구역 선
+  for(let i=0;i<7;i++){
+    const y=(i/7)*h;
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();
+  }
+
+  // 현재 피치 레벨 표시
+  const pitchY=h*(1-pitchLevel);
+  const targetNote=gameState==='playing'?NOTES[CHALLENGE[currentStep]]:null;
+  const targetColor=targetNote?targetNote.color:'#ffffff';
+
+  // 목표 구역 하이라이트
+  if(targetNote){
+    const zoneH=h/7;
+    const targetY=h-((targetNote.zone+1)/7)*h;
+    ctx.fillStyle=targetNote.color+'22';
+    ctx.fillRect(0,targetY,w,zoneH);
+    ctx.strokeStyle=targetNote.color+'66';ctx.lineWidth=2;
+    ctx.setLineDash([8,6]);
+    ctx.beginPath();ctx.moveTo(0,targetY);ctx.lineTo(w,targetY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,targetY+zoneH);ctx.lineTo(w,targetY+zoneH);ctx.stroke();
+    ctx.setLineDash([]);
+    // 목표 음 이름
+    ctx.font=`bold 28px 'Noto Serif KR',serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=targetNote.color+'99';
+    ctx.fillText(targetNote.name,w/2,targetY+zoneH/2);
+  }
+
+  // 현재 피치 선
+  ctx.strokeStyle=targetColor+'cc';ctx.lineWidth=3;
+  ctx.setLineDash([]);
+  ctx.shadowBlur=12;ctx.shadowColor=targetColor;
+  ctx.beginPath();ctx.moveTo(0,pitchY);ctx.lineTo(w,pitchY);ctx.stroke();
+  ctx.shadowBlur=0;
+
+  // 현재 피치 공
+  ctx.beginPath();ctx.arc(w*.7,pitchY,18,0,Math.PI*2);
+  const ballGrad=ctx.createRadialGradient(w*.7-5,pitchY-5,2,w*.7,pitchY,18);
+  ballGrad.addColorStop(0,'#fff');ballGrad.addColorStop(1,targetColor);
+  ctx.fillStyle=ballGrad;ctx.shadowBlur=20;ctx.shadowColor=targetColor;ctx.fill();ctx.shadowBlur=0;
+  ctx.font='16px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🎵',w*.7,pitchY);
+
+  // 홀드 진행 바
+  if(gameState==='playing'&&micActive&&holdTimer>0){
+    const barW=(holdTimer/holdRequired)*w*.6;
+    ctx.fillStyle='rgba(255,255,255,.1)';ctx.beginPath();ctx.roundRect(w*.2,h-30,w*.6,12,6);ctx.fill();
+    ctx.fillStyle=targetColor;ctx.shadowBlur=8;ctx.shadowColor=targetColor;
+    ctx.beginPath();ctx.roundRect(w*.2,h-30,barW,12,6);ctx.fill();ctx.shadowBlur=0;
+    ctx.font=`11px 'Noto Sans KR',sans-serif`;ctx.fillStyle='rgba(255,255,255,.6)';ctx.textAlign='center';
+    ctx.fillText('유지해요!',w/2,h-44);
+  }
+
+  // 파티클
+  particles.forEach(p=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.color+(Math.floor((p.life/60)*255)).toString(16).padStart(2,'0');
+    ctx.fill();
+  });
+
+  // 성공 플래시
+  if(successAnim>0){
+    ctx.fillStyle=`rgba(255,255,255,${successAnim/30*.15})`;
+    ctx.fillRect(0,0,w,h);
+  }
+
+  // 진행도 표시
+  if(gameState==='playing'){
+    const steps=CHALLENGE.length;
+    const stepW=w/steps;
+    for(let i=0;i<steps;i++){
+      const n=NOTES[CHALLENGE[i]];
+      ctx.beginPath();ctx.arc(stepW*(i+.5),35,10,0,Math.PI*2);
+      ctx.fillStyle=i<currentStep?n.color:i===currentStep?n.color+'88':'rgba(255,255,255,.1)';
+      ctx.fill();
+      if(i<currentStep){ctx.font='10px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✓',stepW*(i+.5),35);}
+      else{ctx.font=`bold 10px 'Noto Sans KR',sans-serif`;ctx.fillStyle=i===currentStep?'#fff':'rgba(255,255,255,.4)';ctx.fillText(CHALLENGE_NAMES[i],stepW*(i+.5),35);}
+    }
+  }
+
+  // 완주 화면
+  if(gameState==='done'){
+    ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,w,h);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='60px serif';ctx.fillText('🎉',w/2,h/2-80);
+    ctx.font=`bold 28px 'Noto Serif KR',serif`;ctx.fillStyle='#fff';ctx.fillText('도레미 완주!',w/2,h/2-20);
+    ctx.font=`bold 52px 'Noto Serif KR',serif`;ctx.fillStyle='#FFD700';ctx.fillText(score+'점',w/2,h/2+50);
+    ctx.font=`13px 'Noto Sans KR',sans-serif`;ctx.fillStyle='rgba(255,255,255,.5)';
+    ctx.fillText('마이크 버튼을 눌러 다시 시작해요',w/2,h*.85);
+  }
+
+  // 준비 화면
+  if(gameState==='ready'){
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font=`bold 18px 'Noto Serif KR',serif`;ctx.fillStyle='rgba(255,255,255,.8)';
+    ctx.fillText('마이크 버튼을 눌러 시작!',w/2,h/2);
+    ctx.font=`12px 'Noto Sans KR',sans-serif`;ctx.fillStyle='rgba(255,255,255,.4)';
+    ctx.fillText('목표 구역에 맞게 소리를 내봐요',w/2,h/2+32);
+  }
+}
+</script>
+</body>
+</html>
