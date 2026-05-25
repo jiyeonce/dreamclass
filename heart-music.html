@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>심박 음악 추천</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden}
+:root{--cream:#FFF8F0;--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
+body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(160deg,#FFF8F0 0%,#FFE8D8 50%,#FFD6E8 100%);min-height:100vh;color:var(--text-dark)}
+
+.header{background:rgba(255,255,255,.6);backdrop-filter:blur(10px);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative;border-bottom:1px solid rgba(200,160,140,.2)}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.7);border:1px solid rgba(200,160,140,.3);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
+.header-sub{font-size:11px;color:var(--text-light)}
+
+/* 스텝 인디케이터 */
+.steps{display:flex;justify-content:center;gap:8px;padding:1rem;align-items:center}
+.step-dot{width:10px;height:10px;border-radius:50%;background:rgba(200,160,140,.3);transition:all .3s}
+.step-dot.active{background:var(--pink);transform:scale(1.3)}
+.step-dot.done{background:var(--teal)}
+
+/* 화면들 */
+.screen{display:none;padding:1.5rem 1rem;max-width:440px;margin:0 auto;padding-bottom:100px}
+.screen.active{display:block}
+
+.card{background:rgba(255,255,255,.8);border-radius:22px;padding:1.8rem 1.5rem;border:1.5px solid rgba(255,255,255,.6);backdrop-filter:blur(8px);margin-bottom:1rem}
+.card-emoji{font-size:48px;display:block;text-align:center;margin-bottom:.8rem}
+.card-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.3rem;text-align:center}
+.card-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.8;text-align:center}
+
+/* 심박 측정 */
+.camera-circle{width:min(220px,70vw);aspect-ratio:1;border-radius:50%;overflow:hidden;margin:0 auto 1rem;position:relative;border:4px solid rgba(201,123,123,.3);box-shadow:0 0 0 8px rgba(201,123,123,.1)}
+#heart-video{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}
+.heart-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.heart-pulse{font-size:48px;animation:heartbeat 1s infinite}
+@keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.bpm-display{font-family:'Noto Serif KR',serif;font-size:36px;font-weight:600;color:var(--pink);text-align:center;margin-bottom:.4rem}
+.bpm-label{font-size:12px;color:var(--text-light);text-align:center;margin-bottom:1rem}
+.bpm-bar-wrap{height:8px;background:rgba(200,160,140,.2);border-radius:4px;overflow:hidden;margin-bottom:1.2rem}
+.bpm-bar-fill{height:100%;background:linear-gradient(90deg,#6BCB77,var(--pink));border-radius:4px;transition:width .3s}
+.measure-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:14px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px;margin-bottom:.6rem}
+.measure-btn:active{transform:scale(.98)}
+.skip-btn{width:100%;background:transparent;border:1.5px solid rgba(200,160,140,.3);border-radius:14px;padding:11px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-light);cursor:pointer}
+.measuring-status{font-size:12px;color:var(--pink);text-align:center;margin-bottom:.8rem;min-height:18px;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* 설문 */
+.question-label{font-size:11px;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:.8rem}
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.option-btn{padding:12px 8px;border-radius:14px;border:1.5px solid rgba(200,160,140,.2);background:rgba(255,255,255,.6);cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;color:var(--text-dark);text-align:center;transition:all .2s;line-height:1.5}
+.option-btn:active{transform:scale(.96)}
+.option-btn.selected{background:linear-gradient(135deg,#FFE4CC,#FFD6E8);border-color:var(--pink);color:var(--text-dark)}
+.option-emoji{font-size:22px;display:block;margin-bottom:4px}
+.next-btn{width:100%;background:linear-gradient(135deg,var(--teal),#4D96FF);color:#fff;border:none;border-radius:14px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+.next-btn:disabled{opacity:.4;cursor:default}
+
+/* 결과 */
+.result-hero{text-align:center;margin-bottom:1.5rem}
+.result-bpm{font-size:13px;color:var(--text-light);margin-bottom:.4rem}
+.result-mood{font-family:'Noto Serif KR',serif;font-size:22px;color:var(--text-dark);margin-bottom:.8rem}
+.result-desc{font-size:13px;color:var(--text-mid);line-height:1.8}
+.rec-card{background:rgba(255,255,255,.7);border-radius:18px;padding:1.2rem;border:1.5px solid rgba(200,160,140,.15);margin-bottom:.8rem;cursor:pointer;transition:all .2s}
+.rec-card:active{transform:scale(.98)}
+.rec-card:hover{box-shadow:0 4px 16px rgba(201,123,123,.12)}
+.rec-genre{font-size:10px;letter-spacing:2px;color:var(--text-light);text-transform:uppercase;margin-bottom:.4rem}
+.rec-title{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--text-dark);margin-bottom:.3rem}
+.rec-desc{font-size:12px;color:var(--text-mid);line-height:1.6;margin-bottom:.6rem}
+.rec-tags{display:flex;gap:5px;flex-wrap:wrap}
+.rec-tag{font-size:10px;background:rgba(200,160,140,.15);border-radius:10px;padding:3px 8px;color:var(--text-light)}
+.rec-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--teal);text-decoration:none;margin-top:.6rem;font-weight:500}
+.retry-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:14px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px;margin-top:.5rem}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">💓 심박 음악 추천</div>
+  <div class="header-sub">심박수와 기분으로 딱 맞는 음악을 찾아요!</div>
+</div>
+
+<div class="steps">
+  <div class="step-dot active" id="dot-0"></div>
+  <div class="step-dot" id="dot-1"></div>
+  <div class="step-dot" id="dot-2"></div>
+  <div class="step-dot" id="dot-3"></div>
+  <div class="step-dot" id="dot-4"></div>
+</div>
+
+<!-- 스텝 0: 소개 -->
+<div class="screen active" id="step-0">
+  <div class="card">
+    <span class="card-emoji">💓</span>
+    <div class="card-title">심박 음악 추천</div>
+    <div class="card-sub">카메라에 손가락을 대면<br>심박수를 측정해요!<br>그리고 몇 가지 질문에 답하면<br>딱 맞는 음악을 추천해드려요 🎵</div>
+    <button class="measure-btn" onclick="goStep(1)">💓 시작하기</button>
+  </div>
+</div>
+
+<!-- 스텝 1: 심박수 측정 -->
+<div class="screen" id="step-1">
+  <div class="card">
+    <div class="card-title">💓 심박수 측정</div>
+    <div class="card-sub">카메라에 손가락 끝을 살짝 대고<br>15초 동안 가만히 있어봐요</div>
+    <div class="camera-circle">
+      <video id="heart-video" autoplay playsinline muted></video>
+      <div class="heart-overlay">
+        <div class="heart-pulse" id="heart-pulse" style="display:none">❤️</div>
+      </div>
+    </div>
+    <div class="bpm-display" id="bpm-display">--</div>
+    <div class="bpm-label">BPM</div>
+    <div class="bpm-bar-wrap">
+      <div class="bpm-bar-fill" id="bpm-bar" style="width:50%"></div>
+    </div>
+    <div class="measuring-status" id="measuring-status"></div>
+    <button class="measure-btn" id="measure-btn" onclick="startMeasure()">📷 측정 시작</button>
+    <button class="skip-btn" onclick="skipMeasure()">건너뛰기 →</button>
+  </div>
+</div>
+
+<!-- 스텝 2: 설문 1 - 기분 -->
+<div class="screen" id="step-2">
+  <div class="card">
+    <div class="card-title">지금 기분이 어때요?</div>
+    <div class="card-sub">가장 가까운 기분을 골라요</div>
+    <div class="options-grid">
+      <button class="option-btn" onclick="selectOption('mood','happy',this)"><span class="option-emoji">😊</span>기분 좋아요</button>
+      <button class="option-btn" onclick="selectOption('mood','sad',this)"><span class="option-emoji">😢</span>슬퍼요</button>
+      <button class="option-btn" onclick="selectOption('mood','tired',this)"><span class="option-emoji">😴</span>피곤해요</button>
+      <button class="option-btn" onclick="selectOption('mood','anxious',this)"><span class="option-emoji">😰</span>불안해요</button>
+      <button class="option-btn" onclick="selectOption('mood','bored',this)"><span class="option-emoji">😑</span>심심해요</button>
+      <button class="option-btn" onclick="selectOption('mood','excited',this)"><span class="option-emoji">🤩</span>설레요</button>
+    </div>
+    <button class="next-btn" id="next-2" onclick="goStep(3)" disabled>다음 →</button>
+  </div>
+</div>
+
+<!-- 스텝 3: 설문 2 - 원하는 것 -->
+<div class="screen" id="step-3">
+  <div class="card">
+    <div class="card-title">지금 음악으로 뭘 하고 싶어요?</div>
+    <div class="card-sub">원하는 걸 골라요</div>
+    <div class="options-grid">
+      <button class="option-btn" onclick="selectOption('want','relax',this)"><span class="option-emoji">🛋️</span>쉬고 싶어요</button>
+      <button class="option-btn" onclick="selectOption('want','energy',this)"><span class="option-emoji">⚡</span>힘내고 싶어요</button>
+      <button class="option-btn" onclick="selectOption('want','cry',this)"><span class="option-emoji">😭</span>울고 싶어요</button>
+      <button class="option-btn" onclick="selectOption('want','dance',this)"><span class="option-emoji">💃</span>춤추고 싶어요</button>
+      <button class="option-btn" onclick="selectOption('want','focus',this)"><span class="option-emoji">🎯</span>집중하고 싶어요</button>
+      <button class="option-btn" onclick="selectOption('want','sleep',this)"><span class="option-emoji">🌙</span>자고 싶어요</button>
+    </div>
+    <button class="next-btn" id="next-3" onclick="goStep(4)" disabled>다음 →</button>
+  </div>
+</div>
+
+<!-- 스텝 4: 결과 -->
+<div class="screen" id="step-4">
+  <div class="result-hero" id="result-hero"></div>
+  <div id="result-cards"></div>
+  <button class="retry-btn" onclick="restart()">🔄 다시 추천받기</button>
+</div>
+
+<script>
+let currentBPM=75;
+let answers={mood:null,want:null};
+let measuring=false;
+let measureTimer=null;
+let heartVideo=null;
+let heartCanvas=document.createElement('canvas');
+let heartCtx=heartCanvas.getContext('2d');
+let redHistory=[];
+let measureInterval=null;
+
+// 음악 추천 데이터
+const RECOMMENDATIONS={
+  // mood x want 조합별
+  happy_relax:{
+    mood:'기분 좋고 편안한',emoji:'☀️',
+    desc:'지금 이 순간을 즐기기 좋은 음악이에요. 포근하고 따뜻한 멜로디가 기분을 더 좋게 만들어줘요.',
+    recs:[
+      {genre:'어쿠스틱 팝',title:'따뜻한 어쿠스틱',desc:'기타 선율이 따뜻하게 감싸는 음악',tags:['편안함','따뜻함','잔잔함'],query:'acoustic pop happy'},
+      {genre:'재즈',title:'카페 재즈',desc:'여유롭고 감성적인 재즈 선율',tags:['여유','감성','분위기'],query:'jazz cafe happy'},
+    ]
+  },
+  happy_energy:{
+    mood:'신나고 활기찬',emoji:'🌟',
+    desc:'지금 이 에너지를 마음껏 발산할 시간이에요!',
+    recs:[
+      {genre:'팝',title:'업비트 팝',desc:'신나는 리듬으로 에너지를 폭발시켜요',tags:['신남','에너지','댄스'],query:'upbeat pop energetic'},
+      {genre:'K-POP',title:'케이팝 댄스',desc:'따라부르기 좋은 신나는 케이팝',tags:['신남','케이팝','댄스'],query:'kpop dance energetic'},
+    ]
+  },
+  happy_dance:{
+    mood:'신나서 몸이 들썩',emoji:'💃',
+    desc:'지금 바로 일어나서 춤춰도 좋아요!',
+    recs:[
+      {genre:'댄스 팝',title:'댄스 팝',desc:'몸이 저절로 움직이는 리듬',tags:['댄스','신남','비트'],query:'dance pop fun'},
+      {genre:'K-POP',title:'케이팝 플레이리스트',desc:'따라부르고 춤추기 좋은 케이팝',tags:['케이팝','댄스','신남'],query:'kpop dance challenge playlist'},
+    ]
+  },
+  sad_relax:{
+    mood:'슬프지만 쉬고 싶은',emoji:'🌧️',
+    desc:'지금 감정을 인정하고 천천히 쉬어가요. 감성적인 음악이 위로가 될 거예요.',
+    recs:[
+      {genre:'발라드',title:'감성 발라드',desc:'슬픈 감정을 감싸주는 따뜻한 발라드',tags:['위로','감성','잔잔함'],query:'korean ballad sad comfort'},
+      {genre:'클래식',title:'쇼팽 야상곡',desc:'밤처럼 고요하고 감성적인 피아노',tags:['피아노','잔잔함','클래식'],query:'chopin nocturne piano'},
+    ]
+  },
+  sad_cry:{
+    mood:'슬픔을 흘려보내고 싶은',emoji:'💧',
+    desc:'울고 싶을 땐 실컷 울어도 괜찮아요. 음악이 함께 있어줄게요.',
+    recs:[
+      {genre:'발라드',title:'눈물 나는 발라드',desc:'감정을 마음껏 흘려보낼 수 있는 음악',tags:['감동','눈물','위로'],query:'emotional ballad sad crying'},
+      {genre:'OST',title:'영화 OST',desc:'감동적인 영화 음악',tags:['감동','OST','감성'],query:'emotional movie ost sad'},
+    ]
+  },
+  sad_energy:{
+    mood:'슬프지만 다시 일어서고 싶은',emoji:'🌱',
+    desc:'힘들어도 괜찮아요. 다시 일어설 수 있어요. 응원하는 음악이에요.',
+    recs:[
+      {genre:'인디 팝',title:'희망적인 인디',desc:'슬픔 속에서도 희망을 노래하는 음악',tags:['희망','위로','인디'],query:'indie pop hopeful uplifting'},
+      {genre:'팝',title:'힐링 팝',desc:'다시 힘을 낼 수 있게 도와주는 음악',tags:['힐링','응원','따뜻함'],query:'healing pop uplifting'},
+    ]
+  },
+  tired_relax:{
+    mood:'몸과 마음이 지친',emoji:'🌙',
+    desc:'잠깐 쉬어가도 괜찮아요. 편안한 음악이 몸의 긴장을 풀어줄 거예요.',
+    recs:[
+      {genre:'앰비언트',title:'자연 소리',desc:'빗소리 새소리가 담긴 편안한 음악',tags:['힐링','자연','편안함'],query:'nature ambient relaxing rain'},
+      {genre:'로파이',title:'Lo-Fi 힙합',desc:'편안하고 나른한 로파이 비트',tags:['로파이','편안함','감성'],query:'lofi hip hop relaxing'},
+    ]
+  },
+  tired_sleep:{
+    mood:'잠이 쏟아지는',emoji:'😴',
+    desc:'푹 자도 좋아요. 수면에 도움이 되는 편안한 음악이에요.',
+    recs:[
+      {genre:'수면 음악',title:'수면 유도 음악',desc:'깊은 잠에 빠져들 수 있는 음악',tags:['수면','힐링','편안함'],query:'sleep music relaxing deep sleep'},
+      {genre:'클래식',title:'자장가 모음',desc:'포근하게 잠들 수 있는 클래식',tags:['자장가','클래식','편안함'],query:'lullaby classical sleep'},
+    ]
+  },
+  tired_focus:{
+    mood:'피곤하지만 집중해야 하는',emoji:'☕',
+    desc:'커피 한 잔처럼 집중력을 깨워주는 음악이에요.',
+    recs:[
+      {genre:'로파이',title:'집중 Lo-Fi',desc:'공부나 작업할 때 집중력을 높여주는 음악',tags:['집중','로파이','공부'],query:'lofi study focus concentration'},
+      {genre:'클래식',title:'집중력 클래식',desc:'집중력에 도움이 되는 클래식',tags:['집중','클래식','공부'],query:'mozart effect study focus'},
+    ]
+  },
+  anxious_relax:{
+    mood:'마음이 불안하고 긴장된',emoji:'🌿',
+    desc:'천천히 숨 쉬어요. 음악이 마음을 차분하게 만들어줄 거예요.',
+    recs:[
+      {genre:'힐링',title:'명상 음악',desc:'마음을 진정시켜주는 명상 음악',tags:['명상','힐링','안정'],query:'meditation relaxing anxiety relief'},
+      {genre:'클래식',title:'드뷔시 피아노',desc:'물처럼 흐르는 편안한 피아노 음악',tags:['피아노','편안함','클래식'],query:'debussy piano relaxing calm'},
+    ]
+  },
+  anxious_focus:{
+    mood:'불안하지만 집중하고 싶은',emoji:'🎯',
+    desc:'불안감을 내려놓고 지금에 집중할 수 있도록 도와줘요.',
+    recs:[
+      {genre:'앰비언트',title:'화이트 노이즈',desc:'잡생각을 지워주는 화이트 노이즈',tags:['집중','노이즈','명상'],query:'white noise focus study'},
+      {genre:'뉴에이지',title:'뉴에이지 피아노',desc:'마음을 차분하게 만드는 뉴에이지',tags:['뉴에이지','피아노','집중'],query:'new age piano focus calm'},
+    ]
+  },
+  bored_energy:{
+    mood:'심심하고 뭔가 하고 싶은',emoji:'🎮',
+    desc:'지루함을 날려버릴 신나는 음악이에요!',
+    recs:[
+      {genre:'팝',title:'신나는 팝',desc:'지루함을 완전히 날려버리는 팝',tags:['신남','팝','에너지'],query:'fun pop energetic bored'},
+      {genre:'게임 OST',title:'게임 음악',desc:'모험심을 자극하는 신나는 게임 음악',tags:['게임','신남','흥미'],query:'game ost energetic exciting'},
+    ]
+  },
+  bored_dance:{
+    mood:'심심해서 몸을 움직이고 싶은',emoji:'🕺',
+    desc:'지금 당장 일어나서 신나게 움직여요!',
+    recs:[
+      {genre:'댄스',title:'댄스 플레이리스트',desc:'몸이 저절로 움직이는 댄스 음악',tags:['댄스','신남','비트'],query:'dance playlist fun'},
+      {genre:'K-POP',title:'케이팝 플레이리스트',desc:'따라부르고 춤추기 좋은 케이팝',tags:['케이팝','댄스','신남'],query:'kpop dance fun playlist'},
+    ]
+  },
+  excited_energy:{
+    mood:'설레고 기대되는',emoji:'🎉',
+    desc:'이 설렘을 음악으로 더 키워봐요!',
+    recs:[
+      {genre:'팝',title:'설레는 팝',desc:'설레는 감정을 더 키워주는 밝은 팝',tags:['설렘','팝','밝음'],query:'exciting pop upbeat happy'},
+      {genre:'인디',title:'밝은 인디팝',desc:'사랑스럽고 설레는 인디팝',tags:['인디','설렘','사랑스러움'],query:'indie pop bright excited'},
+    ]
+  },
+  excited_relax:{
+    mood:'설레지만 진정하고 싶은',emoji:'🌸',
+    desc:'설레는 마음을 차분하게 가라앉히면서도 기분 좋은 음악이에요.',
+    recs:[
+      {genre:'어쿠스틱',title:'어쿠스틱 팝',desc:'포근하고 따뜻한 어쿠스틱 팝',tags:['어쿠스틱','따뜻함','편안함'],query:'acoustic pop calm happy'},
+      {genre:'재즈',title:'스윙 재즈',desc:'기분 좋고 경쾌한 재즈',tags:['재즈','경쾌함','기분좋음'],query:'swing jazz happy relaxing'},
+    ]
+  },
+};
+  happy_energy:{
+    mood:'신나고 활기찬',emoji:'🌟',
+    desc:'지금 이 에너지를 마음껏 발산할 시간이에요!',
+    recs:[
+      {genre:'팝',title:'업비트 팝',desc:'신나는 리듬으로 에너지를 폭발시켜요',tags:['신남','에너지','댄스'],query:'upbeat pop energetic'},
+      {genre:'K-POP',title:'케이팝 댄스',desc:'따라부르기 좋은 신나는 케이팝',tags:['신남','케이팝','댄스'],query:'kpop dance energetic'},
+    ]
+  },
+  happy_dance:{
+    mood:'신나서 몸이 들썩',emoji:'💃',
+    desc:'지금 바로 일어나서 춤춰도 좋아요!',
+    recs:[
+      {genre:'댄스 팝',title:'댄스 팝',desc:'몸이 저절로 움직이는 리듬',tags:['댄스','신남','비트'],query:'dance pop'},
+      {genre:'디스코',title:'클래식 디스코',desc:'신나는 디스코 리듬',tags:['댄스','흥겨움'],query:'classic disco dance'},
+    ]
+  },
+  sad_relax:{
+    mood:'슬프지만 쉬고 싶은',emoji:'🌧️',
+    desc:'지금 감정을 인정하고 천천히 쉬어가요. 감성적인 음악이 위로가 될 거예요.',
+    recs:[
+      {genre:'발라드',title:'감성 발라드',desc:'슬픈 감정을 감싸주는 따뜻한 발라드',tags:['위로','감성','잔잔함'],query:'korean ballad sad comfort'},
+      {genre:'클래식',title:'쇼팽 야상곡',desc:'밤처럼 고요하고 감성적인 피아노',tags:['피아노','잔잔함','클래식'],query:'chopin nocturne piano'},
+    ]
+  },
+  sad_cry:{
+    mood:'슬픔을 흘려보내고 싶은',emoji:'💧',
+    desc:'울고 싶을 땐 실컷 울어도 괜찮아요. 음악이 함께 있어줄게요.',
+    recs:[
+      {genre:'발라드',title:'눈물 나는 발라드',desc:'감정을 마음껏 흘려보낼 수 있는 음악',tags:['감동','눈물','위로'],query:'emotional ballad sad crying'},
+      {genre:'OST',title:'영화 OST',desc:'감동적인 영화 음악',tags:['감동','OST','감성'],query:'emotional movie ost sad'},
+    ]
+  },
+  sad_energy:{
+    mood:'슬프지만 다시 일어서고 싶은',emoji:'🌱',
+    desc:'힘들어도 괜찮아요. 다시 일어설 수 있어요. 응원하는 음악이에요.',
+    recs:[
+      {genre:'인디 팝',title:'희망적인 인디',desc:'슬픔 속에서도 희망을 노래하는 음악',tags:['희망','위로','인디'],query:'indie pop hopeful uplifting'},
+      {genre:'팝',title:'힐링 팝',desc:'다시 힘을 낼 수 있게 도와주는 음악',tags:['힐링','응원','따뜻함'],query:'healing pop uplifting'},
+    ]
+  },
+  tired_relax:{
+    mood:'몸과 마음이 지친',emoji:'🌙',
+    desc:'잠깐 쉬어가도 괜찮아요. 편안한 음악이 몸의 긴장을 풀어줄 거예요.',
+    recs:[
+      {genre:'앰비언트',title:'자연 소리 앰비언트',desc:'빗소리, 새소리가 담긴 편안한 음악',tags:['힐링','자연','편안함'],query:'nature ambient relaxing rain'},
+      {genre:'로파이',title:'Lo-Fi 힙합',desc:'편안하고 나른한 로파이 비트',tags:['로파이','편안함','집중'],query:'lofi hip hop relaxing'},
+    ]
+  },
+  tired_sleep:{
+    mood:'잠이 쏟아지는',emoji:'😴',
+    desc:'푹 자도 좋아요. 수면에 도움이 되는 편안한 음악이에요.',
+    recs:[
+      {genre:'수면 음악',title:'수면 유도 음악',desc:'깊은 잠에 빠져들 수 있는 음악',tags:['수면','힐링','편안함'],query:'sleep music relaxing deep sleep'},
+      {genre:'클래식',title:'자장가 모음',desc:'포근하게 잠들 수 있는 클래식',tags:['자장가','클래식','편안함'],query:'lullaby classical sleep'},
+    ]
+  },
+  tired_focus:{
+    mood:'피곤하지만 집중해야 하는',emoji:'☕',
+    desc:'커피 한 잔처럼 집중력을 깨워주는 음악이에요.',
+    recs:[
+      {genre:'로파이',title:'집중 Lo-Fi',desc:'공부나 작업할 때 집중력을 높여주는 음악',tags:['집중','로파이','공부'],query:'lofi study focus concentration'},
+      {genre:'클래식',title:'모차르트 효과',desc:'집중력에 도움이 되는 클래식',tags:['집중','클래식','공부'],query:'mozart effect study focus'},
+    ]
+  },
+  anxious_relax:{
+    mood:'마음이 불안하고 긴장된',emoji:'🌿',
+    desc:'천천히 숨 쉬어요. 음악이 마음을 차분하게 만들어줄 거예요.',
+    recs:[
+      {genre:'힐링',title:'명상 음악',desc:'마음을 진정시켜주는 명상 음악',tags:['명상','힐링','안정'],query:'meditation relaxing anxiety relief'},
+      {genre:'클래식',title:'드뷔시 피아노',desc:'물처럼 흐르는 편안한 피아노 음악',tags:['피아노','편안함','클래식'],query:'debussy piano relaxing calm'},
+    ]
+  },
+  anxious_focus:{
+    mood:'불안하지만 집중하고 싶은',emoji:'🎯',
+    desc:'불안감을 내려놓고 지금에 집중할 수 있도록 도와줘요.',
+    recs:[
+      {genre:'앰비언트',title:'화이트 노이즈',desc:'잡생각을 지워주는 화이트 노이즈',tags:['집중','노이즈','명상'],query:'white noise focus study'},
+      {genre:'뉴에이지',title:'뉴에이지 피아노',desc:'마음을 차분하게 만드는 뉴에이지',tags:['뉴에이지','피아노','집중'],query:'new age piano focus calm'},
+    ]
+  },
+  bored_energy:{
+    mood:'심심하고 뭔가 하고 싶은',emoji:'🎮',
+    desc:'지루함을 날려버릴 신나는 음악이에요!',
+    recs:[
+      {genre:'팝',title:'신나는 팝',desc:'지루함을 완전히 날려버리는 팝',tags:['신남','팝','에너지'],query:'fun pop energetic bored'},
+      {genre:'게임 OST',title:'게임 음악',desc:'모험심을 자극하는 신나는 게임 음악',tags:['게임','신남','흥미'],query:'game ost energetic exciting'},
+    ]
+  },
+  bored_dance:{
+    mood:'심심해서 몸을 움직이고 싶은',emoji:'🕺',
+    desc:'지금 당장 일어나서 신나게 움직여요!',
+    recs:[
+      {genre:'댄스',title:'댄스 플레이리스트',desc:'몸이 저절로 움직이는 댄스 음악',tags:['댄스','신남','비트'],query:'dance playlist fun'},
+      {genre:'K-POP',title:'케이팝 플레이리스트',desc:'따라부르고 춤추기 좋은 케이팝',tags:['케이팝','댄스','신남'],query:'kpop dance fun playlist'},
+    ]
+  },
+  excited_energy:{
+    mood:'설레고 기대되는',emoji:'🎉',
+    desc:'이 설렘을 음악으로 더 키워봐요!',
+    recs:[
+      {genre:'팝',title:'설레는 팝',desc:'설레는 감정을 더 키워주는 밝은 팝',tags:['설렘','팝','밝음'],query:'exciting pop upbeat happy'},
+      {genre:'인디',title:'밝은 인디팝',desc:'사랑스럽고 설레는 인디팝',tags:['인디','설렘','사랑스러움'],query:'indie pop bright excited'},
+    ]
+  },
+  excited_relax:{
+    mood:'설레지만 진정하고 싶은',emoji:'🌸',
+    desc:'설레는 마음을 차분하게 가라앉히면서도 기분 좋은 음악이에요.',
+    recs:[
+      {genre:'어쿠스틱',title:'어쿠스틱 팝',desc:'포근하고 따뜻한 어쿠스틱 팝',tags:['어쿠스틱','따뜻함','편안함'],query:'acoustic pop calm happy'},
+      {genre:'재즈',title:'스윙 재즈',desc:'기분 좋고 경쾌한 재즈',tags:['재즈','경쾌함','기분좋음'],query:'swing jazz happy relaxing'},
+    ]
+  },
+};
+
+// BPM 기반 템포 설명
+function getBPMDesc(bpm){
+  if(bpm<60)return{desc:'매우 느린 심박수예요. 깊이 이완된 상태예요.',tempo:'느린',emoji:'🌙'};
+  if(bpm<70)return{desc:'안정적이고 편안한 심박수예요.',tempo:'잔잔한',emoji:'🌿'};
+  if(bpm<85)return{desc:'건강하고 정상적인 심박수예요.',tempo:'보통의',emoji:'☀️'};
+  if(bpm<100)return{desc:'약간 활동적인 상태예요.',tempo:'경쾌한',emoji:'🌟'};
+  return{desc:'심장이 빠르게 뛰고 있어요. 흥분되거나 긴장된 상태예요.',tempo:'활기찬',emoji:'⚡'};
+}
+
+/* ── 스텝 이동 ── */
+function goStep(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('step-'+n).classList.add('active');
+  document.querySelectorAll('.step-dot').forEach((d,i)=>{
+    d.classList.remove('active','done');
+    if(i<n)d.classList.add('done');
+    else if(i===n)d.classList.add('active');
+  });
+  if(n===1)initHeartCamera();
+  if(n===4)showResult();
+}
+
+/* ── 카메라 심박 측정 ── */
+async function initHeartCamera(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:160,height:120},audio:false});
+    heartVideo=document.getElementById('heart-video');
+    heartVideo.srcObject=stream;
+    await heartVideo.play();
+  }catch(e){
+    document.getElementById('measuring-status').textContent='카메라를 사용할 수 없어요';
+  }
+}
+
+function startMeasure(){
+  if(!heartVideo||!heartVideo.videoWidth){
+    alert('카메라를 먼저 허용해줘요!');return;
+  }
+  measuring=true;
+  redHistory=[];
+  document.getElementById('measure-btn').textContent='측정 중...';
+  document.getElementById('measure-btn').disabled=true;
+  document.getElementById('heart-pulse').style.display='block';
+  document.getElementById('measuring-status').textContent='손가락을 카메라에 대봐요 🤞';
+
+  let elapsed=0;
+  const total=15;
+  measureInterval=setInterval(()=>{
+    elapsed++;
+    // 빨간색 채널 평균 추출
+    heartCanvas.width=heartVideo.videoWidth||160;
+    heartCanvas.height=heartVideo.videoHeight||120;
+    heartCtx.drawImage(heartVideo,0,0,heartCanvas.width,heartCanvas.height);
+    const imgData=heartCtx.getImageData(0,0,heartCanvas.width,heartCanvas.height);
+    let redSum=0,count=0;
+    for(let i=0;i<imgData.data.length;i+=4){redSum+=imgData.data[i];count++;}
+    const avgRed=redSum/count;
+    redHistory.push(avgRed);
+
+    const progress=(elapsed/total)*100;
+    document.getElementById('bpm-bar').style.width=progress+'%';
+    document.getElementById('measuring-status').textContent=`측정 중... ${total-elapsed}초`;
+
+    if(elapsed>=total){
+      clearInterval(measureInterval);
+      calculateBPM();
+    }
+  },1000);
+}
+
+function calculateBPM(){
+  // 빨간 채널 변화에서 피크 감지
+  if(redHistory.length<5){currentBPM=72;showBPMResult();return;}
+  // 평활화
+  const smooth=redHistory.map((_,i,arr)=>{
+    const s=Math.max(0,i-2),e=Math.min(arr.length-1,i+2);
+    return arr.slice(s,e+1).reduce((a,b)=>a+b,0)/(e-s+1);
+  });
+  // 피크 찾기
+  let peaks=0;
+  for(let i=1;i<smooth.length-1;i++){
+    if(smooth[i]>smooth[i-1]&&smooth[i]>smooth[i+1]&&smooth[i]-smooth[i-1]>0.3)peaks++;
+  }
+  // 15초 동안 peaks → BPM
+  const rawBPM=Math.round(peaks*(60/15));
+  currentBPM=Math.max(50,Math.min(120,rawBPM||72));
+  showBPMResult();
+}
+
+function showBPMResult(){
+  measuring=false;
+  document.getElementById('bpm-display').textContent=currentBPM;
+  document.getElementById('heart-pulse').style.display='none';
+  document.getElementById('measuring-status').textContent='측정 완료! 🎉';
+  document.getElementById('measure-btn').textContent='다음으로 →';
+  document.getElementById('measure-btn').disabled=false;
+  document.getElementById('measure-btn').onclick=()=>goStep(2);
+  // 심박수에 맞게 heartbeat 속도 조정
+  const interval=Math.round(60000/currentBPM);
+  document.querySelector('.heart-pulse').style.animationDuration=(interval/1000)+'s';
+  document.getElementById('heart-pulse').style.display='block';
+}
+
+function skipMeasure(){
+  currentBPM=75;
+  goStep(2);
+}
+
+/* ── 설문 ── */
+function selectOption(key,val,el){
+  answers[key]=val;
+  const parent=el.closest('.options-grid');
+  parent.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  const nextId='next-'+(key==='mood'?2:3);
+  const nextBtn=document.getElementById(nextId);
+  if(nextBtn)nextBtn.disabled=false;
+}
+
+/* ── 결과 ── */
+function showResult(){
+  const mood=answers.mood||'happy';
+  const want=answers.want||'relax';
+  const key=mood+'_'+want;
+  const rec=RECOMMENDATIONS[key]||RECOMMENDATIONS['happy_relax'];
+  const bpmInfo=getBPMDesc(currentBPM);
+
+  document.getElementById('result-hero').innerHTML=`
+    <div style="font-size:52px;margin-bottom:.8rem">${rec.emoji}</div>
+    <div style="font-size:13px;color:var(--text-light);margin-bottom:.4rem">
+      ${bpmInfo.emoji} 심박수 ${currentBPM} BPM · ${bpmInfo.tempo} 템포
+    </div>
+    <div style="font-family:'Noto Serif KR',serif;font-size:20px;color:var(--text-dark);margin-bottom:.6rem">
+      ${rec.mood} 음악이 어울려요
+    </div>
+    <div style="font-size:13px;color:var(--text-mid);line-height:1.8;margin-bottom:1rem">
+      ${rec.desc}<br>${bpmInfo.desc}
+    </div>`;
+
+  document.getElementById('result-cards').innerHTML=rec.recs.map(r=>`
+    <div class="rec-card" onclick="window.open('https://www.youtube.com/results?search_query=${encodeURIComponent(r.query+' '+currentBPM+'bpm')}','_blank')">
+      <div class="rec-genre">${r.genre}</div>
+      <div class="rec-title">${r.title}</div>
+      <div class="rec-desc">${r.desc}</div>
+      <div class="rec-tags">${r.tags.map(t=>`<span class="rec-tag">${t}</span>`).join('')}</div>
+      <a class="rec-link">🎵 유튜브에서 찾기 →</a>
+    </div>`).join('');
+}
+
+function restart(){
+  answers={mood:null,want:null};
+  currentBPM=75;
+  redHistory=[];
+  if(measureInterval)clearInterval(measureInterval);
+  document.getElementById('bpm-display').textContent='--';
+  document.getElementById('bpm-bar').style.width='50%';
+  document.getElementById('measuring-status').textContent='';
+  document.getElementById('measure-btn').textContent='📷 측정 시작';
+  document.getElementById('measure-btn').disabled=false;
+  document.getElementById('measure-btn').onclick=startMeasure;
+  document.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('next-2').disabled=true;
+  document.getElementById('next-3').disabled=true;
+  goStep(0);
+}
+</script>
+</body>
+</html>
