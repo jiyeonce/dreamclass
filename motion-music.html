@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>움직임 음악</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden;background:#0a0a1a}
+:root{--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-light:#A08070;}
+body{font-family:'Noto Sans KR',sans-serif;min-height:100vh;color:#fff}
+
+.header{background:rgba(255,255,255,.08);backdrop-filter:blur(10px);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative;border-bottom:1px solid rgba(255,255,255,.1)}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,.8);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:#fff;margin-bottom:.2rem}
+.header-sub{font-size:11px;color:rgba(255,255,255,.5)}
+
+/* 닉네임 */
+#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
+.nick-card{background:rgba(255,255,255,.08);border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(255,255,255,.12);text-align:center;backdrop-filter:blur(10px)}
+.nick-emoji{font-size:56px;margin-bottom:.8rem;display:block}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:#fff;margin-bottom:.4rem}
+.nick-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:1.4rem;line-height:1.8}
+.nick-field{width:100%;border:1.5px solid rgba(255,255,255,.2);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:#fff;background:rgba(255,255,255,.1);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-field::placeholder{color:rgba(255,255,255,.3)}
+.nick-field:focus{border-color:rgba(201,123,123,.5)}
+.start-btn{width:100%;background:linear-gradient(135deg,#9b59b6,#e91e8c);color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+
+/* 메인 */
+#screen-main{display:none;padding:1rem;max-width:480px;margin:0 auto;padding-bottom:120px}
+
+/* 카메라 */
+.camera-wrap{position:relative;border-radius:22px;overflow:hidden;margin-bottom:1rem;aspect-ratio:4/3;background:#000}
+#camera-video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block}
+#motion-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.5;pointer-events:none}
+.camera-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.motion-level{position:absolute;bottom:12px;left:12px;right:12px;height:8px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden}
+.motion-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#6BCB77,#FFD93D,#e91e8c);transition:width .1s}
+.zone-labels{position:absolute;top:12px;left:0;right:0;display:flex;justify-content:space-between;padding:0 12px;pointer-events:none}
+.zone-label{font-size:9px;color:rgba(255,255,255,.6);background:rgba(0,0,0,.3);border-radius:8px;padding:2px 6px}
+.note-popup{position:absolute;top:20%;left:50%;transform:translateX(-50%);font-family:'Noto Serif KR',serif;font-size:32px;color:#fff;text-shadow:0 0 20px rgba(255,255,255,.8);opacity:0;transition:opacity .15s;pointer-events:none}
+.note-popup.show{opacity:1}
+
+/* 악기 선택 */
+.instrument-row{display:flex;gap:8px;margin-bottom:1rem;overflow-x:auto;padding-bottom:4px}
+.inst-btn{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s}
+.inst-btn.active{background:linear-gradient(135deg,#9b59b6,#e91e8c);border-color:transparent;color:#fff}
+.inst-btn:active{transform:scale(.95)}
+
+/* 음계 모드 */
+.scale-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.scale-btn{padding:6px 12px;border-radius:16px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);font-family:'Noto Sans KR',sans-serif;font-size:11px;cursor:pointer;transition:all .2s}
+.scale-btn.active{background:rgba(107,203,119,.3);border-color:#6BCB77;color:#6BCB77}
+
+/* 컨트롤 */
+.controls{display:flex;gap:8px;margin-bottom:1rem}
+.ctrl-btn{flex:1;padding:13px;border-radius:14px;border:none;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:48px;display:flex;align-items:center;justify-content:center;gap:6px}
+.ctrl-btn:active{transform:scale(.97)}
+.start-music-btn{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff}
+.start-music-btn.active{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.75}}
+.rec-btn{background:linear-gradient(135deg,#e91e8c,#9b59b6);color:#fff}
+.rec-btn.recording{animation:pulse 1s infinite}
+
+/* 감도 */
+.sensitivity-wrap{background:rgba(255,255,255,.06);border-radius:14px;padding:1rem;border:1px solid rgba(255,255,255,.08);margin-bottom:1rem}
+.sens-label{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:.6rem;text-transform:uppercase;display:flex;justify-content:space-between}
+.sens-slider{width:100%;accent-color:#e91e8c;height:4px}
+
+/* 시각화 */
+.viz-wrap{background:rgba(255,255,255,.06);border-radius:14px;padding:.8rem;border:1px solid rgba(255,255,255,.08);margin-bottom:1rem}
+.viz-label{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.4);margin-bottom:.5rem;text-transform:uppercase}
+.viz-bars{display:flex;gap:3px;align-items:flex-end;height:50px}
+.viz-bar{flex:1;border-radius:2px;background:linear-gradient(180deg,#e91e8c,#9b59b6);min-height:3px;transition:height .08s}
+
+/* 현재 음 표시 */
+.current-note{text-align:center;padding:.8rem;background:rgba(255,255,255,.06);border-radius:14px;border:1px solid rgba(255,255,255,.08);margin-bottom:1rem}
+.note-display{font-family:'Noto Serif KR',serif;font-size:36px;color:#fff;margin-bottom:.2rem;min-height:44px}
+.note-name{font-size:11px;color:rgba(255,255,255,.5)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">🎵 움직임 음악</div>
+  <div class="header-sub">몸을 움직이면 음악이 나와요!</div>
+</div>
+
+<!-- 닉네임 -->
+<div id="screen-nick">
+  <div style="height:.5rem"></div>
+  <div class="nick-card">
+    <span class="nick-emoji">🕺</span>
+    <div class="nick-title">움직임 음악</div>
+    <div class="nick-sub">카메라 앞에서 움직여봐요!<br>움직임이 클수록 높은 음이 나와요 🎵<br>빠르게 움직이면 빠른 박자!</div>
+    <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterMain()">
+    <button class="start-btn" onclick="enterMain()">🎵 시작하기</button>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div id="screen-main">
+  <!-- 카메라 -->
+  <div class="camera-wrap">
+    <video id="camera-video" autoplay playsinline muted></video>
+    <canvas id="motion-canvas"></canvas>
+    <div class="zone-labels">
+      <span class="zone-label">← 낮은 음</span>
+      <span class="zone-label">높은 음 →</span>
+    </div>
+    <div class="note-popup" id="note-popup"></div>
+    <div class="motion-level">
+      <div class="motion-fill" id="motion-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- 악기 선택 -->
+  <div class="instrument-row">
+    <button class="inst-btn active" onclick="selectInst('piano',this)">🎹 피아노</button>
+    <button class="inst-btn" onclick="selectInst('xylophone',this)">🎵 실로폰</button>
+    <button class="inst-btn" onclick="selectInst('flute',this)">🪈 플루트</button>
+    <button class="inst-btn" onclick="selectInst('guitar',this)">🎸 기타</button>
+    <button class="inst-btn" onclick="selectInst('bell',this)">🔔 벨</button>
+  </div>
+
+  <!-- 음계 모드 -->
+  <div class="scale-row">
+    <button class="scale-btn active" onclick="selectScale('pentatonic',this)">🎵 5음계</button>
+    <button class="scale-btn" onclick="selectScale('major',this)">🎶 장음계</button>
+    <button class="scale-btn" onclick="selectScale('minor',this)">🎼 단음계</button>
+    <button class="scale-btn" onclick="selectScale('chromatic',this)">🌈 반음계</button>
+  </div>
+
+  <!-- 현재 음 -->
+  <div class="current-note">
+    <div class="note-display" id="note-display">—</div>
+    <div class="note-name" id="note-name">움직여봐요!</div>
+  </div>
+
+  <!-- 시각화 -->
+  <div class="viz-wrap">
+    <div class="viz-label">음악 파형</div>
+    <div class="viz-bars" id="viz-bars"></div>
+  </div>
+
+  <!-- 감도 -->
+  <div class="sensitivity-wrap">
+    <div class="sens-label">
+      <span>감도</span>
+      <span id="sens-val">50</span>
+    </div>
+    <input class="sens-slider" type="range" min="10" max="100" value="50" id="sens-slider" oninput="sensitivity=+this.value;document.getElementById('sens-val').textContent=this.value">
+  </div>
+
+  <!-- 컨트롤 -->
+  <div class="controls">
+    <button class="ctrl-btn start-music-btn" id="start-music-btn" onclick="toggleMusic()">
+      <span id="music-icon">🎵</span><span id="music-text">음악 시작</span>
+    </button>
+  </div>
+</div>
+
+<script>
+let myNickname='';
+let audioCtx=null;
+let video=null,motionCanvas=null,motionCtx=null;
+let prevFrame=null;
+let isRunning=false;
+let animId=null;
+let lastNoteTime=0;
+let currentInstrument='piano';
+let currentScale='pentatonic';
+let sensitivity=50;
+let activeOscillators={};
+let lastMotion=0;
+
+// 음계 정의
+const SCALES={
+  pentatonic:[261.63,293.66,329.63,392,440,523.25,587.33,659.25,783.99,880],
+  major:[261.63,293.66,329.63,349.23,392,440,493.88,523.25,587.33,659.25],
+  minor:[261.63,293.66,311.13,349.23,392,415.30,466.16,523.25,587.33,622.25],
+  chromatic:[261.63,277.18,293.66,311.13,329.63,349.23,369.99,392,415.30,440],
+};
+
+const NOTE_NAMES={
+  pentatonic:['도','레','미','솔','라','도↑','레↑','미↑','솔↑','라↑'],
+  major:['도','레','미','파','솔','라','시','도↑','레↑','미↑'],
+  minor:['도','레','레♭','파','솔','솔♭','시♭','도↑','레↑','레♭↑'],
+  chromatic:['도','도#','레','레#','미','파','파#','솔','솔#','라'],
+};
+
+const INST_WAVE={piano:'triangle',xylophone:'sine',flute:'sine',guitar:'sawtooth',bell:'sine'};
+const INST_DECAY={piano:.8,xylophone:.4,flute:1.2,guitar:.6,bell:1.5};
+
+function getAudioCtx(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function enterMain(){
+  const nick=document.getElementById('nick-input').value.trim()||'익명';
+  myNickname=nick;
+  document.getElementById('screen-nick').style.display='none';
+  document.getElementById('screen-main').style.display='block';
+  initVizBars();
+  startCamera();
+}
+
+/* ── 카메라 ── */
+async function startCamera(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
+    video=document.getElementById('camera-video');
+    video.srcObject=stream;
+    await video.play();
+    motionCanvas=document.getElementById('motion-canvas');
+    motionCanvas.width=video.videoWidth||320;
+    motionCanvas.height=video.videoHeight||240;
+    motionCtx=motionCanvas.getContext('2d');
+  }catch(e){alert('카메라 권한이 필요해요!');}
+}
+
+/* ── 악기/음계 선택 ── */
+function selectInst(name,el){
+  currentInstrument=name;
+  document.querySelectorAll('.inst-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+function selectScale(name,el){
+  currentScale=name;
+  document.querySelectorAll('.scale-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+/* ── 음악 토글 ── */
+function toggleMusic(){
+  if(isRunning){stopMusic();return;}
+  if(!video||!video.videoWidth){alert('카메라를 먼저 허용해줘요!');return;}
+  startMusic();
+}
+
+function startMusic(){
+  isRunning=true;
+  document.getElementById('start-music-btn').classList.add('active');
+  document.getElementById('music-icon').textContent='⏹';
+  document.getElementById('music-text').textContent='음악 멈추기';
+  detectLoop();
+}
+
+function stopMusic(){
+  isRunning=false;
+  if(animId)cancelAnimationFrame(animId);
+  document.getElementById('start-music-btn').classList.remove('active');
+  document.getElementById('music-icon').textContent='🎵';
+  document.getElementById('music-text').textContent='음악 시작';
+  document.getElementById('motion-fill').style.width='0%';
+  document.getElementById('note-display').textContent='—';
+  document.getElementById('note-name').textContent='움직여봐요!';
+  stopAllNotes();
+  resetVizBars();
+}
+
+/* ── 움직임 감지 루프 ── */
+function detectLoop(){
+  if(!isRunning)return;
+  animId=requestAnimationFrame(detectLoop);
+
+  if(!video||video.readyState<2)return;
+  const w=video.videoWidth,h=video.videoHeight;
+  if(!w||!h)return;
+  motionCanvas.width=w;motionCanvas.height=h;
+
+  // 현재 프레임 캡처
+  motionCtx.drawImage(video,0,0,w,h);
+  const frame=motionCtx.getImageData(0,0,w,h);
+
+  if(!prevFrame){prevFrame=frame;return;}
+
+  // 구역별 움직임 분석 (10등분 가로)
+  const zones=10;
+  const zoneW=Math.floor(w/zones);
+  const motions=new Array(zones).fill(0);
+  let totalMotion=0;
+
+  for(let z=0;z<zones;z++){
+    let diff=0,count=0;
+    for(let x=z*zoneW;x<(z+1)*zoneW;x+=3){
+      for(let y=0;y<h;y+=3){
+        const i=(y*w+x)*4;
+        const dr=Math.abs(frame.data[i]-prevFrame.data[i]);
+        const dg=Math.abs(frame.data[i+1]-prevFrame.data[i+1]);
+        const db=Math.abs(frame.data[i+2]-prevFrame.data[i+2]);
+        diff+=dr+dg+db;count++;
+      }
+    }
+    motions[z]=count>0?diff/count:0;
+    totalMotion+=motions[z];
+  }
+
+  prevFrame=frame;
+  const avgMotion=totalMotion/zones;
+
+  // 움직임 레벨 표시
+  const motionPct=Math.min(100,(avgMotion/sensitivity)*100);
+  document.getElementById('motion-fill').style.width=motionPct+'%';
+  lastMotion=motionPct;
+
+  // 모션 캔버스에 구역별 시각화
+  motionCtx.clearRect(0,0,w,h);
+  for(let z=0;z<zones;z++){
+    const intensity=Math.min(1,motions[z]/(sensitivity*2));
+    if(intensity>0.05){
+      motionCtx.fillStyle=`hsla(${280+z*8},80%,60%,${intensity*.7})`;
+      motionCtx.fillRect(z*zoneW,0,zoneW,h);
+    }
+  }
+
+  // 움직임이 있으면 음 재생
+  const now=Date.now();
+  const threshold=sensitivity*0.3;
+  if(avgMotion>threshold&&now-lastNoteTime>80){
+    // 가장 많이 움직인 구역 → 음 결정
+    const maxZone=motions.indexOf(Math.max(...motions));
+    const noteIdx=Math.floor((maxZone/zones)*SCALES[currentScale].length);
+    const freq=SCALES[currentScale][noteIdx];
+    const noteName=NOTE_NAMES[currentScale][noteIdx];
+    const vol=Math.min(.5,(avgMotion/sensitivity)*.5);
+    playNote(freq,vol,noteIdx);
+    showNoteDisplay(noteName,noteIdx);
+    lastNoteTime=now;
+  }
+
+  // 시각화 바 업데이트
+  updateVizBars(motions,zones);
+}
+
+/* ── 음 재생 ── */
+function playNote(freq,vol,noteIdx){
+  const actx=getAudioCtx();
+  const osc=actx.createOscillator();
+  const gain=actx.createGain();
+  osc.type=INST_WAVE[currentInstrument]||'sine';
+  osc.frequency.value=freq;
+  osc.connect(gain);gain.connect(actx.destination);
+  gain.gain.setValueAtTime(0,actx.currentTime);
+  gain.gain.linearRampToValueAtTime(vol,actx.currentTime+.02);
+  const decay=INST_DECAY[currentInstrument]||.8;
+  gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+decay);
+  osc.start(actx.currentTime);
+  osc.stop(actx.currentTime+decay+.1);
+}
+
+function stopAllNotes(){
+  Object.values(activeOscillators).forEach(o=>{try{o.stop();}catch(e){}});
+  activeOscillators={};
+}
+
+/* ── 음 표시 ── */
+const NOTE_EMOJIS=['🎵','🎶','🎼','🎹','🎸','🎺','🎻','🥁','🎤','✨'];
+function showNoteDisplay(name,idx){
+  document.getElementById('note-display').textContent=NOTE_EMOJIS[idx%NOTE_EMOJIS.length]+' '+name;
+  document.getElementById('note-name').textContent=SCALES[currentScale][idx].toFixed(0)+'Hz';
+  const popup=document.getElementById('note-popup');
+  popup.textContent=name;
+  popup.classList.add('show');
+  setTimeout(()=>popup.classList.remove('show'),300);
+}
+
+/* ── 시각화 바 ── */
+function initVizBars(){
+  const el=document.getElementById('viz-bars');
+  el.innerHTML='';
+  for(let i=0;i<10;i++){
+    const bar=document.createElement('div');
+    bar.className='viz-bar';bar.style.height='3px';
+    el.appendChild(bar);
+  }
+}
+
+function updateVizBars(motions,zones){
+  const bars=document.querySelectorAll('.viz-bar');
+  bars.forEach((bar,i)=>{
+    const h=Math.min(50,Math.max(3,(motions[i]||0)/sensitivity*50));
+    bar.style.height=h+'px';
+    const hue=280+i*8;
+    bar.style.background=`linear-gradient(180deg,hsl(${hue},80%,60%),hsl(${hue+20},80%,40%))`;
+  });
+}
+
+function resetVizBars(){
+  const bars=document.querySelectorAll('.viz-bar');
+  bars.forEach(bar=>{bar.style.height='3px';});
+}
+</script>
+</body>
+</html>
