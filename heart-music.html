@@ -30,7 +30,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(160deg,#FF
 .card-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.8;text-align:center}
 
 .camera-circle{width:min(220px,70vw);aspect-ratio:1;border-radius:50%;overflow:hidden;margin:0 auto 1rem;position:relative;border:4px solid rgba(201,123,123,.3);box-shadow:0 0 0 8px rgba(201,123,123,.1)}
-#heart-video{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}
+#heart-video{width:100%;height:100%;object-fit:cover;display:block;transform:none;}
 .heart-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
 .heart-pulse{font-size:48px;animation:heartbeat 1s infinite}
 @keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
@@ -195,12 +195,37 @@ function goStep(n){
 
 async function initHeartCamera(){
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:160,height:120},audio:false});
-    heartVideo=document.getElementById('heart-video');
-    heartVideo.srcObject=stream;
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video:{
+        facingMode:{ exact:"environment" },
+        width:160,
+        height:120
+      },
+      audio:false
+    });
+
+    heartVideo = document.getElementById('heart-video');
+    heartVideo.srcObject = stream;
     await heartVideo.play();
+
+    const track = stream.getVideoTracks()[0];
+
+    try{
+      await track.applyConstraints({
+        advanced:[{ torch:true }]
+      });
+
+      document.getElementById('measuring-status').textContent =
+        '후레쉬가 켜졌어요. 손가락을 카메라에 살짝 대주세요.';
+
+    }catch(e){
+      document.getElementById('measuring-status').textContent =
+        '후레쉬를 켤 수 없어요. 밝은 곳에서 손가락을 카메라에 대주세요.';
+    }
+
   }catch(e){
-    document.getElementById('measuring-status').textContent='카메라를 사용할 수 없어요';
+    document.getElementById('measuring-status').textContent =
+      '후면 카메라를 사용할 수 없어요. 카메라 권한을 확인해주세요.';
   }
 }
 
