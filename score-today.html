@@ -7,107 +7,118 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;overflow-x:hidden}
+html,body{width:100%;overflow-x:hidden;background:#FFF9F0}
 :root{--cream:#FFF8F0;--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh}
+body{font-family:'Noto Sans KR',sans-serif;color:var(--text-dark);min-height:100vh}
 
-.header{background:linear-gradient(135deg,#FFF5E0,#FFE8F0);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative;border-bottom:1px solid rgba(200,160,140,.2)}
+/* 헤더 */
+.header{background:linear-gradient(135deg,#FFF5E0,#FFE8F0);padding:2.2rem 1.2rem 1rem;text-align:center;position:relative;border-bottom:1px solid rgba(200,160,140,.2)}
 .back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.7);border:1px solid rgba(200,160,140,.3);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
-.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.3rem;color:var(--text-dark);margin-bottom:.1rem}
 .header-sub{font-size:11px;color:var(--text-light)}
 
 /* 닉네임 */
-#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
-.nick-card{background:#fff;border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(200,160,140,.15);text-align:center}
+#screen-nick{padding:2rem 1rem;max-width:380px;margin:0 auto}
+.nick-card{background:#fff;border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(200,160,140,.12);text-align:center;box-shadow:0 2px 20px rgba(200,160,140,.1)}
 .nick-emoji{font-size:52px;margin-bottom:.8rem;display:block}
 .nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.3rem}
-.nick-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.8}
+.nick-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.9}
 .nick-field{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--text-dark);background:var(--cream);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
-.nick-field:focus{border-color:rgba(201,123,123,.5)}
+.nick-field:focus{border-color:var(--pink)}
 .start-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
 
 /* 메인 */
-#screen-main{display:none;padding-bottom:140px}
+#screen-main{display:none;padding-bottom:20px}
 
-/* 악보 */
-.score-wrap{background:#FFFDF5;border-bottom:2px solid rgba(200,160,140,.2);position:relative;overflow:hidden;cursor:crosshair}
-.score-lines{position:absolute;left:0;right:0;pointer-events:none}
-.score-line{position:absolute;left:0;right:0;height:2px;background:rgba(100,70,50,.15)}
-.score-clef{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:60px;color:rgba(100,70,50,.3);pointer-events:none;user-select:none;line-height:1}
+/* ── 악보 영역 ── */
+.score-section{background:#FFFCF5;border-bottom:2px solid rgba(200,160,140,.15);position:relative}
+.score-header{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:rgba(255,255,255,.8);border-bottom:1px solid rgba(200,160,140,.1)}
+.score-title{font-size:11px;color:var(--text-light);letter-spacing:1px;text-transform:uppercase}
+.score-actions{display:flex;gap:6px}
+.score-btn{padding:6px 14px;border-radius:10px;border:none;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;cursor:pointer;min-height:32px}
+.play-score-btn{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff}
+.play-score-btn.playing{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.clear-score-btn{background:#fff;border:1px solid rgba(200,160,140,.3)!important;color:var(--text-light)}
+
+/* 오선지 */
+.staff{position:relative;overflow:hidden;cursor:crosshair;background:#FFFCF5}
+.staff-lines{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+.staff-line{position:absolute;left:36px;right:0;height:1.5px;background:rgba(120,80,50,.12)}
+.clef{position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:52px;color:rgba(120,80,50,.2);pointer-events:none;user-select:none;line-height:1}
+.note-guide{position:absolute;right:0;top:0;bottom:0;width:26px;display:flex;flex-direction:column;justify-content:space-around;padding:2px 0;pointer-events:none;background:rgba(255,252,245,.9)}
+.note-guide-lbl{font-size:7px;color:rgba(120,80,50,.35);font-weight:700;text-align:center}
 
 /* 스탬프 노트 */
-.note-stamp{position:absolute;transform:translate(-50%,-50%);cursor:pointer;user-select:none;transition:transform .15s;z-index:10;display:flex;flex-direction:column;align-items:center;gap:1px}
-.note-stamp:active{transform:translate(-50%,-50%) scale(.9)}
-.note-stamp .stamp-icon{font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
-.note-stamp .stamp-name{font-size:8px;color:var(--text-mid);background:rgba(255,255,255,.85);border-radius:6px;padding:1px 5px;white-space:nowrap;font-weight:500}
-.note-stamp.playing{animation:notePop .3s ease}
-@keyframes notePop{0%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.4)}100%{transform:translate(-50%,-50%) scale(1)}}
+.note-stamp{position:absolute;transform:translate(-50%,-50%);cursor:pointer;user-select:none;z-index:10;display:flex;flex-direction:column;align-items:center;gap:2px;transition:filter .2s}
+.note-stamp:active{filter:brightness(1.2)}
+.stamp-icon{font-size:26px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.15))}
+.stamp-photo-circle{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.stamp-label{font-size:8px;background:rgba(255,255,255,.92);border-radius:6px;padding:1px 5px;white-space:nowrap;font-weight:600;max-width:60px;overflow:hidden;text-overflow:ellipsis}
+.note-stamp.popping{animation:notePop .35s ease}
+@keyframes notePop{0%,100%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(1.45)}}
 
-/* 음계 가이드 */
-.note-guide{position:absolute;right:6px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:space-between;padding:4px 0;pointer-events:none}
-.note-guide-label{font-size:8px;color:rgba(100,70,50,.4);font-weight:600;text-align:right}
-
-/* 한마디 입력 모달 */
-#story-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(20,10,5,.6);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center}
-#story-modal.open{display:flex}
-.story-sheet{background:#fff;border-radius:24px 24px 0 0;padding:1.5rem;width:100%;max-width:480px}
-.story-sheet-emoji{font-size:40px;text-align:center;display:block;margin-bottom:.5rem}
-.story-sheet-title{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--text-dark);text-align:center;margin-bottom:.3rem}
-.story-sheet-sub{font-size:11px;color:var(--text-light);text-align:center;margin-bottom:1rem;line-height:1.7}
-.story-default{background:var(--cream);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--text-light);margin-bottom:.8rem;cursor:pointer;border:1.5px solid rgba(200,160,140,.2);display:flex;align-items:center;gap:6px}
-.story-default:active{background:#FFE8D8}
-.story-input{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:11px 13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;color:var(--text-dark);background:var(--cream);outline:none;resize:none;-webkit-appearance:none;margin-bottom:.8rem}
-.story-input:focus{border-color:rgba(201,123,123,.5)}
-.story-btn-row{display:flex;gap:8px}
-.story-confirm-btn{flex:1;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
-.story-cancel-btn{background:#fff;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:13px 20px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-light);cursor:pointer}
-.controls-bar{display:flex;gap:8px;padding:.8rem 1rem;background:#fff;border-bottom:1px solid rgba(200,160,140,.1);align-items:center;position:sticky;top:0;z-index:20}
-.play-btn{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:12px;padding:10px 20px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;flex-shrink:0}
-.play-btn.playing{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse .8s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
-.clear-btn{background:#fff;border:1.5px solid rgba(200,160,140,.3);border-radius:12px;padding:10px 16px;font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-light);cursor:pointer;min-height:40px}
-.tempo-wrap{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
-.tempo-label{font-size:10px;color:var(--text-light);flex-shrink:0}
+/* 빠르기 슬라이더 */
+.tempo-row{display:flex;align-items:center;gap:8px;padding:.5rem 1rem;background:rgba(255,255,255,.6);border-top:1px solid rgba(200,160,140,.08)}
+.tempo-lbl{font-size:10px;color:var(--text-light);flex-shrink:0}
 .tempo-slider{flex:1;accent-color:var(--pink)}
-.note-count{font-size:11px;color:var(--text-light);flex-shrink:0}
+.note-cnt{font-size:10px;color:var(--text-light);flex-shrink:0}
 
-/* 스탬프 팔레트 */
-.palette-wrap{padding:.8rem 1rem}
-.palette-tabs{display:flex;gap:6px;margin-bottom:.8rem;overflow-x:auto;padding-bottom:2px}
-.palette-tab{flex-shrink:0;padding:5px 12px;border-radius:14px;border:1.5px solid rgba(200,160,140,.2);background:#fff;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:500;color:var(--text-mid);cursor:pointer;white-space:nowrap;transition:all .2s}
-.palette-tab.active{background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border-color:transparent}
-.stamp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+/* 참여자 바 */
+.players-row{display:flex;gap:5px;padding:.4rem 1rem;flex-wrap:wrap;min-height:30px}
+.p-chip{display:inline-flex;align-items:center;gap:4px;background:#fff;border-radius:12px;padding:3px 8px;font-size:10px;color:var(--text-mid);border:1px solid rgba(200,160,140,.15)}
+.p-chip.me{background:linear-gradient(135deg,#FFE4CC,#FFD6E8);border-color:var(--pink)}
+.p-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 
-/* 사진 스탬프 */
-.photo-stamp-btn{background:linear-gradient(135deg,#FFE4CC,#FFD6E8);border:2px dashed var(--pink);border-radius:14px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px}
-.photo-stamp-btn:active{transform:scale(.93)}
-.photo-stamp-btn span{font-size:11px;color:var(--pink);font-weight:500}
-.photo-preview-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:.5rem}
-.photo-stamp-item{border-radius:14px;border:1.5px solid rgba(200,160,140,.2);overflow:hidden;cursor:pointer;transition:all .2s;aspect-ratio:1;position:relative}
-.photo-stamp-item:active{transform:scale(.92)}
-.photo-stamp-item.selected{border-color:var(--pink);box-shadow:0 0 0 2px var(--pink)}
-.photo-stamp-item img{width:100%;height:100%;object-fit:cover;display:block}
-.photo-stamp-item .photo-del{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+/* ── 스탬프 선택 영역 ── */
+.palette-section{padding:.8rem 1rem}
+.palette-section-title{font-size:11px;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;margin-bottom:.6rem}
 
-/* 사진 스탬프 노트 (동그란 사진) */
-.note-stamp .stamp-photo{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.stamp-item{background:#fff;border-radius:14px;border:1.5px solid rgba(200,160,140,.15);padding:8px 4px;text-align:center;cursor:pointer;transition:all .2s}
-.stamp-item:active{transform:scale(.92)}
-.stamp-item.selected{border-color:var(--pink);background:#FFF0E8;transform:scale(1.05)}
-.stamp-item-emoji{font-size:26px;display:block;margin-bottom:2px}
-.stamp-item-name{font-size:9px;color:var(--text-light)}
+/* 카테고리 탭 */
+.cat-tabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:.8rem;-webkit-overflow-scrolling:touch}
+.cat-tab{flex-shrink:0;padding:5px 11px;border-radius:12px;border:1.5px solid rgba(200,160,140,.18);background:#fff;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:500;color:var(--text-mid);cursor:pointer;white-space:nowrap;transition:all .2s}
+.cat-tab.active{background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border-color:transparent}
 
-/* 말풍선 팝업 */
-#bubble-popup{display:none;position:fixed;z-index:200;background:#fff;border-radius:16px;padding:12px 14px;max-width:200px;box-shadow:0 4px 24px rgba(0,0,0,.15);border:1.5px solid rgba(200,160,140,.2);pointer-events:none}
-#bubble-popup.show{display:block}
-#bubble-popup::after{content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-top-color:#fff;border-bottom:none}
-.bubble-emoji{font-size:28px;display:block;text-align:center;margin-bottom:4px}
-.bubble-text{font-size:12px;color:var(--text-dark);line-height:1.6;text-align:center}
+/* 스탬프 그리드 */
+.stamp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.stamp-item{background:#fff;border-radius:12px;border:1.5px solid rgba(200,160,140,.12);padding:8px 3px;text-align:center;cursor:pointer;transition:all .18s}
+.stamp-item:active{transform:scale(.9)}
+.stamp-item.sel{border-color:var(--pink);background:#FFF0E8;box-shadow:0 0 0 2px rgba(201,123,123,.2)}
+.stamp-item-emoji{font-size:24px;display:block;margin-bottom:2px;line-height:1}
+.stamp-item-name{font-size:8px;color:var(--text-light)}
 
-/* 참여자 */
-.players-bar{display:flex;gap:6px;padding:.5rem 1rem;flex-wrap:wrap;border-top:1px solid rgba(200,160,140,.1)}
-.player-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.8);border-radius:14px;padding:3px 10px;font-size:11px;color:var(--text-mid);border:1px solid rgba(200,160,140,.2)}
-.player-chip.me{background:linear-gradient(135deg,#FFE4CC,#FFD6E8);border-color:var(--pink)}
+/* 사진 탭 */
+.photo-add-btn{background:linear-gradient(135deg,#FFE4CC,#FFD6E8);border:2px dashed var(--pink);border-radius:14px;padding:12px;text-align:center;cursor:pointer;margin-bottom:.8rem;display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px}
+.photo-add-btn span{font-size:13px;color:var(--pink);font-weight:500}
+.photo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.photo-item{border-radius:12px;border:2px solid rgba(200,160,140,.15);overflow:hidden;cursor:pointer;aspect-ratio:1;position:relative;background:#fff}
+.photo-item.sel{border-color:var(--pink);box-shadow:0 0 0 2px rgba(201,123,123,.3)}
+.photo-item img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-item .del-btn{position:absolute;top:2px;right:2px;width:17px;height:17px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}
+
+/* ── 한마디 모달 ── */
+#story-modal{display:none;position:fixed;inset:0;z-index:500;background:rgba(20,10,5,.55);backdrop-filter:blur(5px);align-items:flex-end;justify-content:center}
+#story-modal.open{display:flex}
+.story-sheet{background:#fff;border-radius:24px 24px 0 0;padding:1.5rem 1.2rem 2rem;width:100%;max-width:480px}
+.story-stamp-preview{text-align:center;margin-bottom:.8rem}
+.story-stamp-preview img{width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid rgba(200,160,140,.2)}
+.story-stamp-title{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--text-dark);text-align:center;margin-bottom:.2rem}
+.story-stamp-sub{font-size:11px;color:var(--text-light);text-align:center;margin-bottom:.8rem}
+.story-hint{background:var(--cream);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--text-light);margin-bottom:.6rem;cursor:pointer;border:1.5px solid rgba(200,160,140,.15);display:flex;align-items:center;gap:6px;transition:background .2s}
+.story-hint:active{background:#FFE8D8}
+.story-textarea{width:100%;border:1.5px solid rgba(200,160,140,.22);border-radius:12px;padding:11px 12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;color:var(--text-dark);background:var(--cream);outline:none;resize:none;-webkit-appearance:none;margin-bottom:.8rem;line-height:1.6}
+.story-textarea:focus{border-color:var(--pink)}
+.story-btns{display:flex;gap:8px}
+.story-ok{flex:1;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+.story-cancel{background:#fff;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:13px 18px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-light);cursor:pointer}
+
+/* ── 말풍선 ── */
+#bubble{display:none;position:fixed;z-index:400;background:#fff;border-radius:16px;padding:10px 13px;max-width:190px;box-shadow:0 4px 20px rgba(0,0,0,.13);border:1.5px solid rgba(200,160,140,.18);pointer-events:none}
+#bubble.show{display:block}
+#bubble::after{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border:7px solid transparent;border-top-color:#fff;border-bottom:none}
+#bubble-photo{width:72px;height:72px;border-radius:10px;object-fit:cover;display:block;margin:0 auto 5px}
+#bubble-emoji{font-size:26px;display:block;text-align:center;margin-bottom:4px}
+#bubble-text{font-size:12px;color:var(--text-dark);line-height:1.6;text-align:center}
 </style>
 </head>
 <body>
@@ -124,7 +135,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   <div class="nick-card">
     <span class="nick-emoji">🎼</span>
     <div class="nick-title">오늘의 악보</div>
-    <div class="nick-sub">오늘 먹은 것, 느낀 것을<br>악보 위에 스탬프로 찍어요!<br>스탬프 위치가 음계가 돼요 🎵</div>
+    <div class="nick-sub">오늘 먹은 것, 느낀 것을<br>악보 위에 스탬프로 찍어요!<br>위치가 음계가 되고, 순서가 박자가 돼요 🎵</div>
     <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterMain()">
     <button class="start-btn" onclick="enterMain()">🎼 악보 펼치기</button>
   </div>
@@ -132,417 +143,394 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 
 <!-- 메인 -->
 <div id="screen-main">
-  <!-- 컨트롤 -->
-  <div class="controls-bar">
-    <button class="play-btn" id="play-btn" onclick="togglePlay()">▶ 재생</button>
-    <button class="clear-btn" onclick="clearMyNotes()">내 것 지우기</button>
-    <div class="tempo-wrap">
-      <span class="tempo-label">빠르기</span>
-      <input class="tempo-slider" type="range" min="60" max="180" value="100" id="tempo-slider">
-    </div>
-    <span class="note-count" id="note-count">0개</span>
-  </div>
 
-  <!-- 악보 -->
-  <div class="score-wrap" id="score-wrap">
-    <div class="score-clef">𝄞</div>
-    <div class="score-lines" id="score-lines"></div>
-    <div class="note-guide" id="note-guide"></div>
-  </div>
-
-  <!-- 참여자 -->
-  <div class="players-bar" id="players-bar"></div>
-
-  <!-- 스탬프 팔레트 -->
-  <div class="palette-wrap">
-    <div class="palette-tabs" id="palette-tabs"></div>
-    <div class="stamp-grid" id="stamp-grid"></div>
-    <!-- 사진 촬영/업로드 -->
-    <div id="photo-palette" style="display:none">
-      <div class="photo-stamp-btn" onclick="document.getElementById('photo-input').click()">
-        <span style="font-size:28px">📷</span>
-        <span>사진 찍기 / 선택</span>
+  <!-- 악보 섹션 -->
+  <div class="score-section">
+    <div class="score-header">
+      <span class="score-title">🎵 오늘의 악보</span>
+      <div class="score-actions">
+        <button class="score-btn play-score-btn" id="play-btn" onclick="togglePlay()">▶ 재생</button>
+        <button class="score-btn clear-score-btn" onclick="clearMyNotes()">내 것 지우기</button>
       </div>
-      <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
-      <div class="photo-preview-grid" id="photo-preview-grid"></div>
+    </div>
+    <div class="staff" id="staff">
+      <div class="clef">𝄞</div>
+      <div class="staff-lines" id="staff-lines"></div>
+      <div class="note-guide" id="note-guide"></div>
+    </div>
+    <div class="tempo-row">
+      <span class="tempo-lbl">빠르기</span>
+      <input class="tempo-slider" type="range" min="50" max="180" value="90" id="tempo-slider">
+      <span class="note-cnt" id="note-cnt">스탬프 0개</span>
+    </div>
+    <div class="players-row" id="players-row"></div>
+  </div>
+
+  <!-- 스탬프 선택 섹션 -->
+  <div class="palette-section">
+    <div class="palette-section-title">📌 스탬프 고르기 → 악보에 탭해서 올리기</div>
+    <div class="cat-tabs" id="cat-tabs"></div>
+    <div class="stamp-grid" id="stamp-grid"></div>
+    <!-- 사진 탭 -->
+    <div id="photo-tab" style="display:none">
+      <div class="photo-add-btn" onclick="document.getElementById('photo-input').click()">
+        <span style="font-size:26px">📷</span>
+        <span>사진 찍기 또는 선택하기</span>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+      <div class="photo-grid" id="photo-grid"></div>
     </div>
   </div>
 </div>
 
-<!-- 한마디 입력 모달 -->
+<!-- 한마디 모달 -->
 <div id="story-modal">
   <div class="story-sheet">
-    <span class="story-sheet-emoji" id="story-modal-emoji"></span>
-    <div class="story-sheet-title" id="story-modal-title"></div>
-    <div class="story-sheet-sub">오늘 이 스탬프와 관련해서<br>한마디 남겨봐요! ✏️</div>
-    <div class="story-default" id="story-default-btn" onclick="useDefaultStory()">
-      <span>💡</span><span id="story-default-text"></span>
+    <div class="story-stamp-preview" id="story-preview"></div>
+    <div class="story-stamp-title" id="story-title"></div>
+    <div class="story-stamp-sub">한마디를 남겨봐요 ✏️</div>
+    <div class="story-hint" id="story-hint" onclick="useHint()">
+      <span>💡</span><span id="story-hint-text"></span>
     </div>
-    <textarea class="story-input" id="story-input" rows="2" maxlength="50" placeholder="직접 써봐요 (최대 50자)"></textarea>
-    <div class="story-btn-row">
-      <button class="story-cancel-btn" onclick="closeStoryModal()">취소</button>
-      <button class="story-confirm-btn" onclick="confirmStory()">🎵 악보에 올리기</button>
+    <textarea class="story-textarea" id="story-textarea" rows="2" maxlength="50" placeholder="오늘 이것과 관련해서 한마디..."></textarea>
+    <div class="story-btns">
+      <button class="story-cancel" onclick="closeStoryModal()">취소</button>
+      <button class="story-ok" onclick="confirmStory()">🎵 악보에 올리기</button>
     </div>
   </div>
 </div>
 
-<!-- 말풍선 팝업 -->
-<div id="bubble-popup">
-  <img id="bubble-photo" src="" style="display:none;width:80px;height:80px;border-radius:12px;object-fit:cover;margin:0 auto 6px;display:none">
-  <span class="bubble-emoji" id="bubble-emoji"></span>
-  <div class="bubble-text" id="bubble-text"></div>
+<!-- 말풍선 -->
+<div id="bubble">
+  <img id="bubble-photo" src="" alt="" style="display:none">
+  <span id="bubble-emoji" style="display:none"></span>
+  <div id="bubble-text"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const SB_URL='https://aoywuhpqivpczstoogcm.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
+const sb=supabase.createClient(SB_URL,SB_KEY);
 
-// 스탬프 데이터
-const STAMP_CATEGORIES={
+/* ── 스탬프 데이터 ── */
+const CATS={
   '🍽️ 음식':[
-    {emoji:'🍚',name:'밥',story:'오늘 따뜻한 밥을 먹었어요 🍚'},
-    {emoji:'🍜',name:'면',story:'맛있는 면 요리를 먹었어요 🍜'},
-    {emoji:'🍞',name:'빵',story:'부드러운 빵을 먹었어요 🍞'},
-    {emoji:'🍎',name:'사과',story:'새콤달콤 사과를 먹었어요 🍎'},
-    {emoji:'🍌',name:'바나나',story:'달달한 바나나를 먹었어요 🍌'},
-    {emoji:'🍊',name:'귤',story:'새콤한 귤을 먹었어요 🍊'},
-    {emoji:'🍰',name:'케이크',story:'달콤한 케이크를 먹었어요 🍰'},
-    {emoji:'🍫',name:'초콜릿',story:'달콤한 초콜릿을 먹었어요 🍫'},
-    {emoji:'🥛',name:'우유',story:'고소한 우유를 마셨어요 🥛'},
-    {emoji:'🧃',name:'주스',story:'달콤한 주스를 마셨어요 🧃'},
+    {e:'🍚',n:'밥',s:'오늘 따뜻한 밥을 먹었어요 🍚'},
+    {e:'🍜',n:'면',s:'맛있는 면 요리를 먹었어요 🍜'},
+    {e:'🍞',n:'빵',s:'부드러운 빵을 먹었어요 🍞'},
+    {e:'🍎',n:'사과',s:'새콤달콤 사과를 먹었어요 🍎'},
+    {e:'🍌',n:'바나나',s:'달달한 바나나를 먹었어요 🍌'},
+    {e:'🍊',n:'귤',s:'새콤한 귤을 먹었어요 🍊'},
+    {e:'🍰',n:'케이크',s:'달콤한 케이크를 먹었어요 🍰'},
+    {e:'🍫',n:'초콜릿',s:'달콤한 초콜릿을 먹었어요 🍫'},
+    {e:'🥛',n:'우유',s:'고소한 우유를 마셨어요 🥛'},
+    {e:'🧃',n:'주스',s:'달콤한 주스를 마셨어요 🧃'},
   ],
   '🏥 병원생활':[
-    {emoji:'💊',name:'약',story:'오늘 약을 먹었어요 💊'},
-    {emoji:'💉',name:'주사',story:'주사를 맞았어요. 조금 아팠지만 잘 참았어요 💪'},
-    {emoji:'🩺',name:'진찰',story:'선생님께 진찰을 받았어요 🩺'},
-    {emoji:'🩹',name:'밴드',story:'상처에 밴드를 붙였어요 🩹'},
-    {emoji:'🛏️',name:'침대',story:'침대에서 쉬었어요 🛏️'},
-    {emoji:'📺',name:'TV',story:'TV를 보며 시간을 보냈어요 📺'},
-    {emoji:'📚',name:'책',story:'책을 읽으며 시간을 보냈어요 📚'},
-    {emoji:'🎮',name:'게임',story:'게임을 하며 즐거운 시간을 보냈어요 🎮'},
-    {emoji:'🧸',name:'인형',story:'좋아하는 인형과 함께했어요 🧸'},
-    {emoji:'🌡️',name:'체온',story:'체온을 쟀어요 🌡️'},
+    {e:'💊',n:'약',s:'오늘 약을 먹었어요 💊'},
+    {e:'💉',n:'주사',s:'주사를 맞았어요. 조금 아팠지만 잘 참았어요 💪'},
+    {e:'🩺',n:'진찰',s:'선생님께 진찰을 받았어요 🩺'},
+    {e:'🩹',n:'밴드',s:'상처에 밴드를 붙였어요 🩹'},
+    {e:'🛏️',n:'침대',s:'침대에서 쉬었어요 🛏️'},
+    {e:'📺',n:'TV',s:'TV를 보며 시간을 보냈어요 📺'},
+    {e:'📚',n:'책',s:'책을 읽으며 시간을 보냈어요 📚'},
+    {e:'🎮',n:'게임',s:'게임을 하며 즐거운 시간을 보냈어요 🎮'},
+    {e:'🧸',n:'인형',s:'좋아하는 인형과 함께했어요 🧸'},
+    {e:'🌡️',n:'체온',s:'체온을 쟀어요 🌡️'},
   ],
   '😊 감정':[
-    {emoji:'😊',name:'기쁨',story:'오늘 기분이 좋았어요 😊'},
-    {emoji:'😢',name:'슬픔',story:'오늘 조금 슬펐어요 😢'},
-    {emoji:'😴',name:'졸림',story:'오늘 많이 졸렸어요 😴'},
-    {emoji:'😤',name:'답답함',story:'오늘 조금 답답한 마음이 들었어요 😤'},
-    {emoji:'🥰',name:'행복',story:'오늘 정말 행복했어요 🥰'},
-    {emoji:'😰',name:'불안',story:'오늘 조금 불안했지만 괜찮아요 😰'},
-    {emoji:'😌',name:'평온',story:'오늘 마음이 평온했어요 😌'},
-    {emoji:'🤩',name:'설렘',story:'오늘 설레는 일이 있었어요 🤩'},
-    {emoji:'😠',name:'화남',story:'오늘 화가 났지만 잘 넘겼어요 😠'},
-    {emoji:'🤒',name:'아픔',story:'오늘 몸이 좀 아팠어요 🤒'},
+    {e:'😊',n:'기쁨',s:'오늘 기분이 좋았어요 😊'},
+    {e:'😢',n:'슬픔',s:'오늘 조금 슬펐어요 😢'},
+    {e:'😴',n:'졸림',s:'오늘 많이 졸렸어요 😴'},
+    {e:'🥰',n:'행복',s:'오늘 정말 행복했어요 🥰'},
+    {e:'😰',n:'불안',s:'오늘 조금 불안했지만 괜찮아요 😰'},
+    {e:'😌',n:'평온',s:'오늘 마음이 평온했어요 😌'},
+    {e:'🤩',n:'설렘',s:'오늘 설레는 일이 있었어요 🤩'},
+    {e:'😠',n:'화남',s:'오늘 화가 났지만 잘 넘겼어요 😠'},
+    {e:'🤒',n:'아픔',s:'오늘 몸이 좀 아팠어요 🤒'},
+    {e:'😤',n:'답답',s:'오늘 조금 답답했어요 😤'},
   ],
   '🎮 활동':[
-    {emoji:'🎨',name:'그림',story:'그림 그리기를 했어요 🎨'},
-    {emoji:'🎵',name:'노래',story:'노래를 불렀어요 🎵'},
-    {emoji:'🏃',name:'걷기',story:'복도를 걸어다녔어요 🏃'},
-    {emoji:'🧩',name:'퍼즐',story:'퍼즐을 맞췄어요 🧩'},
-    {emoji:'✏️',name:'공부',story:'공부를 했어요 ✏️'},
-    {emoji:'📱',name:'폰',story:'핸드폰으로 시간을 보냈어요 📱'},
-    {emoji:'💬',name:'대화',story:'가족이나 친구와 이야기를 나눴어요 💬'},
-    {emoji:'🌷',name:'꽃보기',story:'창문 너머 꽃을 바라봤어요 🌷'},
-    {emoji:'🎁',name:'선물',story:'선물을 받았어요 🎁'},
-    {emoji:'🤝',name:'치료',story:'치료를 받았어요 🤝'},
+    {e:'🎨',n:'그림',s:'그림 그리기를 했어요 🎨'},
+    {e:'🎵',n:'노래',s:'노래를 불렀어요 🎵'},
+    {e:'🏃',n:'걷기',s:'복도를 걸어다녔어요 🏃'},
+    {e:'🧩',n:'퍼즐',s:'퍼즐을 맞췄어요 🧩'},
+    {e:'✏️',n:'공부',s:'공부를 했어요 ✏️'},
+    {e:'💬',n:'대화',s:'가족과 이야기를 나눴어요 💬'},
+    {e:'🌷',n:'꽃보기',s:'창문 너머 꽃을 바라봤어요 🌷'},
+    {e:'🎁',n:'선물',s:'선물을 받았어요 🎁'},
+    {e:'🤝',n:'치료',s:'치료를 받았어요 🤝'},
+    {e:'📱',n:'폰',s:'핸드폰으로 시간을 보냈어요 📱'},
   ],
-  '🌤️ 날씨/시간':[
-    {emoji:'☀️',name:'맑음',story:'오늘 날씨가 맑았어요 ☀️'},
-    {emoji:'🌧️',name:'비',story:'오늘 비가 왔어요 🌧️'},
-    {emoji:'⛅',name:'흐림',story:'오늘 날씨가 흐렸어요 ⛅'},
-    {emoji:'🌙',name:'밤',story:'밤에 잠이 잘 왔어요 🌙'},
-    {emoji:'🌅',name:'아침',story:'아침을 맞이했어요 🌅'},
-    {emoji:'🌈',name:'무지개',story:'오늘 무지개 같은 순간이 있었어요 🌈'},
-    {emoji:'❄️',name:'추움',story:'오늘 날씨가 쌀쌀했어요 ❄️'},
-    {emoji:'🌸',name:'봄',story:'봄 같은 따뜻한 하루였어요 🌸'},
-    {emoji:'⭐',name:'별',story:'오늘 별처럼 빛나는 순간이 있었어요 ⭐'},
-    {emoji:'🌊',name:'파도',story:'마음이 파도처럼 출렁였어요 🌊'},
+  '🌤️ 날씨':[
+    {e:'☀️',n:'맑음',s:'오늘 날씨가 맑았어요 ☀️'},
+    {e:'🌧️',n:'비',s:'오늘 비가 왔어요 🌧️'},
+    {e:'⛅',n:'흐림',s:'오늘 날씨가 흐렸어요 ⛅'},
+    {e:'❄️',n:'눈',s:'오늘 날씨가 쌀쌀했어요 ❄️'},
+    {e:'🌈',n:'무지개',s:'무지개 같은 순간이 있었어요 🌈'},
+    {e:'🌙',n:'밤',s:'밤에 잠이 잘 왔어요 🌙'},
+    {e:'🌅',n:'아침',s:'아침을 맞이했어요 🌅'},
+    {e:'🌸',n:'봄',s:'봄 같은 따뜻한 하루였어요 🌸'},
+    {e:'⭐',n:'별',s:'별처럼 빛나는 순간이 있었어요 ⭐'},
+    {e:'🌊',n:'파도',s:'마음이 파도처럼 출렁였어요 🌊'},
   ],
 };
 
-// 음계 (아래→위 = 도→시)
-const NOTES=['도','레','미','파','솔','라','시','도↑','레↑','미↑'];
+const NOTE_NAMES=['도','레','미','파','솔','라','시','도↑','레↑','미↑'];
 const NOTE_FREQS=[261.63,293.66,329.63,349.23,392,440,493.88,523.25,587.33,659.25];
+const COLORS=['#E05555','#FF8C42','#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF8C69','#5B9B8E','#E91E8C','#9B59B6'];
 
-let myNickname='';
-let selectedStamp=null;
-let selectedCategory=Object.keys(STAMP_CATEGORIES)[0];
-let notes=[]; // {id,emoji,name,story,nx,ny,nickname,color}
-let audioCtx=null;
-let isPlaying=false;
-let playTimeout=null;
-let channel=null;
-let bubbleTimer=null;
-let myColor='';
+let myNick='',myColor='';
+let selCat=Object.keys(CATS)[0];
+let selStamp=null;
+let myPhotos=[];
+let notes=[];
+let pendNx=null,pendNy=null,pendStamp=null;
+let audioCtx=null,isPlaying=false,playTid=null;
+let bubbleTid=null,channel=null;
 
-const COLORS=['#E05555','#FF8C42','#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF8C69','#5B9B8E'];
+function getACtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
 
-function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
-
+/* ── 입장 ── */
 function enterMain(){
   const nick=document.getElementById('nick-input').value.trim()||'익명';
-  myNickname=nick;
+  myNick=nick;
   myColor=COLORS[Math.floor(Math.random()*COLORS.length)];
   document.getElementById('screen-nick').style.display='none';
   document.getElementById('screen-main').style.display='block';
-  initScore();
+  initStaff();
   initPalette();
   loadNotes();
   setupChannel();
-  setInterval(loadNotes,10000);
+  setInterval(loadNotes,12000);
 }
 
 /* ── 악보 초기화 ── */
-function initScore(){
-  const wrap=document.getElementById('score-wrap');
-  const h=Math.min(280,window.innerHeight*.4);
-  wrap.style.height=h+'px';
-
+function initStaff(){
+  const staff=document.getElementById('staff');
+  const h=Math.round(window.innerHeight*.45);
+  staff.style.height=h+'px';
   // 오선 (5줄)
-  const linesEl=document.getElementById('score-lines');
+  const linesEl=document.getElementById('staff-lines');
   linesEl.innerHTML='';
   for(let i=0;i<5;i++){
-    const line=document.createElement('div');
-    line.className='score-line';
-    line.style.top=(20+i*((h-40)/4))+'px';
-    linesEl.appendChild(line);
+    const ln=document.createElement('div');
+    ln.className='staff-line';
+    ln.style.top=(h*.12+i*(h*.76/4))+'px';
+    linesEl.appendChild(ln);
   }
-
-  // 음계 가이드
+  // 음계 가이드 (위=높은음)
   const guide=document.getElementById('note-guide');
-  guide.innerHTML=NOTES.slice().reverse().map(n=>`<div class="note-guide-label">${n}</div>`).join('');
+  guide.innerHTML=[...NOTE_NAMES].reverse().map(n=>`<div class="note-guide-lbl">${n}</div>`).join('');
 
-let pendingNx=null,pendingNy=null,pendingStamp=null;
-
-  // 탭/클릭으로 스탬프 배치
-  wrap.addEventListener('click',e=>{
-    if(!selectedStamp)return;
-    if(e.target.closest('.note-stamp'))return;
-    const r=wrap.getBoundingClientRect();
-    pendingNx=(e.clientX-r.left)/r.width;
-    pendingNy=(e.clientY-r.top)/r.height;
-    pendingStamp=selectedStamp;
-    openStoryModal();
-  });
-  wrap.addEventListener('touchend',e=>{
-    if(!selectedStamp)return;
-    if(e.target.closest('.note-stamp'))return;
-    e.preventDefault();
-    const t=e.changedTouches[0];
-    const r=wrap.getBoundingClientRect();
-    pendingNx=(t.clientX-r.left)/r.width;
-    pendingNy=(t.clientY-r.top)/r.height;
-    pendingStamp=selectedStamp;
-    openStoryModal();
-  },{passive:false});
+  // 탭으로 스탬프 배치
+  staff.addEventListener('click',onStaffTap);
+  staff.addEventListener('touchend',e=>{e.preventDefault();onStaffTapTouch(e);},{passive:false});
 }
 
-/* ── 한마디 입력 모달 ── */
-function openStoryModal(){
-  const s=pendingStamp;
-  document.getElementById('story-modal-emoji').textContent=s.emoji;
-  document.getElementById('story-modal-title').textContent=s.name+' 스탬프';
-  document.getElementById('story-default-text').textContent=s.story;
-  document.getElementById('story-input').value='';
-  document.getElementById('story-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('story-input').focus(),300);
+function onStaffTap(e){
+  if(!selStamp)return;
+  if(e.target.closest('.note-stamp'))return;
+  const r=document.getElementById('staff').getBoundingClientRect();
+  openStoryModal((e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height);
+}
+function onStaffTapTouch(e){
+  if(!selStamp)return;
+  if(e.target.closest('.note-stamp'))return;
+  const t=e.changedTouches[0];
+  const r=document.getElementById('staff').getBoundingClientRect();
+  openStoryModal((t.clientX-r.left)/r.width,(t.clientY-r.top)/r.height);
 }
 
-function closeStoryModal(){
-  document.getElementById('story-modal').classList.remove('open');
-  pendingNx=null;pendingNy=null;pendingStamp=null;
+/* ── 팔레트 ── */
+function initPalette(){
+  const tabsEl=document.getElementById('cat-tabs');
+  const cats=[...Object.keys(CATS),'📷 사진'];
+  tabsEl.innerHTML=cats.map(c=>`<button class="cat-tab${c===selCat?' active':''}" onclick="switchCat('${c}',this)">${c}</button>`).join('');
+  renderStamps();
 }
 
-function useDefaultStory(){
-  document.getElementById('story-input').value=pendingStamp.story;
-  document.getElementById('story-input').focus();
+function switchCat(cat,el){
+  selCat=cat;
+  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(cat==='📷 사진'){
+    document.getElementById('stamp-grid').style.display='none';
+    document.getElementById('photo-tab').style.display='block';
+    renderPhotoGrid();
+  }else{
+    document.getElementById('stamp-grid').style.display='grid';
+    document.getElementById('photo-tab').style.display='none';
+    renderStamps();
+  }
 }
 
-function confirmStory(){
-  const text=document.getElementById('story-input').value.trim();
-  const story=text||pendingStamp.story;
-  document.getElementById('story-modal').classList.remove('open');
-  placeNote(pendingNx,pendingNy,{...pendingStamp,story});
-  pendingNx=null;pendingNy=null;pendingStamp=null;
+function renderStamps(){
+  const stamps=CATS[selCat]||[];
+  document.getElementById('stamp-grid').innerHTML=stamps.map((s,i)=>`
+    <div class="stamp-item${selStamp&&selStamp.e===s.e?' sel':''}" onclick="pickStamp(${i})">
+      <span class="stamp-item-emoji">${s.e}</span>
+      <span class="stamp-item-name">${s.n}</span>
+    </div>`).join('');
 }
 
-/* ── 스탬프 배치 ── */
-async function placeNote(nx,ny,stamp){
-  const{error}=await sb.from('score_notes').insert([{
-    nickname:myNickname,color:myColor,
-    emoji:stamp.emoji,name:stamp.name,story:stamp.story,
-    nx,ny,
-    image_data:stamp.isPhoto?(stamp.dataUrl||null):null
-  }]);
-  if(error){console.log(error);return;}
-  if(channel)channel.send({type:'broadcast',event:'new_note',payload:{nickname:myNickname}});
-  loadNotes();
+function pickStamp(i){
+  selStamp={...CATS[selCat][i],isPhoto:false};
+  renderStamps();
+  document.getElementById('staff').style.cursor='cell';
 }
 
-/* ── 사진 스탬프 ── */
-let myPhotos=[]; // {dataUrl, name}
-
+/* ── 사진 ── */
 function handlePhoto(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=ev=>{
-    const dataUrl=ev.target.result;
-    // 리사이즈
     const img=new Image();
     img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      const size=120;canvas.width=size;canvas.height=size;
-      const ctx=canvas.getContext('2d');
-      // 정사각형 크롭
+      const c=document.createElement('canvas');
+      const sz=120;c.width=sz;c.height=sz;
+      const cx=c.getContext('2d');
       const min=Math.min(img.width,img.height);
-      const sx=(img.width-min)/2,sy=(img.height-min)/2;
-      ctx.drawImage(img,sx,sy,min,min,0,0,size,size);
-      const resized=canvas.toDataURL('image/jpeg',.7);
-      const photoStamp={emoji:'📷',name:'내 사진',story:'',dataUrl:resized,isPhoto:true};
-      myPhotos.push(photoStamp);
+      cx.drawImage(img,(img.width-min)/2,(img.height-min)/2,min,min,0,0,sz,sz);
+      const dataUrl=c.toDataURL('image/jpeg',.75);
+      myPhotos.push(dataUrl);
       renderPhotoGrid();
       // 바로 선택
-      selectedStamp=photoStamp;
-      document.getElementById('score-wrap').style.cursor='cell';
+      selStamp={e:'📷',n:'내 사진',s:'',dataUrl,isPhoto:true};
+      renderPhotoGrid();
+      document.getElementById('staff').style.cursor='cell';
     };
-    img.src=dataUrl;
+    img.src=ev.target.result;
   };
   reader.readAsDataURL(file);
   e.target.value='';
 }
 
 function renderPhotoGrid(){
-  const el=document.getElementById('photo-preview-grid');
-  el.innerHTML=myPhotos.map((p,i)=>`
-    <div class="photo-stamp-item${selectedStamp&&selectedStamp===myPhotos[i]?' selected':''}" onclick="selectPhotoStamp(${i})">
-      <img src="${p.dataUrl}" alt="">
-      <div class="photo-del" onclick="event.stopPropagation();deletePhoto(${i})">×</div>
+  const el=document.getElementById('photo-grid');
+  el.innerHTML=myPhotos.map((url,i)=>`
+    <div class="photo-item${selStamp&&selStamp.dataUrl===url?' sel':''}" onclick="pickPhoto(${i})">
+      <img src="${url}" alt="">
+      <div class="del-btn" onclick="event.stopPropagation();delPhoto(${i})">×</div>
     </div>`).join('');
 }
 
-function selectPhotoStamp(idx){
-  selectedStamp=myPhotos[idx];
-  document.getElementById('score-wrap').style.cursor='cell';
+function pickPhoto(i){
+  selStamp={e:'📷',n:'내 사진',s:'',dataUrl:myPhotos[i],isPhoto:true};
+  renderPhotoGrid();
+  document.getElementById('staff').style.cursor='cell';
+}
+
+function delPhoto(i){
+  myPhotos.splice(i,1);
+  selStamp=null;
   renderPhotoGrid();
 }
 
-function deletePhoto(idx){
-  myPhotos.splice(idx,1);
-  if(selectedStamp===myPhotos[idx])selectedStamp=null;
-  renderPhotoGrid();
+/* ── 한마디 모달 ── */
+function openStoryModal(nx,ny){
+  pendNx=nx;pendNy=ny;pendStamp={...selStamp};
+  const s=pendStamp;
+  // 미리보기
+  const previewEl=document.getElementById('story-preview');
+  if(s.isPhoto&&s.dataUrl){
+    previewEl.innerHTML=`<img src="${s.dataUrl}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid rgba(200,160,140,.2)">`;
+  }else{
+    previewEl.innerHTML=`<span style="font-size:48px">${s.e}</span>`;
+  }
+  document.getElementById('story-title').textContent=s.n+' 스탬프';
+  document.getElementById('story-hint-text').textContent=s.s||'오늘 있었던 일을 적어봐요';
+  document.getElementById('story-textarea').value='';
+  document.getElementById('story-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('story-textarea').focus(),350);
 }
 
-/* ── 노트 렌더 (사진 포함) ── */
-function renderNote(note,isNew=false){
-  const wrap=document.getElementById('score-wrap');
-  if(document.getElementById('note-'+note.id))return;
+function closeStoryModal(){
+  document.getElementById('story-modal').classList.remove('open');
+  pendNx=null;pendNy=null;pendStamp=null;
+}
+
+function useHint(){
+  document.getElementById('story-textarea').value=pendStamp.s||'';
+  document.getElementById('story-textarea').focus();
+}
+
+async function confirmStory(){
+  const text=document.getElementById('story-textarea').value.trim();
+  const story=text||(pendStamp?.s||'');
+  document.getElementById('story-modal').classList.remove('open');
+  const nx=pendNx,ny=pendNy,stamp={...pendStamp,story};
+  pendNx=null;pendNy=null;pendStamp=null;
+  await sb.from('score_notes').insert([{
+    nickname:myNick,color:myColor,
+    emoji:stamp.e,name:stamp.n,story,nx,ny,
+    image_data:stamp.isPhoto?(stamp.dataUrl||null):null,
+  }]);
+  if(channel)channel.send({type:'broadcast',event:'note',payload:{nickname:myNick}});
+  loadNotes();
+}
+
+/* ── 노트 렌더 ── */
+function renderNote(note){
+  if(document.getElementById('n-'+note.id))return;
+  const staff=document.getElementById('staff');
   const el=document.createElement('div');
-  el.className='note-stamp'+(isNew?' playing':'');
-  el.id='note-'+note.id;
+  el.className='note-stamp';el.id='n-'+note.id;
   el.style.left=(note.nx*100)+'%';
   el.style.top=(note.ny*100)+'%';
-  el.style.filter=`drop-shadow(0 2px 6px ${note.color}88)`;
-  // 사진이면 동그란 사진, 아니면 이모지
   const iconHtml=note.image_data
-    ?`<img class="stamp-photo" src="${note.image_data}" alt="">`
+    ?`<img class="stamp-photo-circle" src="${note.image_data}" alt="">`
     :`<span class="stamp-icon">${note.emoji}</span>`;
-  el.innerHTML=`${iconHtml}<span class="stamp-name" style="color:${note.color}">${note.nickname}</span>`;
+  el.innerHTML=`${iconHtml}<span class="stamp-label" style="color:${note.color}">${note.nickname}</span>`;
   el.addEventListener('click',()=>showBubble(note,el));
-  el.addEventListener('touchend',e=>{e.preventDefault();showBubble(note,el);});
-  wrap.appendChild(el);
+  el.addEventListener('touchend',e=>{e.preventDefault();showBubble(note,el);},{passive:false});
+  staff.appendChild(el);
 }
 
 async function loadNotes(){
   const{data}=await sb.from('score_notes').select('*').order('created_at',{ascending:true});
   if(!data)return;
   notes=data;
-  // 새로 온 것만 추가
   data.forEach(n=>renderNote(n));
-  document.getElementById('note-count').textContent=data.length+'개';
-  updatePlayersBar(data);
+  document.getElementById('note-cnt').textContent=`스탬프 ${data.length}개`;
+  // 나간 노트 제거
+  document.querySelectorAll('.note-stamp').forEach(el=>{
+    const id=+el.id.replace('n-','');
+    if(!data.find(n=>n.id===id))el.remove();
+  });
+  renderPlayers(data);
 }
 
-function updatePlayersBar(data){
-  const players={};
-  data.forEach(n=>{if(!players[n.nickname])players[n.nickname]=n.color;});
-  const el=document.getElementById('players-bar');
-  el.innerHTML=Object.entries(players).map(([name,color])=>`
-    <span class="player-chip${name===myNickname?' me':''}" style="${name===myNickname?'':''}">
-      <span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block"></span>
-      ${name}${name===myNickname?' (나)':''}
-    </span>`).join('');
+function renderPlayers(data){
+  const pm={};data.forEach(n=>{if(!pm[n.nickname])pm[n.nickname]=n.color;});
+  document.getElementById('players-row').innerHTML=Object.entries(pm).map(([name,col])=>`
+    <div class="p-chip${name===myNick?' me':''}">
+      <div class="p-dot" style="background:${col}"></div>${name}${name===myNick?' (나)':''}
+    </div>`).join('');
 }
 
 /* ── 말풍선 ── */
 function showBubble(note,el){
-  const popup=document.getElementById('bubble-popup');
+  const b=document.getElementById('bubble');
   const r=el.getBoundingClientRect();
-  const photoEl=document.getElementById('bubble-photo');
-  const emojiEl=document.getElementById('bubble-emoji');
-  if(note.image_data){
-    photoEl.src=note.image_data;
-    photoEl.style.display='block';
-    emojiEl.style.display='none';
-  }else{
-    photoEl.style.display='none';
-    emojiEl.style.display='block';
-    emojiEl.textContent=note.emoji;
-  }
-  document.getElementById('bubble-text').textContent=note.story;
-  popup.style.left=Math.max(8,Math.min(window.innerWidth-210,r.left-80))+'px';
-  popup.style.top=(r.top-120+window.scrollY)+'px';
-  popup.classList.add('show');
-  if(bubbleTimer)clearTimeout(bubbleTimer);
-  bubbleTimer=setTimeout(()=>popup.classList.remove('show'),3500);
-}
-
-/* ── 팔레트 ── */
-function initPalette(){
-  const tabsEl=document.getElementById('palette-tabs');
-  const categories=[...Object.keys(STAMP_CATEGORIES),'📷 사진'];
-  tabsEl.innerHTML=categories.map(cat=>`
-    <button class="palette-tab${cat===selectedCategory?' active':''}" onclick="switchCategory('${cat}',this)">${cat}</button>`).join('');
-  renderStamps();
-}
-
-function switchCategory(cat,el){
-  selectedCategory=cat;
-  document.querySelectorAll('.palette-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  if(cat==='📷 사진'){
-    document.getElementById('stamp-grid').style.display='none';
-    document.getElementById('photo-palette').style.display='block';
-    selectedStamp=null;
-  }else{
-    document.getElementById('stamp-grid').style.display='grid';
-    document.getElementById('photo-palette').style.display='none';
-    renderStamps();
-  }
-}
-
-function renderStamps(){
-  const stamps=STAMP_CATEGORIES[selectedCategory];
-  document.getElementById('stamp-grid').innerHTML=stamps.map((s,i)=>`
-    <div class="stamp-item${selectedStamp&&selectedStamp.emoji===s.emoji?' selected':''}" onclick="selectStamp(${i})">
-      <span class="stamp-item-emoji">${s.emoji}</span>
-      <span class="stamp-item-name">${s.name}</span>
-    </div>`).join('');
-}
-
-function selectStamp(idx){
-  selectedStamp=STAMP_CATEGORIES[selectedCategory][idx];
-  renderStamps();
-  // 악보 영역 힌트
-  document.getElementById('score-wrap').style.cursor='cell';
+  const ph=document.getElementById('bubble-photo');
+  const em=document.getElementById('bubble-emoji');
+  if(note.image_data){ph.src=note.image_data;ph.style.display='block';em.style.display='none';}
+  else{ph.style.display='none';em.style.display='block';em.textContent=note.emoji;}
+  document.getElementById('bubble-text').textContent=note.story||note.name;
+  const bx=Math.max(8,Math.min(window.innerWidth-200,r.left+r.width/2-95));
+  const by=r.top+window.scrollY-130;
+  b.style.left=bx+'px';b.style.top=Math.max(60,by)+'px';
+  b.classList.add('show');
+  if(bubbleTid)clearTimeout(bubbleTid);
+  bubbleTid=setTimeout(()=>b.classList.remove('show'),3500);
 }
 
 /* ── 재생 ── */
 function togglePlay(){
   if(isPlaying){stopPlay();return;}
-  if(!notes.length){alert('악보에 스탬프를 찍어줘요! 🎵');return;}
+  if(!notes.length){alert('스탬프를 먼저 찍어봐요! 🎵');return;}
   startPlay();
 }
 
@@ -550,70 +538,52 @@ function startPlay(){
   isPlaying=true;
   document.getElementById('play-btn').textContent='⏹ 멈추기';
   document.getElementById('play-btn').classList.add('playing');
-  const actx=getAudioCtx();
+  const actx=getACtx();
   const tempo=+document.getElementById('tempo-slider').value;
-  const beatDur=60/tempo;
-  // x 위치 기준 정렬
+  const dur=60/tempo;
   const sorted=[...notes].sort((a,b)=>a.nx-b.nx);
   let i=0;
-  function playNext(){
+  function next(){
     if(!isPlaying||i>=sorted.length){stopPlay();return;}
-    const note=sorted[i];
-    // y 위치 → 음계 (위=높은음, 아래=낮은음)
-    const noteIdx=Math.floor((1-note.ny)*NOTE_FREQS.length);
-    const freq=NOTE_FREQS[Math.max(0,Math.min(NOTE_FREQS.length-1,noteIdx))];
-    const noteName=NOTES[Math.max(0,Math.min(NOTES.length-1,noteIdx))];
+    const n=sorted[i];
+    const idx=Math.max(0,Math.min(9,Math.floor((1-n.ny)*10)));
+    const freq=NOTE_FREQS[idx];
     // 음 재생
-    playNoteSound(freq,.4,beatDur*.9,actx);
-    // 스탬프 애니메이션
-    const el=document.getElementById('note-'+note.id);
-    if(el){el.classList.add('playing');setTimeout(()=>el.classList.remove('playing'),300);}
-    // 말풍선 잠깐 표시
-    if(el)showBubble(note,el);
-    i++;
-    playTimeout=setTimeout(playNext,beatDur*1000);
+    const osc=actx.createOscillator();const gain=actx.createGain();
+    osc.type='sine';osc.frequency.value=freq;
+    osc.connect(gain);gain.connect(actx.destination);
+    gain.gain.setValueAtTime(0,actx.currentTime);
+    gain.gain.linearRampToValueAtTime(.4,actx.currentTime+.02);
+    gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+dur*.88);
+    osc.start(actx.currentTime);osc.stop(actx.currentTime+dur);
+    // 스탬프 애니메이션 + 말풍선
+    const el=document.getElementById('n-'+n.id);
+    if(el){el.classList.add('popping');setTimeout(()=>el.classList.remove('popping'),350);showBubble(n,el);}
+    i++;playTid=setTimeout(next,dur*1000);
   }
-  playNext();
+  next();
 }
 
 function stopPlay(){
-  isPlaying=false;
-  if(playTimeout)clearTimeout(playTimeout);
+  isPlaying=false;if(playTid)clearTimeout(playTid);
   document.getElementById('play-btn').textContent='▶ 재생';
   document.getElementById('play-btn').classList.remove('playing');
-  document.getElementById('bubble-popup').classList.remove('show');
+  document.getElementById('bubble').classList.remove('show');
 }
 
-function playNoteSound(freq,vol,dur,actx){
-  const osc=actx.createOscillator();const gain=actx.createGain();
-  osc.type='sine';osc.frequency.value=freq;
-  osc.connect(gain);gain.connect(actx.destination);
-  gain.gain.setValueAtTime(0,actx.currentTime);
-  gain.gain.linearRampToValueAtTime(vol,actx.currentTime+.02);
-  gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+dur*.9);
-  osc.start(actx.currentTime);osc.stop(actx.currentTime+dur);
-}
-
-/* ── 내 것 지우기 ── */
 async function clearMyNotes(){
   if(!confirm('내 스탬프를 모두 지울까요?'))return;
-  await sb.from('score_notes').delete().eq('nickname',myNickname);
-  // DOM에서도 제거
-  notes.filter(n=>n.nickname===myNickname).forEach(n=>{
-    const el=document.getElementById('note-'+n.id);
-    if(el)el.remove();
-  });
+  await sb.from('score_notes').delete().eq('nickname',myNick);
+  notes.filter(n=>n.nickname===myNick).forEach(n=>{const el=document.getElementById('n-'+n.id);if(el)el.remove();});
   loadNotes();
 }
 
 /* ── 실시간 ── */
 function setupChannel(){
-  channel=sb.channel('score-rt',{config:{broadcast:{self:false}}});
+  channel=sb.channel('score-rt2',{config:{broadcast:{self:false}}});
   channel
-    .on('broadcast',{event:'new_note'},(payload)=>{
-      setTimeout(loadNotes,300);
-    })
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'score_notes'},()=>{loadNotes();})
+    .on('broadcast',{event:'note'},()=>setTimeout(loadNotes,400))
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'score_notes'},()=>loadNotes())
     .subscribe();
 }
 </script>
