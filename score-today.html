@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>오늘의 악보</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;overflow-x:hidden}
+:root{--cream:#FFF8F0;--pink:#C97B7B;--pink-light:#E8A89A;--teal:#5B9B8E;--text-dark:#3D2B1F;--text-mid:#6B4E3D;--text-light:#A08070;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh}
+
+.header{background:linear-gradient(135deg,#FFF5E0,#FFE8F0);padding:2.5rem 1.2rem 1.2rem;text-align:center;position:relative;border-bottom:1px solid rgba(200,160,140,.2)}
+.back{position:absolute;left:.9rem;top:.9rem;background:rgba(255,255,255,.7);border:1px solid rgba(200,160,140,.3);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-mid);text-decoration:none;display:inline-flex;align-items:center;min-height:36px}
+.header-title{font-family:'Noto Serif KR',serif;font-size:1.4rem;color:var(--text-dark);margin-bottom:.2rem}
+.header-sub{font-size:11px;color:var(--text-light)}
+
+/* 닉네임 */
+#screen-nick{padding:2rem 1rem;max-width:400px;margin:0 auto}
+.nick-card{background:#fff;border-radius:22px;padding:2rem 1.5rem;border:1.5px solid rgba(200,160,140,.15);text-align:center}
+.nick-emoji{font-size:52px;margin-bottom:.8rem;display:block}
+.nick-title{font-family:'Noto Serif KR',serif;font-size:18px;color:var(--text-dark);margin-bottom:.3rem}
+.nick-sub{font-size:12px;color:var(--text-light);margin-bottom:1.2rem;line-height:1.8}
+.nick-field{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:12px 14px;font-family:'Noto Sans KR',sans-serif;font-size:15px;color:var(--text-dark);background:var(--cream);outline:none;text-align:center;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-field:focus{border-color:rgba(201,123,123,.5)}
+.start-btn{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+
+/* 메인 */
+#screen-main{display:none;padding-bottom:140px}
+
+/* 악보 */
+.score-wrap{background:#FFFDF5;border-bottom:2px solid rgba(200,160,140,.2);position:relative;overflow:hidden;cursor:crosshair}
+.score-lines{position:absolute;left:0;right:0;pointer-events:none}
+.score-line{position:absolute;left:0;right:0;height:2px;background:rgba(100,70,50,.15)}
+.score-clef{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:60px;color:rgba(100,70,50,.3);pointer-events:none;user-select:none;line-height:1}
+
+/* 스탬프 노트 */
+.note-stamp{position:absolute;transform:translate(-50%,-50%);cursor:pointer;user-select:none;transition:transform .15s;z-index:10;display:flex;flex-direction:column;align-items:center;gap:1px}
+.note-stamp:active{transform:translate(-50%,-50%) scale(.9)}
+.note-stamp .stamp-icon{font-size:28px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+.note-stamp .stamp-name{font-size:8px;color:var(--text-mid);background:rgba(255,255,255,.85);border-radius:6px;padding:1px 5px;white-space:nowrap;font-weight:500}
+.note-stamp.playing{animation:notePop .3s ease}
+@keyframes notePop{0%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.4)}100%{transform:translate(-50%,-50%) scale(1)}}
+
+/* 음계 가이드 */
+.note-guide{position:absolute;right:6px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:space-between;padding:4px 0;pointer-events:none}
+.note-guide-label{font-size:8px;color:rgba(100,70,50,.4);font-weight:600;text-align:right}
+
+/* 컨트롤 바 */
+.controls-bar{display:flex;gap:8px;padding:.8rem 1rem;background:#fff;border-bottom:1px solid rgba(200,160,140,.1);align-items:center;position:sticky;top:0;z-index:20}
+.play-btn{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:12px;padding:10px 20px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;flex-shrink:0}
+.play-btn.playing{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.clear-btn{background:#fff;border:1.5px solid rgba(200,160,140,.3);border-radius:12px;padding:10px 16px;font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-light);cursor:pointer;min-height:40px}
+.tempo-wrap{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+.tempo-label{font-size:10px;color:var(--text-light);flex-shrink:0}
+.tempo-slider{flex:1;accent-color:var(--pink)}
+.note-count{font-size:11px;color:var(--text-light);flex-shrink:0}
+
+/* 스탬프 팔레트 */
+.palette-wrap{padding:.8rem 1rem}
+.palette-tabs{display:flex;gap:6px;margin-bottom:.8rem;overflow-x:auto;padding-bottom:2px}
+.palette-tab{flex-shrink:0;padding:5px 12px;border-radius:14px;border:1.5px solid rgba(200,160,140,.2);background:#fff;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:500;color:var(--text-mid);cursor:pointer;white-space:nowrap;transition:all .2s}
+.palette-tab.active{background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border-color:transparent}
+.stamp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.stamp-item{background:#fff;border-radius:14px;border:1.5px solid rgba(200,160,140,.15);padding:8px 4px;text-align:center;cursor:pointer;transition:all .2s}
+.stamp-item:active{transform:scale(.92)}
+.stamp-item.selected{border-color:var(--pink);background:#FFF0E8;transform:scale(1.05)}
+.stamp-item-emoji{font-size:26px;display:block;margin-bottom:2px}
+.stamp-item-name{font-size:9px;color:var(--text-light)}
+
+/* 말풍선 팝업 */
+#bubble-popup{display:none;position:fixed;z-index:200;background:#fff;border-radius:16px;padding:12px 14px;max-width:200px;box-shadow:0 4px 24px rgba(0,0,0,.15);border:1.5px solid rgba(200,160,140,.2);pointer-events:none}
+#bubble-popup.show{display:block}
+#bubble-popup::after{content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-top-color:#fff;border-bottom:none}
+.bubble-emoji{font-size:28px;display:block;text-align:center;margin-bottom:4px}
+.bubble-text{font-size:12px;color:var(--text-dark);line-height:1.6;text-align:center}
+
+/* 참여자 */
+.players-bar{display:flex;gap:6px;padding:.5rem 1rem;flex-wrap:wrap;border-top:1px solid rgba(200,160,140,.1)}
+.player-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.8);border-radius:14px;padding:3px 10px;font-size:11px;color:var(--text-mid);border:1px solid rgba(200,160,140,.2)}
+.player-chip.me{background:linear-gradient(135deg,#FFE4CC,#FFD6E8);border-color:var(--pink)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="index.html">← 돌아가기</a>
+  <div class="header-title">🎼 오늘의 악보</div>
+  <div class="header-sub">오늘 있었던 일로 음악을 만들어요!</div>
+</div>
+
+<!-- 닉네임 -->
+<div id="screen-nick">
+  <div style="height:.5rem"></div>
+  <div class="nick-card">
+    <span class="nick-emoji">🎼</span>
+    <div class="nick-title">오늘의 악보</div>
+    <div class="nick-sub">오늘 먹은 것, 느낀 것을<br>악보 위에 스탬프로 찍어요!<br>스탬프 위치가 음계가 돼요 🎵</div>
+    <input class="nick-field" id="nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')enterMain()">
+    <button class="start-btn" onclick="enterMain()">🎼 악보 펼치기</button>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div id="screen-main">
+  <!-- 컨트롤 -->
+  <div class="controls-bar">
+    <button class="play-btn" id="play-btn" onclick="togglePlay()">▶ 재생</button>
+    <button class="clear-btn" onclick="clearMyNotes()">내 것 지우기</button>
+    <div class="tempo-wrap">
+      <span class="tempo-label">빠르기</span>
+      <input class="tempo-slider" type="range" min="60" max="180" value="100" id="tempo-slider">
+    </div>
+    <span class="note-count" id="note-count">0개</span>
+  </div>
+
+  <!-- 악보 -->
+  <div class="score-wrap" id="score-wrap">
+    <div class="score-clef">𝄞</div>
+    <div class="score-lines" id="score-lines"></div>
+    <div class="note-guide" id="note-guide"></div>
+  </div>
+
+  <!-- 참여자 -->
+  <div class="players-bar" id="players-bar"></div>
+
+  <!-- 스탬프 팔레트 -->
+  <div class="palette-wrap">
+    <div class="palette-tabs" id="palette-tabs"></div>
+    <div class="stamp-grid" id="stamp-grid"></div>
+  </div>
+</div>
+
+<!-- 말풍선 팝업 -->
+<div id="bubble-popup">
+  <span class="bubble-emoji" id="bubble-emoji"></span>
+  <div class="bubble-text" id="bubble-text"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFveXd1aHBxaXZwY3pzdG9vZ2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzc4MDQsImV4cCI6MjA5NDk1MzgwNH0.UgxYDvQpTZA_g2wuvwh6QyS4cogKnCkG3FjG9IRd_Cw';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+// 스탬프 데이터
+const STAMP_CATEGORIES={
+  '🍽️ 음식':[
+    {emoji:'🍚',name:'밥',story:'오늘 따뜻한 밥을 먹었어요 🍚'},
+    {emoji:'🍜',name:'면',story:'맛있는 면 요리를 먹었어요 🍜'},
+    {emoji:'🍞',name:'빵',story:'부드러운 빵을 먹었어요 🍞'},
+    {emoji:'🍎',name:'사과',story:'새콤달콤 사과를 먹었어요 🍎'},
+    {emoji:'🍌',name:'바나나',story:'달달한 바나나를 먹었어요 🍌'},
+    {emoji:'🍊',name:'귤',story:'새콤한 귤을 먹었어요 🍊'},
+    {emoji:'🍰',name:'케이크',story:'달콤한 케이크를 먹었어요 🍰'},
+    {emoji:'🍫',name:'초콜릿',story:'달콤한 초콜릿을 먹었어요 🍫'},
+    {emoji:'🥛',name:'우유',story:'고소한 우유를 마셨어요 🥛'},
+    {emoji:'🧃',name:'주스',story:'달콤한 주스를 마셨어요 🧃'},
+  ],
+  '🏥 병원생활':[
+    {emoji:'💊',name:'약',story:'오늘 약을 먹었어요 💊'},
+    {emoji:'💉',name:'주사',story:'주사를 맞았어요. 조금 아팠지만 잘 참았어요 💪'},
+    {emoji:'🩺',name:'진찰',story:'선생님께 진찰을 받았어요 🩺'},
+    {emoji:'🩹',name:'밴드',story:'상처에 밴드를 붙였어요 🩹'},
+    {emoji:'🛏️',name:'침대',story:'침대에서 쉬었어요 🛏️'},
+    {emoji:'📺',name:'TV',story:'TV를 보며 시간을 보냈어요 📺'},
+    {emoji:'📚',name:'책',story:'책을 읽으며 시간을 보냈어요 📚'},
+    {emoji:'🎮',name:'게임',story:'게임을 하며 즐거운 시간을 보냈어요 🎮'},
+    {emoji:'🧸',name:'인형',story:'좋아하는 인형과 함께했어요 🧸'},
+    {emoji:'🌡️',name:'체온',story:'체온을 쟀어요 🌡️'},
+  ],
+  '😊 감정':[
+    {emoji:'😊',name:'기쁨',story:'오늘 기분이 좋았어요 😊'},
+    {emoji:'😢',name:'슬픔',story:'오늘 조금 슬펐어요 😢'},
+    {emoji:'😴',name:'졸림',story:'오늘 많이 졸렸어요 😴'},
+    {emoji:'😤',name:'답답함',story:'오늘 조금 답답한 마음이 들었어요 😤'},
+    {emoji:'🥰',name:'행복',story:'오늘 정말 행복했어요 🥰'},
+    {emoji:'😰',name:'불안',story:'오늘 조금 불안했지만 괜찮아요 😰'},
+    {emoji:'😌',name:'평온',story:'오늘 마음이 평온했어요 😌'},
+    {emoji:'🤩',name:'설렘',story:'오늘 설레는 일이 있었어요 🤩'},
+    {emoji:'😠',name:'화남',story:'오늘 화가 났지만 잘 넘겼어요 😠'},
+    {emoji:'🤒',name:'아픔',story:'오늘 몸이 좀 아팠어요 🤒'},
+  ],
+  '🎮 활동':[
+    {emoji:'🎨',name:'그림',story:'그림 그리기를 했어요 🎨'},
+    {emoji:'🎵',name:'노래',story:'노래를 불렀어요 🎵'},
+    {emoji:'🏃',name:'걷기',story:'복도를 걸어다녔어요 🏃'},
+    {emoji:'🧩',name:'퍼즐',story:'퍼즐을 맞췄어요 🧩'},
+    {emoji:'✏️',name:'공부',story:'공부를 했어요 ✏️'},
+    {emoji:'📱',name:'폰',story:'핸드폰으로 시간을 보냈어요 📱'},
+    {emoji:'💬',name:'대화',story:'가족이나 친구와 이야기를 나눴어요 💬'},
+    {emoji:'🌷',name:'꽃보기',story:'창문 너머 꽃을 바라봤어요 🌷'},
+    {emoji:'🎁',name:'선물',story:'선물을 받았어요 🎁'},
+    {emoji:'🤝',name:'치료',story:'치료를 받았어요 🤝'},
+  ],
+  '🌤️ 날씨/시간':[
+    {emoji:'☀️',name:'맑음',story:'오늘 날씨가 맑았어요 ☀️'},
+    {emoji:'🌧️',name:'비',story:'오늘 비가 왔어요 🌧️'},
+    {emoji:'⛅',name:'흐림',story:'오늘 날씨가 흐렸어요 ⛅'},
+    {emoji:'🌙',name:'밤',story:'밤에 잠이 잘 왔어요 🌙'},
+    {emoji:'🌅',name:'아침',story:'아침을 맞이했어요 🌅'},
+    {emoji:'🌈',name:'무지개',story:'오늘 무지개 같은 순간이 있었어요 🌈'},
+    {emoji:'❄️',name:'추움',story:'오늘 날씨가 쌀쌀했어요 ❄️'},
+    {emoji:'🌸',name:'봄',story:'봄 같은 따뜻한 하루였어요 🌸'},
+    {emoji:'⭐',name:'별',story:'오늘 별처럼 빛나는 순간이 있었어요 ⭐'},
+    {emoji:'🌊',name:'파도',story:'마음이 파도처럼 출렁였어요 🌊'},
+  ],
+};
+
+// 음계 (아래→위 = 도→시)
+const NOTES=['도','레','미','파','솔','라','시','도↑','레↑','미↑'];
+const NOTE_FREQS=[261.63,293.66,329.63,349.23,392,440,493.88,523.25,587.33,659.25];
+
+let myNickname='';
+let selectedStamp=null;
+let selectedCategory=Object.keys(STAMP_CATEGORIES)[0];
+let notes=[]; // {id,emoji,name,story,nx,ny,nickname,color}
+let audioCtx=null;
+let isPlaying=false;
+let playTimeout=null;
+let channel=null;
+let bubbleTimer=null;
+let myColor='';
+
+const COLORS=['#E05555','#FF8C42','#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF8C69','#5B9B8E'];
+
+function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+
+function enterMain(){
+  const nick=document.getElementById('nick-input').value.trim()||'익명';
+  myNickname=nick;
+  myColor=COLORS[Math.floor(Math.random()*COLORS.length)];
+  document.getElementById('screen-nick').style.display='none';
+  document.getElementById('screen-main').style.display='block';
+  initScore();
+  initPalette();
+  loadNotes();
+  setupChannel();
+  setInterval(loadNotes,10000);
+}
+
+/* ── 악보 초기화 ── */
+function initScore(){
+  const wrap=document.getElementById('score-wrap');
+  const h=Math.min(280,window.innerHeight*.4);
+  wrap.style.height=h+'px';
+
+  // 오선 (5줄)
+  const linesEl=document.getElementById('score-lines');
+  linesEl.innerHTML='';
+  for(let i=0;i<5;i++){
+    const line=document.createElement('div');
+    line.className='score-line';
+    line.style.top=(20+i*((h-40)/4))+'px';
+    linesEl.appendChild(line);
+  }
+
+  // 음계 가이드
+  const guide=document.getElementById('note-guide');
+  guide.innerHTML=NOTES.slice().reverse().map(n=>`<div class="note-guide-label">${n}</div>`).join('');
+
+  // 탭/클릭으로 스탬프 배치
+  wrap.addEventListener('click',e=>{
+    if(!selectedStamp)return;
+    if(e.target.closest('.note-stamp'))return;
+    const r=wrap.getBoundingClientRect();
+    const nx=(e.clientX-r.left)/r.width;
+    const ny=(e.clientY-r.top)/r.height;
+    placeNote(nx,ny,selectedStamp);
+  });
+  wrap.addEventListener('touchend',e=>{
+    if(!selectedStamp)return;
+    if(e.target.closest('.note-stamp'))return;
+    e.preventDefault();
+    const t=e.changedTouches[0];
+    const r=wrap.getBoundingClientRect();
+    const nx=(t.clientX-r.left)/r.width;
+    const ny=(t.clientY-r.top)/r.height;
+    placeNote(nx,ny,selectedStamp);
+  },{passive:false});
+}
+
+/* ── 스탬프 배치 ── */
+async function placeNote(nx,ny,stamp){
+  const{error}=await sb.from('score_notes').insert([{
+    nickname:myNickname,color:myColor,
+    emoji:stamp.emoji,name:stamp.name,story:stamp.story,
+    nx,ny
+  }]);
+  if(error){console.log(error);return;}
+  if(channel)channel.send({type:'broadcast',event:'new_note',payload:{nickname:myNickname,color:myColor,emoji:stamp.emoji,name:stamp.name,story:stamp.story,nx,ny}});
+  loadNotes();
+}
+
+/* ── 노트 렌더 ── */
+function renderNote(note,isNew=false){
+  const wrap=document.getElementById('score-wrap');
+  if(document.getElementById('note-'+note.id))return;
+  const el=document.createElement('div');
+  el.className='note-stamp'+(isNew?' playing':'');
+  el.id='note-'+note.id;
+  el.style.left=(note.nx*100)+'%';
+  el.style.top=(note.ny*100)+'%';
+  el.style.filter=`drop-shadow(0 2px 6px ${note.color}88)`;
+  el.innerHTML=`<span class="stamp-icon">${note.emoji}</span><span class="stamp-name" style="color:${note.color}">${note.nickname}</span>`;
+  el.addEventListener('click',()=>showBubble(note,el));
+  el.addEventListener('touchend',e=>{e.preventDefault();showBubble(note,el);});
+  wrap.appendChild(el);
+}
+
+async function loadNotes(){
+  const{data}=await sb.from('score_notes').select('*').order('created_at',{ascending:true});
+  if(!data)return;
+  notes=data;
+  // 새로 온 것만 추가
+  data.forEach(n=>renderNote(n));
+  document.getElementById('note-count').textContent=data.length+'개';
+  updatePlayersBar(data);
+}
+
+function updatePlayersBar(data){
+  const players={};
+  data.forEach(n=>{if(!players[n.nickname])players[n.nickname]=n.color;});
+  const el=document.getElementById('players-bar');
+  el.innerHTML=Object.entries(players).map(([name,color])=>`
+    <span class="player-chip${name===myNickname?' me':''}" style="${name===myNickname?'':''}">
+      <span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block"></span>
+      ${name}${name===myNickname?' (나)':''}
+    </span>`).join('');
+}
+
+/* ── 말풍선 ── */
+function showBubble(note,el){
+  const popup=document.getElementById('bubble-popup');
+  const r=el.getBoundingClientRect();
+  document.getElementById('bubble-emoji').textContent=note.emoji;
+  document.getElementById('bubble-text').textContent=note.story;
+  popup.style.left=Math.max(8,Math.min(window.innerWidth-210,r.left-80))+'px';
+  popup.style.top=(r.top-100+window.scrollY)+'px';
+  popup.classList.add('show');
+  if(bubbleTimer)clearTimeout(bubbleTimer);
+  bubbleTimer=setTimeout(()=>popup.classList.remove('show'),3000);
+}
+
+/* ── 팔레트 ── */
+function initPalette(){
+  const tabsEl=document.getElementById('palette-tabs');
+  tabsEl.innerHTML=Object.keys(STAMP_CATEGORIES).map(cat=>`
+    <button class="palette-tab${cat===selectedCategory?' active':''}" onclick="switchCategory('${cat}',this)">${cat}</button>`).join('');
+  renderStamps();
+}
+
+function switchCategory(cat,el){
+  selectedCategory=cat;
+  document.querySelectorAll('.palette-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderStamps();
+}
+
+function renderStamps(){
+  const stamps=STAMP_CATEGORIES[selectedCategory];
+  document.getElementById('stamp-grid').innerHTML=stamps.map((s,i)=>`
+    <div class="stamp-item${selectedStamp&&selectedStamp.emoji===s.emoji?' selected':''}" onclick="selectStamp(${i})">
+      <span class="stamp-item-emoji">${s.emoji}</span>
+      <span class="stamp-item-name">${s.name}</span>
+    </div>`).join('');
+}
+
+function selectStamp(idx){
+  selectedStamp=STAMP_CATEGORIES[selectedCategory][idx];
+  renderStamps();
+  // 악보 영역 힌트
+  document.getElementById('score-wrap').style.cursor='cell';
+}
+
+/* ── 재생 ── */
+function togglePlay(){
+  if(isPlaying){stopPlay();return;}
+  if(!notes.length){alert('악보에 스탬프를 찍어줘요! 🎵');return;}
+  startPlay();
+}
+
+function startPlay(){
+  isPlaying=true;
+  document.getElementById('play-btn').textContent='⏹ 멈추기';
+  document.getElementById('play-btn').classList.add('playing');
+  const actx=getAudioCtx();
+  const tempo=+document.getElementById('tempo-slider').value;
+  const beatDur=60/tempo;
+  // x 위치 기준 정렬
+  const sorted=[...notes].sort((a,b)=>a.nx-b.nx);
+  let i=0;
+  function playNext(){
+    if(!isPlaying||i>=sorted.length){stopPlay();return;}
+    const note=sorted[i];
+    // y 위치 → 음계 (위=높은음, 아래=낮은음)
+    const noteIdx=Math.floor((1-note.ny)*NOTE_FREQS.length);
+    const freq=NOTE_FREQS[Math.max(0,Math.min(NOTE_FREQS.length-1,noteIdx))];
+    const noteName=NOTES[Math.max(0,Math.min(NOTES.length-1,noteIdx))];
+    // 음 재생
+    playNoteSound(freq,.4,beatDur*.9,actx);
+    // 스탬프 애니메이션
+    const el=document.getElementById('note-'+note.id);
+    if(el){el.classList.add('playing');setTimeout(()=>el.classList.remove('playing'),300);}
+    // 말풍선 잠깐 표시
+    if(el)showBubble(note,el);
+    i++;
+    playTimeout=setTimeout(playNext,beatDur*1000);
+  }
+  playNext();
+}
+
+function stopPlay(){
+  isPlaying=false;
+  if(playTimeout)clearTimeout(playTimeout);
+  document.getElementById('play-btn').textContent='▶ 재생';
+  document.getElementById('play-btn').classList.remove('playing');
+  document.getElementById('bubble-popup').classList.remove('show');
+}
+
+function playNoteSound(freq,vol,dur,actx){
+  const osc=actx.createOscillator();const gain=actx.createGain();
+  osc.type='sine';osc.frequency.value=freq;
+  osc.connect(gain);gain.connect(actx.destination);
+  gain.gain.setValueAtTime(0,actx.currentTime);
+  gain.gain.linearRampToValueAtTime(vol,actx.currentTime+.02);
+  gain.gain.exponentialRampToValueAtTime(.001,actx.currentTime+dur*.9);
+  osc.start(actx.currentTime);osc.stop(actx.currentTime+dur);
+}
+
+/* ── 내 것 지우기 ── */
+async function clearMyNotes(){
+  if(!confirm('내 스탬프를 모두 지울까요?'))return;
+  await sb.from('score_notes').delete().eq('nickname',myNickname);
+  // DOM에서도 제거
+  notes.filter(n=>n.nickname===myNickname).forEach(n=>{
+    const el=document.getElementById('note-'+n.id);
+    if(el)el.remove();
+  });
+  loadNotes();
+}
+
+/* ── 실시간 ── */
+function setupChannel(){
+  channel=sb.channel('score-rt',{config:{broadcast:{self:false}}});
+  channel
+    .on('broadcast',{event:'new_note'},(payload)=>{
+      setTimeout(loadNotes,300);
+    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'score_notes'},()=>{loadNotes();})
+    .subscribe();
+}
+</script>
+</body>
+</html>
