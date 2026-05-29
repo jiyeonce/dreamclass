@@ -47,7 +47,20 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .note-guide{position:absolute;right:6px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:space-between;padding:4px 0;pointer-events:none}
 .note-guide-label{font-size:8px;color:rgba(100,70,50,.4);font-weight:600;text-align:right}
 
-/* 컨트롤 바 */
+/* 한마디 입력 모달 */
+#story-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(20,10,5,.6);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center}
+#story-modal.open{display:flex}
+.story-sheet{background:#fff;border-radius:24px 24px 0 0;padding:1.5rem;width:100%;max-width:480px}
+.story-sheet-emoji{font-size:40px;text-align:center;display:block;margin-bottom:.5rem}
+.story-sheet-title{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--text-dark);text-align:center;margin-bottom:.3rem}
+.story-sheet-sub{font-size:11px;color:var(--text-light);text-align:center;margin-bottom:1rem;line-height:1.7}
+.story-default{background:var(--cream);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--text-light);margin-bottom:.8rem;cursor:pointer;border:1.5px solid rgba(200,160,140,.2);display:flex;align-items:center;gap:6px}
+.story-default:active{background:#FFE8D8}
+.story-input{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:11px 13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;color:var(--text-dark);background:var(--cream);outline:none;resize:none;-webkit-appearance:none;margin-bottom:.8rem}
+.story-input:focus{border-color:rgba(201,123,123,.5)}
+.story-btn-row{display:flex;gap:8px}
+.story-confirm-btn{flex:1;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:48px}
+.story-cancel-btn{background:#fff;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:13px 20px;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-light);cursor:pointer}
 .controls-bar{display:flex;gap:8px;padding:.8rem 1rem;background:#fff;border-bottom:1px solid rgba(200,160,140,.1);align-items:center;position:sticky;top:0;z-index:20}
 .play-btn{background:linear-gradient(135deg,#6BCB77,#4D96FF);color:#fff;border:none;border-radius:12px;padding:10px 20px;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:40px;flex-shrink:0}
 .play-btn.playing{background:linear-gradient(135deg,#FF8080,#FFB347);animation:pulse .8s infinite}
@@ -64,6 +77,20 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .palette-tab{flex-shrink:0;padding:5px 12px;border-radius:14px;border:1.5px solid rgba(200,160,140,.2);background:#fff;font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:500;color:var(--text-mid);cursor:pointer;white-space:nowrap;transition:all .2s}
 .palette-tab.active{background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border-color:transparent}
 .stamp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+
+/* 사진 스탬프 */
+.photo-stamp-btn{background:linear-gradient(135deg,#FFE4CC,#FFD6E8);border:2px dashed var(--pink);border-radius:14px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.photo-stamp-btn:active{transform:scale(.93)}
+.photo-stamp-btn span{font-size:11px;color:var(--pink);font-weight:500}
+.photo-preview-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:.5rem}
+.photo-stamp-item{border-radius:14px;border:1.5px solid rgba(200,160,140,.2);overflow:hidden;cursor:pointer;transition:all .2s;aspect-ratio:1;position:relative}
+.photo-stamp-item:active{transform:scale(.92)}
+.photo-stamp-item.selected{border-color:var(--pink);box-shadow:0 0 0 2px var(--pink)}
+.photo-stamp-item img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-stamp-item .photo-del{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+/* 사진 스탬프 노트 (동그란 사진) */
+.note-stamp .stamp-photo{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .stamp-item{background:#fff;border-radius:14px;border:1.5px solid rgba(200,160,140,.15);padding:8px 4px;text-align:center;cursor:pointer;transition:all .2s}
 .stamp-item:active{transform:scale(.92)}
 .stamp-item.selected{border-color:var(--pink);background:#FFF0E8;transform:scale(1.05)}
@@ -130,11 +157,38 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   <div class="palette-wrap">
     <div class="palette-tabs" id="palette-tabs"></div>
     <div class="stamp-grid" id="stamp-grid"></div>
+    <!-- 사진 촬영/업로드 -->
+    <div id="photo-palette" style="display:none">
+      <div class="photo-stamp-btn" onclick="document.getElementById('photo-input').click()">
+        <span style="font-size:28px">📷</span>
+        <span>사진 찍기 / 선택</span>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+      <div class="photo-preview-grid" id="photo-preview-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 한마디 입력 모달 -->
+<div id="story-modal">
+  <div class="story-sheet">
+    <span class="story-sheet-emoji" id="story-modal-emoji"></span>
+    <div class="story-sheet-title" id="story-modal-title"></div>
+    <div class="story-sheet-sub">오늘 이 스탬프와 관련해서<br>한마디 남겨봐요! ✏️</div>
+    <div class="story-default" id="story-default-btn" onclick="useDefaultStory()">
+      <span>💡</span><span id="story-default-text"></span>
+    </div>
+    <textarea class="story-input" id="story-input" rows="2" maxlength="50" placeholder="직접 써봐요 (최대 50자)"></textarea>
+    <div class="story-btn-row">
+      <button class="story-cancel-btn" onclick="closeStoryModal()">취소</button>
+      <button class="story-confirm-btn" onclick="confirmStory()">🎵 악보에 올리기</button>
+    </div>
   </div>
 </div>
 
 <!-- 말풍선 팝업 -->
 <div id="bubble-popup">
+  <img id="bubble-photo" src="" style="display:none;width:80px;height:80px;border-radius:12px;object-fit:cover;margin:0 auto 6px;display:none">
   <span class="bubble-emoji" id="bubble-emoji"></span>
   <div class="bubble-text" id="bubble-text"></div>
 </div>
@@ -261,14 +315,17 @@ function initScore(){
   const guide=document.getElementById('note-guide');
   guide.innerHTML=NOTES.slice().reverse().map(n=>`<div class="note-guide-label">${n}</div>`).join('');
 
+let pendingNx=null,pendingNy=null,pendingStamp=null;
+
   // 탭/클릭으로 스탬프 배치
   wrap.addEventListener('click',e=>{
     if(!selectedStamp)return;
     if(e.target.closest('.note-stamp'))return;
     const r=wrap.getBoundingClientRect();
-    const nx=(e.clientX-r.left)/r.width;
-    const ny=(e.clientY-r.top)/r.height;
-    placeNote(nx,ny,selectedStamp);
+    pendingNx=(e.clientX-r.left)/r.width;
+    pendingNy=(e.clientY-r.top)/r.height;
+    pendingStamp=selectedStamp;
+    openStoryModal();
   });
   wrap.addEventListener('touchend',e=>{
     if(!selectedStamp)return;
@@ -276,10 +333,40 @@ function initScore(){
     e.preventDefault();
     const t=e.changedTouches[0];
     const r=wrap.getBoundingClientRect();
-    const nx=(t.clientX-r.left)/r.width;
-    const ny=(t.clientY-r.top)/r.height;
-    placeNote(nx,ny,selectedStamp);
+    pendingNx=(t.clientX-r.left)/r.width;
+    pendingNy=(t.clientY-r.top)/r.height;
+    pendingStamp=selectedStamp;
+    openStoryModal();
   },{passive:false});
+}
+
+/* ── 한마디 입력 모달 ── */
+function openStoryModal(){
+  const s=pendingStamp;
+  document.getElementById('story-modal-emoji').textContent=s.emoji;
+  document.getElementById('story-modal-title').textContent=s.name+' 스탬프';
+  document.getElementById('story-default-text').textContent=s.story;
+  document.getElementById('story-input').value='';
+  document.getElementById('story-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('story-input').focus(),300);
+}
+
+function closeStoryModal(){
+  document.getElementById('story-modal').classList.remove('open');
+  pendingNx=null;pendingNy=null;pendingStamp=null;
+}
+
+function useDefaultStory(){
+  document.getElementById('story-input').value=pendingStamp.story;
+  document.getElementById('story-input').focus();
+}
+
+function confirmStory(){
+  const text=document.getElementById('story-input').value.trim();
+  const story=text||pendingStamp.story;
+  document.getElementById('story-modal').classList.remove('open');
+  placeNote(pendingNx,pendingNy,{...pendingStamp,story});
+  pendingNx=null;pendingNy=null;pendingStamp=null;
 }
 
 /* ── 스탬프 배치 ── */
@@ -287,14 +374,68 @@ async function placeNote(nx,ny,stamp){
   const{error}=await sb.from('score_notes').insert([{
     nickname:myNickname,color:myColor,
     emoji:stamp.emoji,name:stamp.name,story:stamp.story,
-    nx,ny
+    nx,ny,
+    image_data:stamp.isPhoto?(stamp.dataUrl||null):null
   }]);
   if(error){console.log(error);return;}
-  if(channel)channel.send({type:'broadcast',event:'new_note',payload:{nickname:myNickname,color:myColor,emoji:stamp.emoji,name:stamp.name,story:stamp.story,nx,ny}});
+  if(channel)channel.send({type:'broadcast',event:'new_note',payload:{nickname:myNickname}});
   loadNotes();
 }
 
-/* ── 노트 렌더 ── */
+/* ── 사진 스탬프 ── */
+let myPhotos=[]; // {dataUrl, name}
+
+function handlePhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const dataUrl=ev.target.result;
+    // 리사이즈
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const size=120;canvas.width=size;canvas.height=size;
+      const ctx=canvas.getContext('2d');
+      // 정사각형 크롭
+      const min=Math.min(img.width,img.height);
+      const sx=(img.width-min)/2,sy=(img.height-min)/2;
+      ctx.drawImage(img,sx,sy,min,min,0,0,size,size);
+      const resized=canvas.toDataURL('image/jpeg',.7);
+      const photoStamp={emoji:'📷',name:'내 사진',story:'',dataUrl:resized,isPhoto:true};
+      myPhotos.push(photoStamp);
+      renderPhotoGrid();
+      // 바로 선택
+      selectedStamp=photoStamp;
+      document.getElementById('score-wrap').style.cursor='cell';
+    };
+    img.src=dataUrl;
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+}
+
+function renderPhotoGrid(){
+  const el=document.getElementById('photo-preview-grid');
+  el.innerHTML=myPhotos.map((p,i)=>`
+    <div class="photo-stamp-item${selectedStamp&&selectedStamp===myPhotos[i]?' selected':''}" onclick="selectPhotoStamp(${i})">
+      <img src="${p.dataUrl}" alt="">
+      <div class="photo-del" onclick="event.stopPropagation();deletePhoto(${i})">×</div>
+    </div>`).join('');
+}
+
+function selectPhotoStamp(idx){
+  selectedStamp=myPhotos[idx];
+  document.getElementById('score-wrap').style.cursor='cell';
+  renderPhotoGrid();
+}
+
+function deletePhoto(idx){
+  myPhotos.splice(idx,1);
+  if(selectedStamp===myPhotos[idx])selectedStamp=null;
+  renderPhotoGrid();
+}
+
+/* ── 노트 렌더 (사진 포함) ── */
 function renderNote(note,isNew=false){
   const wrap=document.getElementById('score-wrap');
   if(document.getElementById('note-'+note.id))return;
@@ -304,7 +445,11 @@ function renderNote(note,isNew=false){
   el.style.left=(note.nx*100)+'%';
   el.style.top=(note.ny*100)+'%';
   el.style.filter=`drop-shadow(0 2px 6px ${note.color}88)`;
-  el.innerHTML=`<span class="stamp-icon">${note.emoji}</span><span class="stamp-name" style="color:${note.color}">${note.nickname}</span>`;
+  // 사진이면 동그란 사진, 아니면 이모지
+  const iconHtml=note.image_data
+    ?`<img class="stamp-photo" src="${note.image_data}" alt="">`
+    :`<span class="stamp-icon">${note.emoji}</span>`;
+  el.innerHTML=`${iconHtml}<span class="stamp-name" style="color:${note.color}">${note.nickname}</span>`;
   el.addEventListener('click',()=>showBubble(note,el));
   el.addEventListener('touchend',e=>{e.preventDefault();showBubble(note,el);});
   wrap.appendChild(el);
@@ -335,19 +480,30 @@ function updatePlayersBar(data){
 function showBubble(note,el){
   const popup=document.getElementById('bubble-popup');
   const r=el.getBoundingClientRect();
-  document.getElementById('bubble-emoji').textContent=note.emoji;
+  const photoEl=document.getElementById('bubble-photo');
+  const emojiEl=document.getElementById('bubble-emoji');
+  if(note.image_data){
+    photoEl.src=note.image_data;
+    photoEl.style.display='block';
+    emojiEl.style.display='none';
+  }else{
+    photoEl.style.display='none';
+    emojiEl.style.display='block';
+    emojiEl.textContent=note.emoji;
+  }
   document.getElementById('bubble-text').textContent=note.story;
   popup.style.left=Math.max(8,Math.min(window.innerWidth-210,r.left-80))+'px';
-  popup.style.top=(r.top-100+window.scrollY)+'px';
+  popup.style.top=(r.top-120+window.scrollY)+'px';
   popup.classList.add('show');
   if(bubbleTimer)clearTimeout(bubbleTimer);
-  bubbleTimer=setTimeout(()=>popup.classList.remove('show'),3000);
+  bubbleTimer=setTimeout(()=>popup.classList.remove('show'),3500);
 }
 
 /* ── 팔레트 ── */
 function initPalette(){
   const tabsEl=document.getElementById('palette-tabs');
-  tabsEl.innerHTML=Object.keys(STAMP_CATEGORIES).map(cat=>`
+  const categories=[...Object.keys(STAMP_CATEGORIES),'📷 사진'];
+  tabsEl.innerHTML=categories.map(cat=>`
     <button class="palette-tab${cat===selectedCategory?' active':''}" onclick="switchCategory('${cat}',this)">${cat}</button>`).join('');
   renderStamps();
 }
@@ -356,7 +512,15 @@ function switchCategory(cat,el){
   selectedCategory=cat;
   document.querySelectorAll('.palette-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  renderStamps();
+  if(cat==='📷 사진'){
+    document.getElementById('stamp-grid').style.display='none';
+    document.getElementById('photo-palette').style.display='block';
+    selectedStamp=null;
+  }else{
+    document.getElementById('stamp-grid').style.display='grid';
+    document.getElementById('photo-palette').style.display='none';
+    renderStamps();
+  }
 }
 
 function renderStamps(){
