@@ -145,6 +145,24 @@ h1 span{color:var(--pink)}
 .nick-modal-box input{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:11px 13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;text-align:center;background:var(--cream);outline:none;margin-bottom:.8rem;-webkit-appearance:none}
 .nick-modal-box input:focus{border-color:var(--pink)}
 .nick-modal-box button{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:46px}
+
+/* 보관함 페이지 */
+#archive-page .page-header{background:linear-gradient(135deg,#FFF3D0 0%,#FFE0F0 100%)}
+.archive-tabs{display:flex;gap:6px;padding:0 1rem 1rem;max-width:480px;margin:0 auto}
+.archive-tab{flex:1;padding:9px;border-radius:12px;border:1.5px solid rgba(200,160,140,.2);background:#fff;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--text-mid);cursor:pointer;min-height:42px}
+.archive-tab.active{background:linear-gradient(135deg,#FFD93D,#FFB347);color:#fff;border-color:transparent}
+.archive-list-wrap{padding:0 1rem;max-width:480px;margin:0 auto}
+.archive-item{background:#fff;border-radius:16px;padding:12px;border:1.5px solid rgba(200,160,140,.15);margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.archive-item-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#FFE4CC,#FFD6E8);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.archive-item-body{flex:1;min-width:0}
+.archive-item-title{font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:2px}
+.archive-item-sub{font-size:11px;color:var(--text-light)}
+.archive-item-sub audio{width:100%;height:28px;margin-top:4px}
+.archive-item-del{background:#fff;border:1.5px solid rgba(200,160,140,.2);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;flex-shrink:0;color:var(--text-light)}
+.archive-empty{text-align:center;padding:2.5rem 1rem;color:var(--text-light);font-size:13px;line-height:1.8}
+.archive-nick-bar{text-align:center;font-size:12px;color:var(--text-light);padding:0 1rem 1rem}
+.archive-nick-bar span{color:var(--pink);font-weight:600}
+.archive-nick-bar button{background:none;border:none;color:var(--teal);font-size:11px;cursor:pointer;text-decoration:underline;margin-left:6px;font-family:'Noto Sans KR',sans-serif}
 .c-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
 .c-name{font-size:11px;font-weight:500;color:var(--text-mid);margin-bottom:2px}
 .c-text{font-size:13px;color:var(--text-dark);line-height:1.65}
@@ -268,6 +286,11 @@ canvas{display:block;touch-action:none;background:#FFFAF7;width:100%;height:auto
       <span class="hub-emoji">🌿</span>
       <div class="hub-name">소리, 생각<br>담아오기</div>
       <div class="hub-desc">오늘의 기분과<br>소리를 담아요</div>
+    </div>
+    <div class="hub-card" onclick="openPage('archive-page')" style="border-color:rgba(255,215,100,.4)">
+      <span class="hub-emoji">⭐</span>
+      <div class="hub-name">내 보관함</div>
+      <div class="hub-desc">소중한 노래와<br>메시지를 모아요</div>
     </div>
     <div class="hub-card game hub-grid-3" onclick="openPage('quiz-page')">
       <span class="hub-emoji">🎮</span>
@@ -420,6 +443,20 @@ canvas{display:block;touch-action:none;background:#FFFAF7;width:100%;height:auto
       <div id="photo-list" style="margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;"></div>
     </div>
   </div>
+</div>
+<!-- 내 보관함 -->
+<div class="page" id="archive-page">
+  <div class="page-header">
+    <button class="back-btn" onclick="goHub()">← 돌아가기</button>
+    <div class="page-title">⭐ 내 보관함</div>
+    <div class="page-sub">소중한 노래와 메시지를 모아두는 곳이에요</div>
+  </div>
+  <div class="archive-nick-bar" id="archive-nick-bar"></div>
+  <div class="archive-tabs">
+    <button class="archive-tab active" id="archive-tab-track" onclick="switchArchiveTab('track')">🎵 노래</button>
+    <button class="archive-tab" id="archive-tab-comment" onclick="switchArchiveTab('comment')">💬 메시지</button>
+  </div>
+  <div class="archive-list-wrap" id="archive-list-wrap"></div>
 </div>
 <!-- 게임 허브 -->
 <div class="page" id="quiz-page">
@@ -641,7 +678,7 @@ const PASSCODE='0000';
 function checkPw(){const v=document.getElementById('gate-input').value;const err=document.getElementById('gate-error');if(v===PASSCODE){document.getElementById('gate').style.display='none';try{sessionStorage.setItem('dream_auth','1');}catch(e){}}else{err.classList.add('show');document.getElementById('gate-input').value='';document.getElementById('gate-input').focus();setTimeout(()=>err.classList.remove('show'),2500);}}
 try{if(sessionStorage.getItem('dream_auth')==='1')document.getElementById('gate').style.display='none';}catch(e){}
 function openHub(){document.getElementById('landing').style.display='none';document.getElementById('hub').style.display='block';window.scrollTo(0,0);}
-function openPage(id){document.getElementById('hub').style.display='none';document.getElementById(id).style.display='block';if(id==='song-page')initSong();if(id==='therapy-page')initTherapy();if(id==='quiz-page')initGameHub();window.scrollTo(0,0);}
+function openPage(id){document.getElementById('hub').style.display='none';document.getElementById(id).style.display='block';if(id==='song-page')initSong();if(id==='therapy-page')initTherapy();if(id==='quiz-page')initGameHub();if(id==='archive-page')initArchivePage();window.scrollTo(0,0);}
 function goHub(){audio.pause();playingIdx=-1;stopQuizAudio();document.getElementById('album-player').classList.remove('visible');document.querySelectorAll('.page').forEach(p=>p.style.display='none');document.getElementById('hub').style.display='block';window.scrollTo(0,0);}
 function openGamePage(id){document.getElementById('quiz-page').style.display='none';document.getElementById(id).style.display='block';if(id==='quiz-game-page')initQuiz();window.scrollTo(0,0);}
 function goGameHub(){stopQuizAudio();document.getElementById('quiz-game-page').style.display='none';document.getElementById('quiz-page').style.display='block';window.scrollTo(0,0);}
@@ -886,7 +923,7 @@ async function toggleArchiveTrack(idx,btnEl,e){
 async function loadArchiveStatus(){
   const nick=getArchiveNick();
   if(!nick)return;
-  const{data}=await sb.from('archive_items').select('item_type,meta');
+  const{data}=await sb.from('archive_items').select('item_type,meta').eq('owner_nickname',nick);
   if(!data)return;
   archivedIds=new Set();
   data.filter(d=>d.meta).forEach(d=>{
@@ -894,6 +931,105 @@ async function loadArchiveStatus(){
     if(d.item_type==='track'&&d.meta.file)archivedIds.add('track-'+d.meta.file);
   });
 }
+
+/* ── 내 보관함 페이지 ── */
+let archiveTab='track';
+let archiveData=[];
+
+function initArchivePage(){
+  const nick=getArchiveNick();
+  const bar=document.getElementById('archive-nick-bar');
+  if(nick){
+    bar.innerHTML=`<span>${nick}</span>님의 보관함이에요<button onclick="changeArchiveNick()">이름 바꾸기</button>`;
+  }else{
+    bar.innerHTML=`<button onclick="changeArchiveNick()" style="color:var(--pink);font-weight:600">이름을 입력해줘요 →</button>`;
+  }
+  switchArchiveTab(archiveTab);
+}
+
+function changeArchiveNick(){
+  pendingArchive=()=>{initArchivePage();};
+  document.getElementById('archive-nick-input').value=getArchiveNick();
+  document.getElementById('nick-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('archive-nick-input').focus(),200);
+}
+
+function switchArchiveTab(tab){
+  archiveTab=tab;
+  document.getElementById('archive-tab-track').classList.toggle('active',tab==='track');
+  document.getElementById('archive-tab-comment').classList.toggle('active',tab==='comment');
+  loadArchiveList();
+}
+
+async function loadArchiveList(){
+  const wrap=document.getElementById('archive-list-wrap');
+  const nick=getArchiveNick();
+  if(!nick){
+    wrap.innerHTML='<div class="archive-empty">이름을 입력하면<br>보관함을 볼 수 있어요 ⭐</div>';
+    return;
+  }
+  const{data,error}=await sb.from('archive_items').select('*').eq('owner_nickname',nick).eq('item_type',archiveTab).order('created_at',{ascending:false});
+  if(error){wrap.innerHTML='<div class="archive-empty">불러오기 실패했어요</div>';return;}
+  archiveData=data||[];
+  if(!archiveData.length){
+    wrap.innerHTML=archiveTab==='track'
+      ? '<div class="archive-empty">아직 저장한 노래가 없어요<br>노래 공유 작업실에서 ⭐을 눌러봐요!</div>'
+      : '<div class="archive-empty">아직 저장한 메시지가 없어요<br>마음에 드는 메시지에 ⭐을 눌러봐요!</div>';
+    return;
+  }
+  if(archiveTab==='track'){
+    wrap.innerHTML=archiveData.map(d=>{
+      const m=d.meta||{};
+      return `<div class="archive-item" onclick="playArchiveTrack('${m.file}','${m.type}','${(d.content||'').replace(/'/g,"\\'")}')">
+        <div class="archive-item-icon">${m.emoji||'🎵'}</div>
+        <div class="archive-item-body">
+          <div class="archive-item-title">${d.content}</div>
+          <div class="archive-item-sub">${m.type==='video'?'▶ 영상':'♪ 음악'} · ${new Date(d.created_at).toLocaleDateString('ko-KR')}</div>
+        </div>
+        <div class="archive-item-del" onclick="event.stopPropagation();deleteArchiveItem(${d.id})">×</div>
+      </div>`;
+    }).join('');
+  }else{
+    wrap.innerHTML=archiveData.map(d=>{
+      const m=d.meta||{};
+      const bodyHtml=m.comment_type==='voice'&&m.audio_url
+        ?`<div class="archive-item-sub"><audio controls src="${m.audio_url}"></audio></div>`
+        :`<div class="archive-item-sub" style="color:var(--text-dark);font-size:13px">${d.content}</div>`;
+      return `<div class="archive-item">
+        <div class="archive-item-icon" style="background:${m.avcolor||'#FFE4CC'}">${m.avatar||'💬'}</div>
+        <div class="archive-item-body">
+          <div class="archive-item-title">${m.name||'익명'}</div>
+          ${bodyHtml}
+          <div class="archive-item-sub" style="margin-top:2px">${new Date(d.created_at).toLocaleDateString('ko-KR')}</div>
+        </div>
+        <div class="archive-item-del" onclick="event.stopPropagation();deleteArchiveItem(${d.id})">×</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+async function deleteArchiveItem(id){
+  await sb.from('archive_items').delete().eq('id',id);
+  loadArchiveList();
+}
+
+function playArchiveTrack(file,type,name){
+  if(type==='video'){
+    document.getElementById('video-modal-title').textContent=name;
+    const vp=document.getElementById('video-player');
+    vp.src=file;vp.load();
+    document.getElementById('video-dl-btn').href=file;
+    document.getElementById('video-dl-btn').download=name;
+    document.getElementById('video-modal').classList.add('open');
+    vp.play().catch(()=>{});
+  }else{
+    audio.pause();audio.src=file;audio.play().catch(()=>{});
+    document.getElementById('album-player').classList.add('visible');
+    document.getElementById('album-player-name').textContent=name;
+    document.getElementById('album-play-btn').textContent='⏸';
+  }
+}
+
 
 </script>
 </body>
