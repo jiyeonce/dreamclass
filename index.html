@@ -132,6 +132,19 @@ h1 span{color:var(--pink)}
 .c-audio audio{width:100%;height:32px}
 .archive-star-btn{font-size:11px;color:var(--text-light);border:1.5px solid rgba(200,160,140,.2);background:#fff;border-radius:14px;padding:3px 9px;cursor:pointer;margin-left:6px;font-family:'Noto Sans KR',sans-serif}
 .archive-star-btn.saved{color:var(--pink);border-color:var(--pink);background:#FFF0E8}
+.track-archive-btn{background:#fff;border:1.5px solid rgba(200,160,140,.25);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;flex-shrink:0}
+.track-archive-btn.saved{color:var(--pink);border-color:var(--pink);background:#FFF0E8}
+#archive-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--text-dark);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:600;opacity:0;transition:all .3s;pointer-events:none}
+#archive-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#nick-modal{display:none;position:fixed;inset:0;z-index:600;background:rgba(20,10,5,.5);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:1rem}
+#nick-modal.open{display:flex}
+.nick-modal-box{background:#fff;border-radius:20px;padding:1.6rem;max-width:300px;width:100%;text-align:center}
+.nick-modal-box .nm-emoji{font-size:40px;display:block;margin-bottom:.6rem}
+.nick-modal-box .nm-title{font-family:'Noto Serif KR',serif;font-size:16px;color:var(--text-dark);margin-bottom:.4rem}
+.nick-modal-box .nm-sub{font-size:12px;color:var(--text-light);margin-bottom:1rem;line-height:1.7}
+.nick-modal-box input{width:100%;border:1.5px solid rgba(200,160,140,.25);border-radius:12px;padding:11px 13px;font-family:'Noto Sans KR',sans-serif;font-size:14px;text-align:center;background:var(--cream);outline:none;margin-bottom:.8rem;-webkit-appearance:none}
+.nick-modal-box input:focus{border-color:var(--pink)}
+.nick-modal-box button{width:100%;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:12px;padding:12px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;min-height:46px}
 .c-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
 .c-name{font-size:11px;font-weight:500;color:var(--text-mid);margin-bottom:2px}
 .c-text{font-size:13px;color:var(--text-dark);line-height:1.65}
@@ -593,6 +606,18 @@ canvas{display:block;touch-action:none;background:#FFFAF7;width:100%;height:auto
     <button id="confirm-delete-btn" style="padding:8px 16px;border-radius:8px;border:none;background:var(--pink);color:#fff;cursor:pointer;">삭제</button>
   </div>
 </div>
+<!-- 보관함 닉네임 모달 -->
+<div id="nick-modal">
+  <div class="nick-modal-box">
+    <span class="nm-emoji">⭐</span>
+    <div class="nm-title">내 보관함</div>
+    <div class="nm-sub">보관함은 이름별로 관리돼요.<br>내 이름을 알려줘요!</div>
+    <input id="archive-nick-input" type="text" placeholder="이름을 입력해요" maxlength="10" onkeydown="if(event.key==='Enter')confirmArchiveNick()">
+    <button onclick="confirmArchiveNick()">확인</button>
+  </div>
+</div>
+<!-- 보관함 토스트 -->
+<div id="archive-toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL='https://aoywuhpqivpczstoogcm.supabase.co';
@@ -621,7 +646,7 @@ function goHub(){audio.pause();playingIdx=-1;stopQuizAudio();document.getElement
 function openGamePage(id){document.getElementById('quiz-page').style.display='none';document.getElementById(id).style.display='block';if(id==='quiz-game-page')initQuiz();window.scrollTo(0,0);}
 function goGameHub(){stopQuizAudio();document.getElementById('quiz-game-page').style.display='none';document.getElementById('quiz-page').style.display='block';window.scrollTo(0,0);}
 function initGameHub(){}
-function initSong(){renderGallery();renderTracks();renderReactions();loadComments();subscribeComments();loadReactions();loadHeartCount();}
+async function initSong(){await loadArchiveStatus();renderGallery();renderTracks();renderReactions();loadComments();subscribeComments();loadReactions();loadHeartCount();}
 function initTherapy(){const d=new Date();document.getElementById('today-date').textContent=d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';initCanvas();loadTodayRecords();loadRecordings();loadPhotos();}
 let lbIdx=0;
 function renderGallery(){const el=document.getElementById('gallery');if(!PHOTOS.length){el.innerHTML='';return;}el.innerHTML=PHOTOS.map((p,i)=>`<div class="gallery-item" onclick="openLb(${i})"><img src="${p.src}" alt="${p.alt}" loading="lazy"></div>`).join('');}
@@ -639,7 +664,7 @@ function openVideo(idx){const t=TRACKS[idx];document.getElementById('video-modal
 function closeVideo(){const vp=document.getElementById('video-player');vp.pause();vp.src='';document.getElementById('video-modal').classList.remove('open');}
 document.getElementById('video-modal').addEventListener('click',function(e){if(e.target===this)closeVideo();});
 const THUMBBG=['#FFE4CC','#FFD6E8','#D4E8D0','#D6E4FF','#FFE8D6'];
-function renderTracks(){document.getElementById('track-list').innerHTML=TRACKS.map((t,i)=>`<div class="track-item${playingIdx===i&&t.type==='audio'?' playing':''}" onclick="playTrack(${i})"><span class="track-num">${i+1}</span><div class="track-thumb" style="background:${THUMBBG[i%THUMBBG.length]}">${t.cover?`<img src="${t.cover}" alt="">`:`${t.emoji}`}<span class="track-type-badge">${t.type==='video'?'▶ 영상':'♪ 음악'}</span></div><div class="track-info"><div class="track-name">${t.name}</div><div class="track-desc">${t.desc}</div></div><div class="play-icon${playingIdx===i&&t.type==='audio'?' pause':''}">${playingIdx===i&&t.type==='audio'?'<svg viewBox="0 0 12 12"><rect x="1" y="1" width="3.5" height="10" rx="1"/><rect x="7.5" y="1" width="3.5" height="10" rx="1"/></svg>':'<svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>'}</div></div>`).join('');}
+function renderTracks(){document.getElementById('track-list').innerHTML=TRACKS.map((t,i)=>{const isSaved=archivedIds.has('track-'+t.file);return `<div class="track-item${playingIdx===i&&t.type==='audio'?' playing':''}" onclick="playTrack(${i})"><span class="track-num">${i+1}</span><div class="track-thumb" style="background:${THUMBBG[i%THUMBBG.length]}">${t.cover?`<img src="${t.cover}" alt="">`:`${t.emoji}`}<span class="track-type-badge">${t.type==='video'?'▶ 영상':'♪ 음악'}</span></div><div class="track-info"><div class="track-name">${t.name}</div><div class="track-desc">${t.desc}</div></div><button class="track-archive-btn${isSaved?' saved':''}" onclick="toggleArchiveTrack(${i},this,event)">⭐</button><div class="play-icon${playingIdx===i&&t.type==='audio'?' pause':''}">${playingIdx===i&&t.type==='audio'?'<svg viewBox="0 0 12 12"><rect x="1" y="1" width="3.5" height="10" rx="1"/><rect x="7.5" y="1" width="3.5" height="10" rx="1"/></svg>':'<svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>'}</div></div>`;}).join('');}
 function playTrack(i){const t=TRACKS[i];if(t.type==='video'){audio.pause();playingIdx=-1;document.getElementById('album-player').classList.remove('visible');renderTracks();openVideo(i);return;}if(playingIdx===i){if(audio.paused){audio.play().catch(()=>{});document.getElementById('album-play-btn').textContent='⏸';}else{audio.pause();document.getElementById('album-play-btn').textContent='▶';}renderTracks();return;}audio.pause();audio.src=t.file;audio.play().catch(()=>{});playingIdx=i;document.getElementById('album-player').classList.add('visible');document.getElementById('album-player-name').textContent=t.name;document.getElementById('album-play-btn').textContent='⏸';document.getElementById('album-dl-btn').href=t.file;document.getElementById('album-dl-btn').download=t.name;const img=document.getElementById('album-cover-img');const emoji=document.getElementById('album-cover-emoji');if(t.cover){img.src=t.cover;img.classList.add('visible');emoji.style.display='none';}else{img.classList.remove('visible');emoji.style.display='block';emoji.textContent=t.emoji;}renderTracks();}
 function toggleCurrentTrack(){if(playingIdx<0)return;if(audio.paused){audio.play().catch(()=>{});document.getElementById('album-play-btn').textContent='⏸';}else{audio.pause();document.getElementById('album-play-btn').textContent='▶';}renderTracks();}
 function prevTrack(){const at=TRACKS.map((t,i)=>t.type==='audio'?i:-1).filter(i=>i>=0);if(!at.length)return;const cur=at.indexOf(playingIdx);playTrack(at[(cur-1+at.length)%at.length]);}
@@ -735,6 +760,7 @@ function renderComments(){
     const bodyHtml=c.type==='voice'&&c.audio_url
       ?`<div class="c-audio"><audio controls src="${c.audio_url}"></audio></div>`
       :`<div class="c-text">${c.text}</div>`;
+    const isSaved=archivedIds.has('comment-'+c.id);
     return `<div class="comment-item">
       <div class="c-avatar" style="background:${c.avcolor}">${c.avatar}</div>
       <div style="flex:1">
@@ -742,6 +768,7 @@ function renderComments(){
         ${bodyHtml}
         <div class="c-time">${new Date(c.created_at).toLocaleString()}</div>
         <button onclick="deleteComment(${c.id})" style="font-size:11px;color:#C97B7B;border:none;background:none;cursor:pointer;">삭제</button>
+        <button class="archive-star-btn${isSaved?' saved':''}" onclick="toggleArchiveComment(${c.id},this)">${isSaved?'⭐ 보관됨':'⭐ 보관하기'}</button>
       </div>
     </div>`;
   }).join('');
@@ -781,6 +808,93 @@ function nextQuestion(){quizCurrentIdx++;if(quizCurrentIdx>=quizQuestions.length
 async function endQuiz(){stopQuizAudio();document.getElementById('quiz-game-box').style.display='none';const total=quizQuestions.length;const pct=Math.round(quizScore/total*100);let emoji='🎉',sub='';if(pct===100){emoji='🏆';sub='완벽해요! 모두 맞췄어요!';}else if(pct>=80){emoji='🌟';sub='정말 잘 했어요!';}else if(pct>=60){emoji='😊';sub='꽤 잘 했어요!';}else if(pct>=40){emoji='🙂';sub='다음엔 더 잘 할 수 있어요!';}else{emoji='💪';sub='노래를 더 들어봐요!';}document.getElementById('quiz-result-emoji').textContent=emoji;document.getElementById('quiz-result-score').textContent=quizScore+' / '+total;document.getElementById('quiz-result-sub').textContent=sub;document.getElementById('quiz-result-box').style.display='block';await sb.from('quiz_scores').insert([{nickname:quizNickname,score:quizScore,total:total}]);loadRanking();}
 function resetQuiz(){stopQuizAudio();document.getElementById('quiz-result-box').style.display='none';document.getElementById('quiz-game-box').style.display='none';document.getElementById('quiz-nickname-box').style.display='block';document.getElementById('nickname-input').value='';quizScore=0;quizCurrentIdx=0;quizAnswered=false;}
 async function loadRanking(){const{data,error}=await sb.from('quiz_scores').select('*').order('score',{ascending:false}).order('created_at',{ascending:true}).limit(10);if(error){console.log(error);return;}const el=document.getElementById('ranking-list');if(!data||!data.length){el.innerHTML='<div class="list-empty">아직 기록이 없어요</div>';return;}const medals=['gold','silver','bronze'];el.innerHTML=data.map((r,i)=>`<div class="ranking-item"><div class="ranking-num ${medals[i]||''}">${i+1}</div><div class="ranking-name">${r.nickname}</div><div class="ranking-score">${r.score} / ${r.total||5}점</div></div>`).join('');}
+
+/* ── 보관함 ── */
+let archivedIds=new Set(); // "type-content_key" 형태로 저장 여부 캐싱
+let pendingArchive=null;
+
+function getArchiveNick(){
+  try{return localStorage.getItem('dream_archive_nick')||'';}catch(e){return '';}
+}
+function setArchiveNick(name){
+  try{localStorage.setItem('dream_archive_nick',name);}catch(e){}
+}
+
+function showArchiveToast(msg){
+  const t=document.getElementById('archive-toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+function ensureArchiveNick(action){
+  const nick=getArchiveNick();
+  if(nick){action(nick);return;}
+  pendingArchive=action;
+  document.getElementById('archive-nick-input').value='';
+  document.getElementById('nick-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('archive-nick-input').focus(),200);
+}
+
+function confirmArchiveNick(){
+  const v=document.getElementById('archive-nick-input').value.trim();
+  if(!v){return;}
+  setArchiveNick(v);
+  document.getElementById('nick-modal').classList.remove('open');
+  if(pendingArchive){const fn=pendingArchive;pendingArchive=null;fn(v);}
+}
+
+// 댓글 보관함 저장/취소
+async function toggleArchiveComment(commentId,btnEl){
+  ensureArchiveNick(async(nick)=>{
+    const c=comments.find(x=>x.id===commentId);
+    if(!c)return;
+    // 이미 저장했는지 확인
+    const{data:existing}=await sb.from('archive_items').select('id').eq('owner_nickname',nick).eq('item_type','comment').eq('meta->>source_id',String(commentId));
+    if(existing&&existing.length){
+      await sb.from('archive_items').delete().eq('id',existing[0].id);
+      btnEl.classList.remove('saved');btnEl.textContent='⭐ 보관하기';
+      showArchiveToast('보관함에서 꺼냈어요');
+    }else{
+      const meta={source_id:commentId,name:c.name,avatar:c.avatar,avcolor:c.avcolor,comment_type:c.type||'text',audio_url:c.audio_url||null,created_at:c.created_at};
+      await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'comment',content:c.text||'',meta}]);
+      btnEl.classList.add('saved');btnEl.textContent='⭐ 보관됨';
+      showArchiveToast('보관함에 저장했어요 ⭐');
+    }
+  });
+}
+
+// 트랙 보관함 저장/취소
+async function toggleArchiveTrack(idx,btnEl,e){
+  if(e)e.stopPropagation();
+  ensureArchiveNick(async(nick)=>{
+    const t=TRACKS[idx];
+    const{data:existing}=await sb.from('archive_items').select('id').eq('owner_nickname',nick).eq('item_type','track').eq('meta->>file',t.file);
+    if(existing&&existing.length){
+      await sb.from('archive_items').delete().eq('id',existing[0].id);
+      btnEl.classList.remove('saved');btnEl.textContent='⭐';
+      showArchiveToast('보관함에서 꺼냈어요');
+    }else{
+      const meta={file:t.file,type:t.type,emoji:t.emoji,cover:t.cover||''};
+      await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'track',content:t.name,meta}]);
+      btnEl.classList.add('saved');btnEl.textContent='⭐';
+      showArchiveToast('보관함에 저장했어요 ⭐');
+    }
+  });
+}
+
+async function loadArchiveStatus(){
+  const nick=getArchiveNick();
+  if(!nick)return;
+  const{data}=await sb.from('archive_items').select('item_type,meta');
+  if(!data)return;
+  archivedIds=new Set();
+  data.filter(d=>d.meta).forEach(d=>{
+    if(d.item_type==='comment'&&d.meta.source_id)archivedIds.add('comment-'+d.meta.source_id);
+    if(d.item_type==='track'&&d.meta.file)archivedIds.add('track-'+d.meta.file);
+  });
+}
+
 </script>
 </body>
 </html>
