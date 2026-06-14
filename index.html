@@ -149,7 +149,7 @@ h1 span{color:var(--pink)}
 /* 보관함 페이지 */
 #archive-page .page-header{background:linear-gradient(135deg,#FFF3D0 0%,#FFE0F0 100%)}
 .archive-tabs{display:flex;gap:6px;padding:0 1rem 1rem;max-width:480px;margin:0 auto}
-.archive-tab{flex:1;padding:9px;border-radius:12px;border:1.5px solid rgba(200,160,140,.2);background:#fff;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--text-mid);cursor:pointer;min-height:42px}
+.archive-tab{flex:1;padding:8px 4px;border-radius:12px;border:1.5px solid rgba(200,160,140,.2);background:#fff;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;color:var(--text-mid);cursor:pointer;min-height:40px}
 .archive-tab.active{background:linear-gradient(135deg,#FFD93D,#FFB347);color:#fff;border-color:transparent}
 .archive-list-wrap{padding:0 1rem;max-width:480px;margin:0 auto}
 .archive-item{background:#fff;border-radius:16px;padding:12px;border:1.5px solid rgba(200,160,140,.15);margin-bottom:8px;display:flex;align-items:center;gap:10px}
@@ -163,6 +163,10 @@ h1 span{color:var(--pink)}
 .archive-nick-bar{text-align:center;font-size:12px;color:var(--text-light);padding:0 1rem 1rem}
 .archive-nick-bar span{color:var(--pink);font-weight:600}
 .archive-nick-bar button{background:none;border:none;color:var(--teal);font-size:11px;cursor:pointer;text-decoration:underline;margin-left:6px;font-family:'Noto Sans KR',sans-serif}
+.photo-item-wrap{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden}
+.photo-item-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-archive-btn{position:absolute;top:4px;right:4px;background:rgba(255,255,255,.85);border:none;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer}
+.photo-archive-btn.saved{color:var(--pink);background:#FFF0E8}
 .c-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
 .c-name{font-size:11px;font-weight:500;color:var(--text-mid);margin-bottom:2px}
 .c-text{font-size:13px;color:var(--text-dark);line-height:1.65}
@@ -456,6 +460,11 @@ canvas{display:block;touch-action:none;background:#FFFAF7;width:100%;height:auto
     <button class="archive-tab active" id="archive-tab-track" onclick="switchArchiveTab('track')">🎵 노래</button>
     <button class="archive-tab" id="archive-tab-comment" onclick="switchArchiveTab('comment')">💬 메시지</button>
   </div>
+  <div class="archive-tabs" style="margin-top:-.6rem">
+    <button class="archive-tab" id="archive-tab-record" onclick="switchArchiveTab('record')">🌸 기록</button>
+    <button class="archive-tab" id="archive-tab-recording" onclick="switchArchiveTab('recording')">🎤 소리</button>
+    <button class="archive-tab" id="archive-tab-photo" onclick="switchArchiveTab('photo')">📸 사진</button>
+  </div>
   <div class="archive-list-wrap" id="archive-list-wrap"></div>
 </div>
 <!-- 게임 허브 -->
@@ -684,7 +693,7 @@ function openGamePage(id){document.getElementById('quiz-page').style.display='no
 function goGameHub(){stopQuizAudio();document.getElementById('quiz-game-page').style.display='none';document.getElementById('quiz-page').style.display='block';window.scrollTo(0,0);}
 function initGameHub(){}
 async function initSong(){await loadArchiveStatus();renderGallery();renderTracks();renderReactions();loadComments();subscribeComments();loadReactions();loadHeartCount();}
-function initTherapy(){const d=new Date();document.getElementById('today-date').textContent=d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';initCanvas();loadTodayRecords();loadRecordings();loadPhotos();}
+async function initTherapy(){await loadArchiveStatus();const d=new Date();document.getElementById('today-date').textContent=d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';initCanvas();loadTodayRecords();loadRecordings();loadPhotos();}
 let lbIdx=0;
 function renderGallery(){const el=document.getElementById('gallery');if(!PHOTOS.length){el.innerHTML='';return;}el.innerHTML=PHOTOS.map((p,i)=>`<div class="gallery-item" onclick="openLb(${i})"><img src="${p.src}" alt="${p.alt}" loading="lazy"></div>`).join('');}
 function openLb(i){lbIdx=i;document.getElementById('lb-img').src=PHOTOS[i].src;document.getElementById('lightbox').classList.add('open');}
@@ -812,7 +821,21 @@ function renderComments(){
 }
 async function deleteComment(id){const pw=prompt('삭제 비밀번호를 입력하세요');if(!pw)return;const{data}=await sb.from('comments').select('*').eq('id',id).single();if(!data||data.password!==pw){alert('비밀번호가 틀렸어요');return;}await sb.from('comments').delete().eq('id',id);loadComments();}
 async function saveTodayRecord(){const mood=selectedMood;const word=document.getElementById('word-input').value.trim();const canvas=document.getElementById('draw-canvas');const small=document.createElement('canvas');small.width=canvas.width;small.height=canvas.height;small.getContext('2d').drawImage(canvas,0,0,canvas.width,canvas.height);const drawing=small.toDataURL('image/png');if(!mood&&!word){alert('기분이나 단어를 입력해줘요 🌸');return;}const{error}=await sb.from('today_records').insert([{mood,word,drawing}]);if(error){alert('저장 실패: '+error.message);return;}alert('저장됐어요 🌸');loadTodayRecords();}
-async function loadTodayRecords(){const{data}=await sb.from('today_records').select('*').order('created_at',{ascending:false}).limit(10);const el=document.getElementById('today-records-list');if(!data||!data.length){el.innerHTML='';return;}el.innerHTML=data.map(r=>`<div style="position:relative;background:linear-gradient(135deg,#FFF5F0,#FFF0F8);border-radius:12px;padding:10px 12px;border:1px solid rgba(200,160,140,.15)"><button onclick="deleteTodayRecord(${r.id})" style="position:absolute;top:8px;right:8px;background:#fff;border:1px solid rgba(200,160,140,.3);border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑</button><div style="font-size:11px;color:var(--text-light);margin-bottom:6px">${new Date(r.created_at).toLocaleDateString('ko-KR')}</div><div style="font-size:18px;margin-bottom:4px">${r.mood||''} ${r.word?'「'+r.word+'」':''}</div>${r.drawing?`<img src="${r.drawing}" style="width:100%;border-radius:8px;margin-top:6px">`:''}</div>`).join('');}
+async function loadTodayRecords(){
+  const{data}=await sb.from('today_records').select('*').order('created_at',{ascending:false}).limit(10);
+  const el=document.getElementById('today-records-list');
+  if(!data||!data.length){el.innerHTML='';return;}
+  el.innerHTML=data.map(r=>{
+    const isSaved=archivedIds.has('record-'+r.id);
+    return `<div style="position:relative;background:linear-gradient(135deg,#FFF5F0,#FFF0F8);border-radius:12px;padding:10px 12px;border:1px solid rgba(200,160,140,.15)">
+      <button onclick="deleteTodayRecord(${r.id})" style="position:absolute;top:8px;right:8px;background:#fff;border:1px solid rgba(200,160,140,.3);border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑</button>
+      <div style="font-size:11px;color:var(--text-light);margin-bottom:6px">${new Date(r.created_at).toLocaleDateString('ko-KR')}</div>
+      <div style="font-size:18px;margin-bottom:4px">${r.mood||''} ${r.word?'「'+r.word+'」':''}</div>
+      ${r.drawing?`<img src="${r.drawing}" style="width:100%;border-radius:8px;margin-top:6px">`:''}
+      <button class="archive-star-btn${isSaved?' saved':''}" style="margin-left:0;margin-top:6px" onclick="toggleArchiveRecord(${r.id},this,event)">${isSaved?'⭐ 보관됨':'⭐ 보관하기'}</button>
+    </div>`;
+  }).join('');
+}
 let selectedMood='';
 function selectMood(btn,emoji){document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');selectedMood=emoji;updateSummary();}
 function updateSummary(){const word=document.getElementById('word-input').value.trim();const s=document.getElementById('today-summary');if(!selectedMood&&!word){s.style.display='none';return;}s.style.display='block';let t='나는 오늘';if(selectedMood)t+=' '+selectedMood;if(word)t+=(selectedMood?' · ':' ')+'「'+word+'」';s.textContent=t;}
@@ -824,10 +847,39 @@ function clearCanvas(){const c=document.getElementById('draw-canvas');const ctx=
 let mediaRec=null,recChunks=[],isRec=false,recCount=0;
 function toggleRec(){if(!isRec){navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{mediaRec=new MediaRecorder(stream);recChunks=[];mediaRec.ondataavailable=e=>recChunks.push(e.data);mediaRec.onstop=async()=>{const blob=new Blob(recChunks,{type:'audio/webm'});recCount++;const fileName='recording-'+Date.now()+'.webm';const{error:uploadError}=await sb.storage.from('recordings').upload(fileName,blob,{contentType:'audio/webm'});if(uploadError){alert('녹음 업로드 실패: '+uploadError.message);stream.getTracks().forEach(t=>t.stop());resetRecButton();return;}const{data:publicData}=sb.storage.from('recordings').getPublicUrl(fileName);const{error:dbError}=await sb.from('recordings').insert([{name:'소리 '+new Date().toLocaleString('ko-KR'),file_url:publicData.publicUrl}]);if(dbError){alert('녹음 저장 실패: '+dbError.message);stream.getTracks().forEach(t=>t.stop());resetRecButton();return;}stream.getTracks().forEach(t=>t.stop());resetRecButton();loadRecordings();};mediaRec.start();isRec=true;document.getElementById('rec-btn').classList.add('recording');document.getElementById('rec-icon').textContent='⏹';document.getElementById('rec-text').textContent='녹음 중... (클릭하면 멈춰요)';}).catch(()=>{alert('마이크 권한이 필요해요!');resetRecButton();});}else{if(mediaRec&&mediaRec.state!=='inactive')mediaRec.stop();}}
 function resetRecButton(){isRec=false;document.getElementById('rec-btn').classList.remove('recording');document.getElementById('rec-icon').textContent='⏺';document.getElementById('rec-text').textContent='녹음 시작';}
-async function loadRecordings(){const{data,error}=await sb.from('recordings').select('*').order('created_at',{ascending:false});if(error){console.log(error);return;}const list=document.getElementById('rec-list');if(!data||!data.length){list.innerHTML='';return;}list.innerHTML=data.map((r,i)=>`<div class="rec-item" style="flex-direction:column;align-items:stretch;"><span class="rec-item-name">🎤 ${r.name||'소리 '+(i+1)}</span><audio controls src="${r.file_url}" style="width:100%;margin-top:6px;"></audio><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;"><a href="${r.file_url}" download class="rec-dl">💾</a></div></div>`).join('');}
+async function loadRecordings(){
+  const{data,error}=await sb.from('recordings').select('*').order('created_at',{ascending:false});
+  if(error){console.log(error);return;}
+  const list=document.getElementById('rec-list');
+  if(!data||!data.length){list.innerHTML='';return;}
+  list.innerHTML=data.map((r,i)=>{
+    const isSaved=archivedIds.has('recording-'+r.id);
+    return `<div class="rec-item" style="flex-direction:column;align-items:stretch;">
+      <span class="rec-item-name">🎤 ${r.name||'소리 '+(i+1)}</span>
+      <audio controls src="${r.file_url}" style="width:100%;margin-top:6px;"></audio>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;align-items:center">
+        <button class="archive-star-btn${isSaved?' saved':''}" onclick="toggleArchiveRecording(${r.id},this,event)">${isSaved?'⭐ 보관됨':'⭐ 보관하기'}</button>
+        <a href="${r.file_url}" download class="rec-dl">💾</a>
+      </div>
+    </div>`;
+  }).join('');
+}
 async function uploadPhoto(input){const file=input.files[0];if(!file)return;const fileName='photo-'+Date.now()+'.'+file.name.split('.').pop();const{error:uploadError}=await sb.storage.from('photos').upload(fileName,file,{contentType:file.type});if(uploadError){alert('업로드 실패: '+uploadError.message);return;}const{data}=sb.storage.from('photos').getPublicUrl(fileName);const{error:dbError}=await sb.from('photos').insert([{file_url:data.publicUrl}]);if(dbError){alert('저장 실패: '+dbError.message);return;}input.value='';await loadPhotos();}
 let photoListData=[];
-async function loadPhotos(){const{data,error}=await sb.from('photos').select('*').order('created_at',{ascending:true});if(error){return;}photoListData=data||[];const el=document.getElementById('photo-list');if(!photoListData.length){el.innerHTML='';return;}el.innerHTML=photoListData.map((p,i)=>`<button type="button" data-idx="${i}" style="border:none;padding:0;aspect-ratio:1;border-radius:10px;overflow:hidden;cursor:pointer;"><img src="${p.file_url}" style="width:100%;height:100%;object-fit:cover;display:block;"></button>`).join('');}
+async function loadPhotos(){
+  const{data,error}=await sb.from('photos').select('*').order('created_at',{ascending:true});
+  if(error){return;}
+  photoListData=data||[];
+  const el=document.getElementById('photo-list');
+  if(!photoListData.length){el.innerHTML='';return;}
+  el.innerHTML=photoListData.map((p,i)=>{
+    const isSaved=archivedIds.has('photo-'+p.id);
+    return `<div class="photo-item-wrap">
+      <img src="${p.file_url}" data-idx="${i}">
+      <button class="photo-archive-btn${isSaved?' saved':''}" onclick="toggleArchivePhoto(${p.id},this,event)">⭐</button>
+    </div>`;
+  }).join('');
+}
 let deleteTarget=null,deleteType=null;
 function deleteTodayRecord(id){openDeleteModal('today',id);}
 async function deleteTodayRecordReal(id){await sb.from('today_records').delete().eq('id',id);loadTodayRecords();}
@@ -920,6 +972,67 @@ async function toggleArchiveTrack(idx,btnEl,e){
   });
 }
 
+// 오늘의 기록 보관함 저장/취소
+async function toggleArchiveRecord(recordId,btnEl,e){
+  if(e)e.stopPropagation();
+  ensureArchiveNick(async(nick)=>{
+    const{data:existing}=await sb.from('archive_items').select('id').eq('owner_nickname',nick).eq('item_type','record').eq('meta->>source_id',String(recordId));
+    if(existing&&existing.length){
+      await sb.from('archive_items').delete().eq('id',existing[0].id);
+      btnEl.classList.remove('saved');btnEl.textContent='⭐ 보관하기';
+      showArchiveToast('보관함에서 꺼냈어요');
+    }else{
+      const{data:rec}=await sb.from('today_records').select('*').eq('id',recordId).single();
+      if(!rec)return;
+      const meta={source_id:recordId,mood:rec.mood,word:rec.word,drawing:rec.drawing,created_at:rec.created_at};
+      const content=(rec.mood||'')+(rec.word?' 「'+rec.word+'」':'');
+      await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'record',content,meta}]);
+      btnEl.classList.add('saved');btnEl.textContent='⭐ 보관됨';
+      showArchiveToast('보관함에 저장했어요 ⭐');
+    }
+  });
+}
+
+// 오늘의 소리(녹음) 보관함 저장/취소
+async function toggleArchiveRecording(recId,btnEl,e){
+  if(e)e.stopPropagation();
+  ensureArchiveNick(async(nick)=>{
+    const{data:existing}=await sb.from('archive_items').select('id').eq('owner_nickname',nick).eq('item_type','recording').eq('meta->>source_id',String(recId));
+    if(existing&&existing.length){
+      await sb.from('archive_items').delete().eq('id',existing[0].id);
+      btnEl.classList.remove('saved');btnEl.textContent='⭐';
+      showArchiveToast('보관함에서 꺼냈어요');
+    }else{
+      const{data:rec}=await sb.from('recordings').select('*').eq('id',recId).single();
+      if(!rec)return;
+      const meta={source_id:recId,file_url:rec.file_url,created_at:rec.created_at};
+      await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'recording',content:rec.name||'소리',meta}]);
+      btnEl.classList.add('saved');btnEl.textContent='⭐';
+      showArchiveToast('보관함에 저장했어요 ⭐');
+    }
+  });
+}
+
+// 오늘의 사진 보관함 저장/취소
+async function toggleArchivePhoto(photoId,btnEl,e){
+  if(e)e.stopPropagation();
+  ensureArchiveNick(async(nick)=>{
+    const{data:existing}=await sb.from('archive_items').select('id').eq('owner_nickname',nick).eq('item_type','photo').eq('meta->>source_id',String(photoId));
+    if(existing&&existing.length){
+      await sb.from('archive_items').delete().eq('id',existing[0].id);
+      btnEl.classList.remove('saved');btnEl.textContent='⭐';
+      showArchiveToast('보관함에서 꺼냈어요');
+    }else{
+      const{data:photo}=await sb.from('photos').select('*').eq('id',photoId).single();
+      if(!photo)return;
+      const meta={source_id:photoId,file_url:photo.file_url,created_at:photo.created_at};
+      await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'photo',content:'사진',meta}]);
+      btnEl.classList.add('saved');btnEl.textContent='⭐';
+      showArchiveToast('보관함에 저장했어요 ⭐');
+    }
+  });
+}
+
 async function loadArchiveStatus(){
   const nick=getArchiveNick();
   if(!nick)return;
@@ -929,6 +1042,9 @@ async function loadArchiveStatus(){
   data.filter(d=>d.meta).forEach(d=>{
     if(d.item_type==='comment'&&d.meta.source_id)archivedIds.add('comment-'+d.meta.source_id);
     if(d.item_type==='track'&&d.meta.file)archivedIds.add('track-'+d.meta.file);
+    if(d.item_type==='record'&&d.meta.source_id)archivedIds.add('record-'+d.meta.source_id);
+    if(d.item_type==='recording'&&d.meta.source_id)archivedIds.add('recording-'+d.meta.source_id);
+    if(d.item_type==='photo'&&d.meta.source_id)archivedIds.add('photo-'+d.meta.source_id);
   });
 }
 
@@ -956,8 +1072,10 @@ function changeArchiveNick(){
 
 function switchArchiveTab(tab){
   archiveTab=tab;
-  document.getElementById('archive-tab-track').classList.toggle('active',tab==='track');
-  document.getElementById('archive-tab-comment').classList.toggle('active',tab==='comment');
+  ['track','comment','record','recording','photo'].forEach(t=>{
+    const el=document.getElementById('archive-tab-'+t);
+    if(el)el.classList.toggle('active',t===tab);
+  });
   loadArchiveList();
 }
 
@@ -972,9 +1090,14 @@ async function loadArchiveList(){
   if(error){wrap.innerHTML='<div class="archive-empty">불러오기 실패했어요</div>';return;}
   archiveData=data||[];
   if(!archiveData.length){
-    wrap.innerHTML=archiveTab==='track'
-      ? '<div class="archive-empty">아직 저장한 노래가 없어요<br>노래 공유 작업실에서 ⭐을 눌러봐요!</div>'
-      : '<div class="archive-empty">아직 저장한 메시지가 없어요<br>마음에 드는 메시지에 ⭐을 눌러봐요!</div>';
+    const emptyMsgs={
+      track:'아직 저장한 노래가 없어요<br>노래 공유 작업실에서 ⭐을 눌러봐요!',
+      comment:'아직 저장한 메시지가 없어요<br>마음에 드는 메시지에 ⭐을 눌러봐요!',
+      record:'아직 저장한 기록이 없어요<br>소리·생각 담아오기에서 ⭐을 눌러봐요!',
+      recording:'아직 저장한 소리가 없어요<br>소리·생각 담아오기에서 ⭐을 눌러봐요!',
+      photo:'아직 저장한 사진이 없어요<br>소리·생각 담아오기에서 ⭐을 눌러봐요!',
+    };
+    wrap.innerHTML=`<div class="archive-empty">${emptyMsgs[archiveTab]}</div>`;
     return;
   }
   if(archiveTab==='track'){
@@ -989,7 +1112,7 @@ async function loadArchiveList(){
         <div class="archive-item-del" onclick="event.stopPropagation();deleteArchiveItem(${d.id})">×</div>
       </div>`;
     }).join('');
-  }else{
+  }else if(archiveTab==='comment'){
     wrap.innerHTML=archiveData.map(d=>{
       const m=d.meta||{};
       const bodyHtml=m.comment_type==='voice'&&m.audio_url
@@ -1005,6 +1128,40 @@ async function loadArchiveList(){
         <div class="archive-item-del" onclick="event.stopPropagation();deleteArchiveItem(${d.id})">×</div>
       </div>`;
     }).join('');
+  }else if(archiveTab==='record'){
+    wrap.innerHTML=archiveData.map(d=>{
+      const m=d.meta||{};
+      return `<div class="archive-item">
+        <div class="archive-item-icon">${m.mood||'🌸'}</div>
+        <div class="archive-item-body">
+          <div class="archive-item-title">${m.word?'「'+m.word+'」':'오늘의 기록'}</div>
+          ${m.drawing?`<img src="${m.drawing}" style="width:100%;border-radius:8px;margin-top:6px">`:''}
+          <div class="archive-item-sub" style="margin-top:4px">${new Date(d.created_at).toLocaleDateString('ko-KR')}</div>
+        </div>
+        <div class="archive-item-del" onclick="event.stopPropagation();deleteArchiveItem(${d.id})">×</div>
+      </div>`;
+    }).join('');
+  }else if(archiveTab==='recording'){
+    wrap.innerHTML=archiveData.map(d=>{
+      const m=d.meta||{};
+      return `<div class="archive-item">
+        <div class="archive-item-icon">🎤</div>
+        <div class="archive-item-body">
+          <div class="archive-item-title">${d.content||'소리'}</div>
+          <div class="archive-item-sub"><audio controls src="${m.file_url}"></audio></div>
+          <div class="archive-item-sub" style="margin-top:2px">${new Date(d.created_at).toLocaleDateString('ko-KR')}</div>
+        </div>
+        <div class="archive-item-del" onclick="event.stopPropagation();deleteArchiveItem(${d.id})">×</div>
+      </div>`;
+    }).join('');
+  }else if(archiveTab==='photo'){
+    wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">`+archiveData.map(d=>{
+      const m=d.meta||{};
+      return `<div class="photo-item-wrap">
+        <img src="${m.file_url}">
+        <button class="photo-archive-btn saved" onclick="deleteArchiveItem(${d.id})">×</button>
+      </div>`;
+    }).join('')+`</div>`;
   }
 }
 
