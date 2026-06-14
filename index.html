@@ -119,6 +119,19 @@ h1 span{color:var(--pink)}
 .name-input::placeholder,.comment-textarea::placeholder{color:var(--text-light)}
 .comment-submit{align-self:flex-end;background:linear-gradient(135deg,var(--pink),var(--pink-light));color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;min-height:36px}
 .comment-item{display:flex;gap:9px;padding:10px 0;border-top:1px solid rgba(200,160,140,.1)}
+.comment-type-row{display:flex;gap:6px;margin-bottom:6px}
+.comment-type-btn{flex:1;padding:7px;border-radius:10px;border:1.5px solid rgba(200,160,140,.2);background:var(--cream);font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;color:var(--text-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;min-height:38px}
+.comment-type-btn.active{background:#FFF0E8;border-color:var(--pink);color:var(--pink)}
+.voice-comment-rec{width:100%;padding:11px;border-radius:12px;border:2px dashed rgba(200,160,140,.3);background:var(--cream);cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--pink);display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px}
+.voice-comment-rec.recording{background:#FFF0E8;border-color:var(--pink);animation:pulse 1s infinite}
+.voice-comment-preview{display:none;align-items:center;gap:8px;background:linear-gradient(135deg,#FFF5F0,#FFF8FC);border-radius:12px;padding:8px 10px;border:1px solid rgba(200,160,140,.15)}
+.voice-comment-preview.show{display:flex}
+.voice-comment-preview audio{flex:1;height:32px}
+.voice-comment-preview .vc-del{background:#fff;border:1.5px solid rgba(200,160,140,.25);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;flex-shrink:0}
+.c-audio{margin-top:4px}
+.c-audio audio{width:100%;height:32px}
+.archive-star-btn{font-size:11px;color:var(--text-light);border:1.5px solid rgba(200,160,140,.2);background:#fff;border-radius:14px;padding:3px 9px;cursor:pointer;margin-left:6px;font-family:'Noto Sans KR',sans-serif}
+.archive-star-btn.saved{color:var(--pink);border-color:var(--pink);background:#FFF0E8}
 .c-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
 .c-name{font-size:11px;font-weight:500;color:var(--text-mid);margin-bottom:2px}
 .c-text{font-size:13px;color:var(--text-dark);line-height:1.65}
@@ -309,7 +322,18 @@ canvas{display:block;touch-action:none;background:#FFFAF7;width:100%;height:auto
         <div class="comment-avatar">🌷</div>
         <div class="input-col">
           <input class="name-input" id="comment-name" type="text" placeholder="이름 (예: 지민, 선생님)" maxlength="20">
+          <div class="comment-type-row">
+            <button class="comment-type-btn active" id="comment-type-text-btn" onclick="setCommentType('text')">✏️ 글로 남기기</button>
+            <button class="comment-type-btn" id="comment-type-voice-btn" onclick="setCommentType('voice')">🎙 음성으로 남기기</button>
+          </div>
           <textarea class="comment-textarea" id="comment-text" rows="2" placeholder="따뜻한 말을 남겨주세요..."></textarea>
+          <button class="voice-comment-rec" id="voice-comment-rec" style="display:none" onclick="toggleVoiceComment()">
+            <span id="voice-comment-icon">🎙</span><span id="voice-comment-text">눌러서 음성 녹음</span>
+          </button>
+          <div class="voice-comment-preview" id="voice-comment-preview">
+            <audio id="voice-comment-audio" controls></audio>
+            <div class="vc-del" onclick="clearVoiceComment()">×</div>
+          </div>
           <input class="name-input" id="comment-password" type="password" placeholder="삭제할 때 사용할 비밀번호">
           <button class="comment-submit" onclick="addComment()">남기기 ↑</button>
         </div>
@@ -629,11 +653,99 @@ async function loadHeartCount(){const{count,error}=await sb.from('hearts').selec
 const comments=[];
 const AVATARS=['🌷','🌸','🌹','🌺','🌻','🌼','💐'];
 const AVCOLORS=['#FFE4CC','#FFD6E8','#D4E8D0','#D6E4FF','#FFE8D4'];
-async function addComment(){const t=document.getElementById('comment-text');const n=document.getElementById('comment-name');const pw=document.getElementById('comment-password').value;const text=t.value.trim();if(!text){t.focus();return;}const avatar=AVATARS[Math.floor(Math.random()*AVATARS.length)];const avcolor=AVCOLORS[comments.length%AVCOLORS.length];const name=n.value.trim()||'익명의 친구';const{error}=await sb.from('comments').insert([{name,text,avatar,avcolor,password:pw}]);if(error){alert('댓글 저장 실패: '+error.message);return;}t.value='';n.value='';document.getElementById('comment-password').value='';loadComments();}
+let commentType='text';
+let voiceCommentMediaRec=null,voiceCommentChunks=[],voiceCommentBlob=null,isVoiceCommentRec=false;
+function setCommentType(type){
+  commentType=type;
+  document.getElementById('comment-type-text-btn').classList.toggle('active',type==='text');
+  document.getElementById('comment-type-voice-btn').classList.toggle('active',type==='voice');
+  document.getElementById('comment-text').style.display=type==='text'?'block':'none';
+  document.getElementById('voice-comment-rec').style.display=type==='voice'?'flex':'none';
+  if(type==='text'){
+    document.getElementById('voice-comment-preview').classList.remove('show');
+    clearVoiceComment();
+  }
+}
+function toggleVoiceComment(){
+  if(isVoiceCommentRec){
+    if(voiceCommentMediaRec&&voiceCommentMediaRec.state==='recording')voiceCommentMediaRec.stop();
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    voiceCommentMediaRec=new MediaRecorder(stream);voiceCommentChunks=[];
+    voiceCommentMediaRec.ondataavailable=e=>{if(e.data.size>0)voiceCommentChunks.push(e.data);};
+    voiceCommentMediaRec.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      voiceCommentBlob=new Blob(voiceCommentChunks,{type:'audio/webm'});
+      const url=URL.createObjectURL(voiceCommentBlob);
+      document.getElementById('voice-comment-audio').src=url;
+      document.getElementById('voice-comment-preview').classList.add('show');
+      isVoiceCommentRec=false;
+      document.getElementById('voice-comment-rec').classList.remove('recording');
+      document.getElementById('voice-comment-icon').textContent='🎙';
+      document.getElementById('voice-comment-text').textContent='다시 녹음하기';
+    };
+    voiceCommentMediaRec.start();isVoiceCommentRec=true;
+    document.getElementById('voice-comment-rec').classList.add('recording');
+    document.getElementById('voice-comment-icon').textContent='⏹';
+    document.getElementById('voice-comment-text').textContent='녹음 중... (눌러서 멈춰요)';
+  }).catch(()=>alert('마이크 권한이 필요해요!'));
+}
+function clearVoiceComment(){
+  voiceCommentBlob=null;
+  document.getElementById('voice-comment-preview').classList.remove('show');
+  document.getElementById('voice-comment-audio').src='';
+  document.getElementById('voice-comment-text').textContent='눌러서 음성 녹음';
+}
+async function addComment(){
+  const n=document.getElementById('comment-name');
+  const pw=document.getElementById('comment-password').value;
+  const name=n.value.trim()||'익명의 친구';
+  const avatar=AVATARS[Math.floor(Math.random()*AVATARS.length)];
+  const avcolor=AVCOLORS[comments.length%AVCOLORS.length];
+
+  if(commentType==='voice'){
+    if(!voiceCommentBlob){alert('먼저 음성을 녹음해줘요! 🎙');return;}
+    const fileName='comment-'+Date.now()+'.webm';
+    const{error:upErr}=await sb.storage.from('comment-audio').upload(fileName,voiceCommentBlob,{contentType:'audio/webm'});
+    if(upErr){alert('음성 업로드 실패: '+upErr.message);return;}
+    const{data:pub}=sb.storage.from('comment-audio').getPublicUrl(fileName);
+    const{error}=await sb.from('comments').insert([{name,text:'',audio_url:pub.publicUrl,type:'voice',avatar,avcolor,password:pw}]);
+    if(error){alert('댓글 저장 실패: '+error.message);return;}
+    clearVoiceComment();
+  }else{
+    const t=document.getElementById('comment-text');
+    const text=t.value.trim();
+    if(!text){t.focus();return;}
+    const{error}=await sb.from('comments').insert([{name,text,type:'text',avatar,avcolor,password:pw}]);
+    if(error){alert('댓글 저장 실패: '+error.message);return;}
+    t.value='';
+  }
+  n.value='';
+  document.getElementById('comment-password').value='';
+  loadComments();
+}
 async function loadComments(){const{data}=await sb.from('comments').select('*').order('created_at',{ascending:false});comments.length=0;if(data)data.forEach(c=>comments.push(c));renderComments();}
 let commentsSubscribed=false;
 function subscribeComments(){if(commentsSubscribed)return;commentsSubscribed=true;sb.channel('comments-rt').on('postgres_changes',{event:'INSERT',schema:'public',table:'comments'},()=>{loadComments();}).subscribe();}
-function renderComments(){const el=document.getElementById('comment-list');if(!comments.length){el.innerHTML='<div class="list-empty">첫 번째 메시지를 남겨주세요 🌸</div>';return;}el.innerHTML=comments.map(c=>`<div class="comment-item"><div class="c-avatar" style="background:${c.avcolor}">${c.avatar}</div><div><div class="c-name">${c.name}</div><div class="c-text">${c.text}</div><div class="c-time">${new Date(c.created_at).toLocaleString()}</div><button onclick="deleteComment(${c.id})" style="font-size:11px;color:#C97B7B;border:none;background:none;cursor:pointer;">삭제</button></div></div>`).join('');}
+function renderComments(){
+  const el=document.getElementById('comment-list');
+  if(!comments.length){el.innerHTML='<div class="list-empty">첫 번째 메시지를 남겨주세요 🌸</div>';return;}
+  el.innerHTML=comments.map(c=>{
+    const bodyHtml=c.type==='voice'&&c.audio_url
+      ?`<div class="c-audio"><audio controls src="${c.audio_url}"></audio></div>`
+      :`<div class="c-text">${c.text}</div>`;
+    return `<div class="comment-item">
+      <div class="c-avatar" style="background:${c.avcolor}">${c.avatar}</div>
+      <div style="flex:1">
+        <div class="c-name">${c.name}</div>
+        ${bodyHtml}
+        <div class="c-time">${new Date(c.created_at).toLocaleString()}</div>
+        <button onclick="deleteComment(${c.id})" style="font-size:11px;color:#C97B7B;border:none;background:none;cursor:pointer;">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 async function deleteComment(id){const pw=prompt('삭제 비밀번호를 입력하세요');if(!pw)return;const{data}=await sb.from('comments').select('*').eq('id',id).single();if(!data||data.password!==pw){alert('비밀번호가 틀렸어요');return;}await sb.from('comments').delete().eq('id',id);loadComments();}
 async function saveTodayRecord(){const mood=selectedMood;const word=document.getElementById('word-input').value.trim();const canvas=document.getElementById('draw-canvas');const small=document.createElement('canvas');small.width=canvas.width;small.height=canvas.height;small.getContext('2d').drawImage(canvas,0,0,canvas.width,canvas.height);const drawing=small.toDataURL('image/png');if(!mood&&!word){alert('기분이나 단어를 입력해줘요 🌸');return;}const{error}=await sb.from('today_records').insert([{mood,word,drawing}]);if(error){alert('저장 실패: '+error.message);return;}alert('저장됐어요 🌸');loadTodayRecords();}
 async function loadTodayRecords(){const{data}=await sb.from('today_records').select('*').order('created_at',{ascending:false}).limit(10);const el=document.getElementById('today-records-list');if(!data||!data.length){el.innerHTML='';return;}el.innerHTML=data.map(r=>`<div style="position:relative;background:linear-gradient(135deg,#FFF5F0,#FFF0F8);border-radius:12px;padding:10px 12px;border:1px solid rgba(200,160,140,.15)"><button onclick="deleteTodayRecord(${r.id})" style="position:absolute;top:8px;right:8px;background:#fff;border:1px solid rgba(200,160,140,.3);border-radius:50%;width:30px;height:30px;cursor:pointer;">🗑</button><div style="font-size:11px;color:var(--text-light);margin-bottom:6px">${new Date(r.created_at).toLocaleDateString('ko-KR')}</div><div style="font-size:18px;margin-bottom:4px">${r.mood||''} ${r.word?'「'+r.word+'」':''}</div>${r.drawing?`<img src="${r.drawing}" style="width:100%;border-radius:8px;margin-top:6px">`:''}</div>`).join('');}
