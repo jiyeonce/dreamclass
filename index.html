@@ -753,7 +753,7 @@ function closeVideo(){const vp=document.getElementById('video-player');vp.pause(
 document.getElementById('video-modal').addEventListener('click',function(e){if(e.target===this)closeVideo();});
 const THUMBBG=['#FFE4CC','#FFD6E8','#D4E8D0','#D6E4FF','#FFE8D6'];
 function renderTracks(){document.getElementById('track-list').innerHTML=TRACKS.map((t,i)=>{const isSaved=archivedIds.has('track-'+t.file);return `<div class="track-item${playingIdx===i&&t.type==='audio'?' playing':''}" onclick="playTrack(${i})"><span class="track-num">${i+1}</span><div class="track-thumb" style="background:${THUMBBG[i%THUMBBG.length]}">${t.cover?`<img src="${t.cover}" alt="">`:`${t.emoji}`}<span class="track-type-badge">${t.type==='video'?'▶ 영상':'♪ 음악'}</span></div><div class="track-info"><div class="track-name">${t.name}</div><div class="track-desc">${t.desc}</div></div><button class="track-archive-btn${isSaved?' saved':''}" onclick="toggleArchiveTrack(${i},this,event)">⭐</button><div class="play-icon${playingIdx===i&&t.type==='audio'?' pause':''}">${playingIdx===i&&t.type==='audio'?'<svg viewBox="0 0 12 12"><rect x="1" y="1" width="3.5" height="10" rx="1"/><rect x="7.5" y="1" width="3.5" height="10" rx="1"/></svg>':'<svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>'}</div></div>`;}).join('');}
-function playTrack(i){const t=TRACKS[i];if(t.type==='video'){audio.pause();playingIdx=-1;document.getElementById('album-player').classList.remove('visible');renderTracks();openVideo(i);return;}if(playingIdx===i){if(audio.paused){audio.play().catch(()=>{});document.getElementById('album-play-btn').textContent='⏸';}else{audio.pause();document.getElementById('album-play-btn').textContent='▶';}renderTracks();return;}audio.pause();audio.src=t.file;audio.play().catch(()=>{});playingIdx=i;document.getElementById('album-player').classList.add('visible');document.getElementById('album-player-name').textContent=t.name;document.getElementById('album-play-btn').textContent='⏸';document.getElementById('album-dl-btn').href=t.file;document.getElementById('album-dl-btn').download=t.name;const img=document.getElementById('album-cover-img');const emoji=document.getElementById('album-cover-emoji');if(t.cover){img.src=t.cover;img.classList.add('visible');emoji.style.display='none';}else{img.classList.remove('visible');emoji.style.display='block';emoji.textContent=t.emoji;}renderTracks();}
+function playTrack(i){const t=TRACKS[i];if(t.type==='video'){audio.pause();playingIdx=-1;document.getElementById('album-player').classList.remove('visible');renderTracks();logEvent('play_video','노래 공유 작업실',i,'track');openVideo(i);return;}if(playingIdx===i){if(audio.paused){audio.play().catch(()=>{});document.getElementById('album-play-btn').textContent='⏸';}else{audio.pause();document.getElementById('album-play-btn').textContent='▶';}renderTracks();return;}audio.pause();audio.src=t.file;audio.play().catch(()=>{});playingIdx=i;logEvent('play_music','노래 공유 작업실',i,'track');document.getElementById('album-player').classList.add('visible');document.getElementById('album-player-name').textContent=t.name;document.getElementById('album-play-btn').textContent='⏸';document.getElementById('album-dl-btn').href=t.file;document.getElementById('album-dl-btn').download=t.name;const img=document.getElementById('album-cover-img');const emoji=document.getElementById('album-cover-emoji');if(t.cover){img.src=t.cover;img.classList.add('visible');emoji.style.display='none';}else{img.classList.remove('visible');emoji.style.display='block';emoji.textContent=t.emoji;}renderTracks();}
 function toggleCurrentTrack(){if(playingIdx<0)return;if(audio.paused){audio.play().catch(()=>{});document.getElementById('album-play-btn').textContent='⏸';}else{audio.pause();document.getElementById('album-play-btn').textContent='▶';}renderTracks();}
 function prevTrack(){const at=TRACKS.map((t,i)=>t.type==='audio'?i:-1).filter(i=>i>=0);if(!at.length)return;const cur=at.indexOf(playingIdx);playTrack(at[(cur-1+at.length)%at.length]);}
 function nextTrack(){const at=TRACKS.map((t,i)=>t.type==='audio'?i:-1).filter(i=>i>=0);if(!at.length)return;const cur=at.indexOf(playingIdx);playTrack(at[(cur+1)%at.length]);}
@@ -825,6 +825,7 @@ async function addComment(){
     const{data:pub}=sb.storage.from('comment-audio').getPublicUrl(fileName);
     const{error}=await sb.from('comments').insert([{name,text:'',audio_url:pub.publicUrl,type:'voice',avatar,avcolor,password:pw}]);
     if(error){alert('댓글 저장 실패: '+error.message);return;}
+    logEvent('comment_voice','노래 공유 작업실',null,'comment');
     clearVoiceComment();
   }else{
     const t=document.getElementById('comment-text');
@@ -832,6 +833,7 @@ async function addComment(){
     if(!text){t.focus();return;}
     const{error}=await sb.from('comments').insert([{name,text,type:'text',avatar,avcolor,password:pw}]);
     if(error){alert('댓글 저장 실패: '+error.message);return;}
+    logEvent('comment_text','노래 공유 작업실',null,'comment');
     t.value='';
   }
   n.value='';
@@ -1094,6 +1096,7 @@ async function toggleArchiveComment(commentId,btnEl){
       const meta={source_id:commentId,name:c.name,avatar:c.avatar,avcolor:c.avcolor,comment_type:c.type||'text',audio_url:c.audio_url||null,created_at:c.created_at};
       await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'comment',content:c.text||'',meta}]);
       btnEl.classList.add('saved');btnEl.textContent='⭐ 보관됨';
+      logEvent('save_archive',currentPageName,commentId,'comment');
       showArchiveToast('보관함에 저장했어요 ⭐');
     }
   });
@@ -1113,6 +1116,7 @@ async function toggleArchiveTrack(idx,btnEl,e){
       const meta={file:t.file,type:t.type,emoji:t.emoji,cover:t.cover||''};
       await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'track',content:t.name,meta}]);
       btnEl.classList.add('saved');btnEl.textContent='⭐';
+      logEvent('save_archive',currentPageName,idx,'track');
       showArchiveToast('보관함에 저장했어요 ⭐');
     }
   });
@@ -1134,6 +1138,7 @@ async function toggleArchiveRecord(recordId,btnEl,e){
       const content=(rec.mood||'')+(rec.word?' 「'+rec.word+'」':'');
       await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'record',content,meta}]);
       btnEl.classList.add('saved');btnEl.textContent='⭐ 보관됨';
+      logEvent('save_archive',currentPageName,recordId,'record');
       showArchiveToast('보관함에 저장했어요 ⭐');
     }
   });
@@ -1154,6 +1159,7 @@ async function toggleArchiveRecording(recId,btnEl,e){
       const meta={source_id:recId,file_url:rec.file_url,created_at:rec.created_at};
       await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'recording',content:rec.name||'소리',meta}]);
       btnEl.classList.add('saved');btnEl.textContent='⭐';
+      logEvent('save_archive',currentPageName,recId,'recording');
       showArchiveToast('보관함에 저장했어요 ⭐');
     }
   });
@@ -1174,6 +1180,7 @@ async function toggleArchivePhoto(photoId,btnEl,e){
       const meta={source_id:photoId,file_url:photo.file_url,created_at:photo.created_at};
       await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'photo',content:'사진',meta}]);
       btnEl.classList.add('saved');btnEl.textContent='⭐';
+      logEvent('save_archive',currentPageName,photoId,'photo');
       showArchiveToast('보관함에 저장했어요 ⭐');
     }
   });
