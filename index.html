@@ -321,10 +321,16 @@ canvas{display:block;touch-action:none;background:#FFFAF7;width:100%;height:auto
   </div>
   <div class="section">
     <div class="section-label">📷 우리의 순간들</div>
-    <label style="display:block;width:100%;padding:11px;border-radius:12px;border:2px dashed rgba(200,160,140,.3);background:var(--cream);cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--pink);text-align:center;margin-bottom:8px">
-      📷 사진 올리기
-      <input type="file" accept="image/*" style="display:none" onchange="uploadGalleryPhoto(this)">
-    </label>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <label style="flex:1;padding:11px;border-radius:12px;border:2px dashed rgba(200,160,140,.3);background:var(--cream);cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--pink);text-align:center">
+        📷 사진 올리기
+        <input type="file" accept="image/*" style="display:none" onchange="uploadGalleryPhoto(this,'image')">
+      </label>
+      <label style="flex:1;padding:11px;border-radius:12px;border:2px dashed rgba(77,150,255,.3);background:var(--cream);cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;color:#4D96FF;text-align:center">
+        🎬 영상 올리기
+        <input type="file" accept="video/*" style="display:none" onchange="uploadGalleryPhoto(this,'video')">
+      </label>
+    </div>
     <div class="gallery-grid" id="gallery"></div>
   </div>
   <div id="lightbox">
@@ -477,6 +483,7 @@ canvas{display:block;touch-action:none;background:#FFFAF7;width:100%;height:auto
     <button class="archive-tab" id="archive-tab-record" onclick="switchArchiveTab('record')">🌸 기록</button>
     <button class="archive-tab" id="archive-tab-recording" onclick="switchArchiveTab('recording')">🎤 소리</button>
     <button class="archive-tab" id="archive-tab-photo" onclick="switchArchiveTab('photo')">📸 사진</button>
+    <button class="archive-tab" id="archive-tab-gallery" onclick="switchArchiveTab('gallery')">🖼️ 갤러리</button>
   </div>
   <div class="archive-list-wrap" id="archive-list-wrap"></div>
 </div>
@@ -747,23 +754,79 @@ async function loadGallery(){
   galleryData=data||[];
   const el=document.getElementById('gallery');
   if(!galleryData.length){el.innerHTML='<div class="list-empty" style="grid-column:1/-1">아직 사진이 없어요 📷</div>';return;}
-  el.innerHTML=galleryData.map((p,i)=>`<div class="gallery-item" onclick="openLb(${i})"><img src="${p.file_url}" alt="${p.caption||''}" loading="lazy"></div>`).join('');
+  el.innerHTML=galleryData.map((p,i)=>{
+    const isSaved=archivedIds.has('gallery-'+p.id);
+    const isVideo=p.media_type==='video';
+    const mediaHtml=isVideo
+      ?`<video src="${p.file_url}" style="width:100%;height:100%;object-fit:cover;display:block" muted playsinline></video><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:22px;pointer-events:none">▶</div>`
+      :`<img src="${p.file_url}" alt="${p.caption||''}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">`;
+    return `<div class="photo-item-wrap" onclick="openLb(${i})">
+      ${mediaHtml}
+      <button class="photo-archive-btn${isSaved?' saved':''}" onclick="event.stopPropagation();toggleArchiveGallery(${p.id},this)">⭐</button>
+    </div>`;
+  }).join('');
 }
 function renderGallery(){loadGallery();}
-function openLb(i){lbIdx=i;document.getElementById('lb-img').src=galleryData[i].file_url;document.getElementById('lightbox').classList.add('open');}
-function closeLb(){document.getElementById('lightbox').classList.remove('open');}
+function openLb(i){
+  lbIdx=i;
+  const p=galleryData[i];
+  const lb=document.getElementById('lightbox');
+  const img=document.getElementById('lb-img');
+  // 기존 영상 제거
+  const oldVid=lb.querySelector('video.lb-video');if(oldVid)oldVid.remove();
+  if(p.media_type==='video'){
+    img.style.display='none';
+    const vid=document.createElement('video');
+    vid.src=p.file_url;vid.controls=true;vid.playsinline=true;
+    vid.className='lb-video';
+    vid.style.cssText='max-width:min(92vw,640px);max-height:75vh;border-radius:14px;background:#000;outline:none';
+    lb.insertBefore(vid,img);
+    vid.play().catch(()=>{});
+  }else{
+    img.style.display='';
+    img.src=p.file_url;
+  }
+  lb.classList.add('open');
+}
+function closeLb(){
+  const lb=document.getElementById('lightbox');
+  const vid=lb.querySelector('video.lb-video');
+  if(vid){vid.pause();vid.remove();}
+  document.getElementById('lb-img').style.display='';
+  lb.classList.remove('open');
+}
 function navLb(d){lbIdx=(lbIdx+d+galleryData.length)%galleryData.length;document.getElementById('lb-img').src=galleryData[lbIdx].file_url;}
-async function uploadGalleryPhoto(input){
+async function uploadGalleryPhoto(input,mediaType='image'){
   const file=input.files[0];if(!file)return;
   const nick=getArchiveNick()||'익명';
   const fileName='gallery-'+Date.now()+'.'+file.name.split('.').pop();
   const{error:upErr}=await sb.storage.from('gallery').upload(fileName,file,{contentType:file.type});
   if(upErr){alert('업로드 실패: '+upErr.message);return;}
   const{data}=sb.storage.from('gallery').getPublicUrl(fileName);
-  await sb.from('gallery').insert([{file_url:data.publicUrl,caption:nick}]);
+  await sb.from('gallery').insert([{file_url:data.publicUrl,caption:nick,media_type:mediaType}]);
   input.value='';
   loadGallery();
-  logEvent('photo_upload','노래 공유 작업실',null,'gallery');
+  logEvent(mediaType==='video'?'video_upload':'photo_upload','노래 공유 작업실',null,'gallery');
+}
+async function toggleArchiveGallery(photoId,btnEl){
+  ensureArchiveNick(async(nick)=>{
+    const{data:existing}=await sb.from('archive_items').select('id').eq('owner_nickname',nick).eq('item_type','gallery').eq('meta->>source_id',String(photoId));
+    if(existing&&existing.length){
+      await sb.from('archive_items').delete().eq('id',existing[0].id);
+      archivedIds.delete('gallery-'+photoId);
+      btnEl.classList.remove('saved');
+      showArchiveToast('보관함에서 꺼냈어요');
+    }else{
+      const p=galleryData.find(x=>x.id===photoId);
+      if(!p)return;
+      const meta={source_id:photoId,file_url:p.file_url,caption:p.caption||''};
+      await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'gallery',content:'갤러리 사진',meta}]);
+      archivedIds.add('gallery-'+photoId);
+      btnEl.classList.add('saved');
+      logEvent('save_archive','노래 공유 작업실',photoId,'gallery');
+      showArchiveToast('보관함에 저장했어요 ⭐');
+    }
+  });
 }
 document.getElementById('lightbox').addEventListener('click',function(e){if(e.target===this)closeLb();});
 const audio=new Audio();let playingIdx=-1;
@@ -1222,6 +1285,7 @@ async function loadArchiveStatus(){
     if(d.item_type==='record'&&d.meta.source_id)archivedIds.add('record-'+d.meta.source_id);
     if(d.item_type==='recording'&&d.meta.source_id)archivedIds.add('recording-'+d.meta.source_id);
     if(d.item_type==='photo'&&d.meta.source_id)archivedIds.add('photo-'+d.meta.source_id);
+    if(d.item_type==='gallery'&&d.meta.source_id)archivedIds.add('gallery-'+d.meta.source_id);
   });
 }
 
@@ -1249,7 +1313,7 @@ function changeArchiveNick(){
 
 function switchArchiveTab(tab){
   archiveTab=tab;
-  ['track','comment','record','recording','photo'].forEach(t=>{
+  ['track','comment','record','recording','photo','gallery'].forEach(t=>{
     const el=document.getElementById('archive-tab-'+t);
     if(el)el.classList.toggle('active',t===tab);
   });
@@ -1273,6 +1337,7 @@ async function loadArchiveList(){
       record:'아직 저장한 기록이 없어요<br>소리·생각 담아오기에서 ⭐을 눌러봐요!',
       recording:'아직 저장한 소리가 없어요<br>소리·생각 담아오기에서 ⭐을 눌러봐요!',
       photo:'아직 저장한 사진이 없어요<br>소리·생각 담아오기에서 ⭐을 눌러봐요!',
+      gallery:'아직 저장한 갤러리 사진이 없어요<br>노래 공유 작업실에서 ⭐을 눌러봐요!',
     };
     wrap.innerHTML=`<div class="archive-empty">${emptyMsgs[archiveTab]}</div>`;
     return;
@@ -1336,6 +1401,14 @@ async function loadArchiveList(){
       const m=d.meta||{};
       return `<div class="photo-item-wrap">
         <img src="${m.file_url}">
+        <button class="photo-archive-btn saved" onclick="deleteArchiveItem(${d.id})">×</button>
+      </div>`;
+    }).join('')+`</div>`;
+  }else if(archiveTab==='gallery'){
+    wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">`+archiveData.map(d=>{
+      const m=d.meta||{};
+      return `<div class="photo-item-wrap">
+        <img src="${m.file_url}" style="width:100%;height:100%;object-fit:cover;display:block">
         <button class="photo-archive-btn saved" onclick="deleteArchiveItem(${d.id})">×</button>
       </div>`;
     }).join('')+`</div>`;
