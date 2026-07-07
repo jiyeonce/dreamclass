@@ -321,6 +321,10 @@ canvas{display:block;touch-action:none;background:#FFFAF7;width:100%;height:auto
   </div>
   <div class="section">
     <div class="section-label">📷 우리의 순간들</div>
+    <label style="display:block;width:100%;padding:11px;border-radius:12px;border:2px dashed rgba(200,160,140,.3);background:var(--cream);cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--pink);text-align:center;margin-bottom:8px">
+      📷 사진 올리기
+      <input type="file" accept="image/*" style="display:none" onchange="uploadGalleryPhoto(this)">
+    </label>
     <div class="gallery-grid" id="gallery"></div>
   </div>
   <div id="lightbox">
@@ -737,10 +741,30 @@ function initGameHub(){}
 async function initSong(){await loadArchiveStatus();renderGallery();renderTracks();renderReactions();loadComments();subscribeComments();loadReactions();loadHeartCount();}
 async function initTherapy(){await loadArchiveStatus();const d=new Date();document.getElementById('today-date').textContent=d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';initCanvas();loadTodayRecords();loadRecordings();loadPhotos();}
 let lbIdx=0;
-function renderGallery(){const el=document.getElementById('gallery');if(!PHOTOS.length){el.innerHTML='';return;}el.innerHTML=PHOTOS.map((p,i)=>`<div class="gallery-item" onclick="openLb(${i})"><img src="${p.src}" alt="${p.alt}" loading="lazy"></div>`).join('');}
-function openLb(i){lbIdx=i;document.getElementById('lb-img').src=PHOTOS[i].src;document.getElementById('lightbox').classList.add('open');}
+let galleryData=[];
+async function loadGallery(){
+  const{data}=await sb.from('gallery').select('*').order('created_at',{ascending:false});
+  galleryData=data||[];
+  const el=document.getElementById('gallery');
+  if(!galleryData.length){el.innerHTML='<div class="list-empty" style="grid-column:1/-1">아직 사진이 없어요 📷</div>';return;}
+  el.innerHTML=galleryData.map((p,i)=>`<div class="gallery-item" onclick="openLb(${i})"><img src="${p.file_url}" alt="${p.caption||''}" loading="lazy"></div>`).join('');
+}
+function renderGallery(){loadGallery();}
+function openLb(i){lbIdx=i;document.getElementById('lb-img').src=galleryData[i].file_url;document.getElementById('lightbox').classList.add('open');}
 function closeLb(){document.getElementById('lightbox').classList.remove('open');}
-function navLb(d){lbIdx=(lbIdx+d+PHOTOS.length)%PHOTOS.length;document.getElementById('lb-img').src=PHOTOS[lbIdx].src;}
+function navLb(d){lbIdx=(lbIdx+d+galleryData.length)%galleryData.length;document.getElementById('lb-img').src=galleryData[lbIdx].file_url;}
+async function uploadGalleryPhoto(input){
+  const file=input.files[0];if(!file)return;
+  const nick=getArchiveNick()||'익명';
+  const fileName='gallery-'+Date.now()+'.'+file.name.split('.').pop();
+  const{error:upErr}=await sb.storage.from('gallery').upload(fileName,file,{contentType:file.type});
+  if(upErr){alert('업로드 실패: '+upErr.message);return;}
+  const{data}=sb.storage.from('gallery').getPublicUrl(fileName);
+  await sb.from('gallery').insert([{file_url:data.publicUrl,caption:nick}]);
+  input.value='';
+  loadGallery();
+  logEvent('photo_upload','노래 공유 작업실',null,'gallery');
+}
 document.getElementById('lightbox').addEventListener('click',function(e){if(e.target===this)closeLb();});
 const audio=new Audio();let playingIdx=-1;
 function fmt(s){if(isNaN(s)||!isFinite(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
