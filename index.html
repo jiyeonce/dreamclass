@@ -819,7 +819,7 @@ async function toggleArchiveGallery(photoId,btnEl){
     }else{
       const p=galleryData.find(x=>x.id===photoId);
       if(!p)return;
-      const meta={source_id:photoId,file_url:p.file_url,caption:p.caption||''};
+      const meta={source_id:photoId,file_url:p.file_url,caption:p.caption||'',media_type:p.media_type||'image'};
       await sb.from('archive_items').insert([{owner_nickname:nick,item_type:'gallery',content:'갤러리 사진',meta}]);
       archivedIds.add('gallery-'+photoId);
       btnEl.classList.add('saved');
@@ -1407,14 +1407,26 @@ async function loadArchiveList(){
   }else if(archiveTab==='gallery'){
     wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">`+archiveData.map(d=>{
       const m=d.meta||{};
-      return `<div class="photo-item-wrap">
-        <img src="${m.file_url}" style="width:100%;height:100%;object-fit:cover;display:block">
-        <button class="photo-archive-btn saved" onclick="deleteArchiveItem(${d.id})">×</button>
+      const isVideo=m.media_type==='video';
+      const mediaHtml=isVideo
+        ?`<video src="${m.file_url}" style="width:100%;height:100%;object-fit:cover;display:block" muted playsinline></video><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:22px;pointer-events:none">▶</div>`
+        :`<img src="${m.file_url}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+      return `<div class="photo-item-wrap" onclick="${isVideo?`openArchiveVideo('${m.file_url}')`:''}" style="${isVideo?'cursor:pointer':''}">
+        ${mediaHtml}
+        <button class="photo-archive-btn saved" onclick="event.stopPropagation();deleteArchiveItem(${d.id})">×</button>
       </div>`;
     }).join('')+`</div>`;
   }
 }
 
+function openArchiveVideo(url){
+  document.getElementById('video-modal-title').textContent='🎬 영상';
+  const vp=document.getElementById('video-player');
+  vp.src=url;vp.load();
+  document.getElementById('video-dl-btn').href=url;
+  document.getElementById('video-modal').classList.add('open');
+  vp.play().catch(()=>{});
+}
 async function deleteArchiveItem(id){
   await sb.from('archive_items').delete().eq('id',id);
   loadArchiveList();
